@@ -4,487 +4,974 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MLB Prediction Model</title>
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap');
+
   :root {
-    --bg:#0a0c0f;--surface:#111417;--surface2:#181c21;--surface3:#1e232a;
-    --border:#252b34;--border2:#2e3640;--text:#e8eaed;--muted:#6b7480;--muted2:#8a939f;
-    --green:#00e676;--green-bg:rgba(0,230,118,0.08);
-    --purple:#9c6fff;--purple-bg:rgba(156,111,255,0.08);
-    --amber:#ffb300;--amber-bg:rgba(255,179,0,0.08);
-    --red:#ff4c4c;--red-bg:rgba(255,76,76,0.08);
-    --blue:#4fc3f7;--blue-bg:rgba(79,195,247,0.08);
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d45;
+    --accent: #2563eb;
+    --accent2: #1d4ed8;
+    --green: #16a34a;
+    --red: #dc2626;
+    --yellow: #ca8a04;
+    --text: #f1f5f9;
+    --text2: #94a3b8;
+    --text3: #64748b;
+    --elite: #f59e0b;
+    --strong: #60a5fa;
+    --moderate: #a78bfa;
   }
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;min-height:100vh}
 
-  .header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;gap:16px;height:52px}
-  .logo{font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;letter-spacing:.08em;display:flex;align-items:center;gap:8px}
-  .logo-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
-  .header-meta{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.06em}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-  .controls{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;height:44px}
-  .day-tabs{display:flex;border-right:1px solid var(--border);margin-right:16px;padding-right:16px;height:100%;align-items:center}
-  .day-tab{font-family:'Oswald',sans-serif;font-size:13px;font-weight:500;letter-spacing:.06em;color:var(--muted);background:none;border:none;padding:6px 14px;cursor:pointer;border-radius:3px;transition:all .15s;text-transform:uppercase}
-  .day-tab:hover{color:var(--text);background:var(--surface2)}
-  .day-tab.active{color:var(--bg);background:var(--green)}
-  .filter-group{display:flex;align-items:center;gap:6px}
-  .filter-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-right:2px}
-  .filter-chip{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;color:var(--muted2);background:var(--surface2);border:1px solid var(--border);padding:4px 10px;border-radius:3px;cursor:pointer;transition:all .15s}
-  .filter-chip:hover{border-color:var(--border2);color:var(--text)}
-  .filter-chip.active{background:var(--surface3);border-color:var(--green);color:var(--green)}
-  .sort-sel{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted2);background:var(--surface2);border:1px solid var(--border);padding:5px 22px 5px 10px;border-radius:3px;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b7480' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
-  .count-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-left:12px}
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+  }
 
-  .summary-bar{background:var(--surface2);border-bottom:1px solid var(--border);padding:6px 20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;min-height:34px}
-  .sum-item{display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:10px}
-  .sdot{width:6px;height:6px;border-radius:50%}
-  .sum-label{color:var(--muted)}.sum-val{color:var(--text);font-weight:500}
-  .sum-meta{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.06em}
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
 
-  .col-headers{display:grid;grid-template-columns:210px 1fr 1fr 1fr 110px;padding:0 20px;height:30px;align-items:center;background:var(--surface);border-bottom:1px solid var(--border2);position:sticky;top:0;z-index:10}
-  .col-head{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:0 12px}
-  .col-head:first-child{padding-left:0}
+  .logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: var(--text);
+  }
+  .logo span { color: var(--accent); }
 
-  .game-list{padding:8px 20px 40px;display:flex;flex-direction:column;gap:6px}
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--green);
+    letter-spacing: 1px;
+  }
+  .live-dot {
+    width: 7px; height: 7px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
 
-  .game-row{background:var(--surface);border:1px solid var(--border);border-radius:4px;display:grid;grid-template-columns:210px 1fr 1fr 1fr 110px;cursor:pointer;transition:border-color .15s,background .15s;overflow:hidden;position:relative}
-  .game-row:hover{border-color:var(--border2);background:var(--surface2)}
-  .game-row.expanded{border-color:rgba(0,230,118,0.4)}
-  .game-row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
-  .game-row[data-rating="Elite"]::before{background:var(--green)}
-  .game-row[data-rating="Strong"]::before{background:var(--blue)}
-  .game-row[data-rating="Moderate"]::before{background:var(--amber)}
-  .game-row[data-rating="Lean"]::before{background:var(--border2)}
+  .refresh-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'Barlow', sans-serif;
+    transition: all 0.2s;
+  }
+  .refresh-btn:hover { border-color: var(--accent); color: var(--text); }
 
-  .cell{padding:10px 12px;border-right:1px solid var(--border);display:flex;flex-direction:column;justify-content:center;gap:3px}
-  .cell:last-child{border-right:none}
-  .cell:first-child{padding-left:16px}
+  /* CONTROLS */
+  .controls {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
 
-  .matchup-time{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)}
-  .matchup-teams{font-family:'Oswald',sans-serif;font-size:14px;font-weight:500;letter-spacing:.04em;line-height:1.2}
-  .matchup-venue{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tab-group, .filter-group {
+    display: flex;
+    gap: 4px;
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 3px;
+  }
 
-  .pitcher-line{display:flex;align-items:baseline;gap:6px;font-size:11px}
-  .pitcher-side{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.08em;min-width:18px;flex-shrink:0}
-  .pitcher-name{color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .pitcher-stats{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted2);white-space:nowrap;flex-shrink:0}
-  .pitcher-stats .sv{color:var(--text)}
+  .tab-btn, .filter-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Barlow', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s;
+    background: none;
+    color: var(--text2);
+  }
+  .tab-btn.active { background: var(--accent); color: white; }
+  .filter-btn.active { background: var(--surface2); color: var(--text); }
+  .tab-btn:hover:not(.active), .filter-btn:hover:not(.active) { color: var(--text); }
 
-  .pred-header{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
-  .pred-pick{font-family:'Oswald',sans-serif;font-size:13px;font-weight:500;letter-spacing:.04em}
-  .pred-pick.away{color:var(--green)}.pred-pick.home{color:var(--purple)}
-  .pred-totals{display:flex;gap:6px;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted2);margin-top:2px}
-  .tv{color:var(--text);font-weight:500}
-  .win-mini{height:3px;border-radius:2px;overflow:hidden;display:flex;margin-top:3px;background:var(--surface3)}
-  .wma{background:var(--green)}.wmh{background:var(--purple)}
-  .win-pcts{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-top:2px}
+  .sort-group {
+    display: flex;
+    gap: 4px;
+    margin-left: auto;
+  }
+  .sort-btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    font-family: 'Barlow', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    background: none;
+    color: var(--text3);
+    transition: all 0.2s;
+  }
+  .sort-btn.active { border-color: var(--accent); color: var(--text); }
+  .sort-btn:hover:not(.active) { color: var(--text2); }
 
-  .rating-cell{align-items:center;justify-content:center;text-align:center}
-  .rating-stars{font-size:13px;line-height:1;margin-bottom:2px}
-  .rating-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase}
-  .rating-label.elite{color:var(--green)}.rating-label.strong{color:var(--blue)}.rating-label.moderate{color:var(--amber)}.rating-label.lean{color:var(--muted)}
-  .conf-indicator{display:flex;align-items:center;justify-content:center;gap:3px;margin-top:4px}
-  .conf-pip{width:5px;height:5px;border-radius:1px}
-  .pip-high{background:var(--green)}.pip-med{background:var(--amber)}.pip-low{background:var(--blue)}.pip-empty{background:var(--border2)}
+  /* STATUS BAR */
+  #status-bar {
+    padding: 8px 20px;
+    font-size: 12px;
+    color: var(--text3);
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    display: none;
+  }
+  #status-bar.visible { display: block; }
+  #status-bar.error { color: #f87171; }
 
-  .chevron{position:absolute;right:8px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:10px;transition:transform .2s;pointer-events:none}
-  .game-row.expanded .chevron{transform:translateY(-50%) rotate(180deg)}
+  /* GAME COUNT */
+  .game-count {
+    padding: 10px 20px 4px;
+    font-size: 12px;
+    color: var(--text3);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
 
-  .expand-panel{display:none;grid-column:1/-1;background:var(--surface2);border-top:1px solid var(--border);padding:14px 16px;gap:16px;grid-template-columns:repeat(4,1fr)}
-  .game-row.expanded .expand-panel{display:grid}
-  .expand-head{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)}
-  .expand-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:11px}
-  .expand-key{color:var(--muted2)}
-  .expand-val{font-family:'IBM Plex Mono',monospace;color:var(--text);font-size:11px}
-  .grade-pill{display:inline-block;padding:1px 7px;border-radius:2px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500}
-  .grade-a{background:var(--green-bg);color:var(--green);border:1px solid rgba(0,230,118,0.2)}
-  .grade-b{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(79,195,247,0.2)}
-  .grade-c{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(255,179,0,0.2)}
-  .grade-d{background:var(--red-bg);color:var(--red);border:1px solid rgba(255,76,76,0.2)}
-  .expand-bar-wrap{margin-top:6px;display:flex;flex-direction:column;gap:5px}
-  .expand-bar-row{display:flex;align-items:center;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:10px}
-  .expand-bar-label{color:var(--muted);width:28px}
-  .expand-bar-track{flex:1;height:5px;background:var(--surface3);border-radius:2px;overflow:hidden}
-  .expand-bar-fill-a{height:100%;background:var(--green)}
-  .expand-bar-fill-h{height:100%;background:var(--purple)}
-  .expand-bar-pct{color:var(--muted2);width:34px;text-align:right}
+  /* GRID */
+  #games-grid {
+    padding: 8px 16px 40px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    gap: 12px;
+  }
 
-  .no-games{text-align:center;padding:60px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:.08em}
+  /* CARD */
+  .game-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.15s, border-color 0.15s;
+    cursor: pointer;
+  }
+  .game-card:hover { transform: translateY(-2px); border-color: #2e4a6e; }
+
+  .card-header {
+    padding: 12px 14px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .matchup {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .matchup .at { color: var(--text3); font-weight: 400; margin: 0 4px; }
+  .matchup .winner { color: #60a5fa; }
+
+  .card-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+  }
+
+  .rating-badge {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  .rating-elite { background: rgba(245,158,11,0.15); color: var(--elite); border: 1px solid rgba(245,158,11,0.3); }
+  .rating-strong { background: rgba(96,165,250,0.15); color: var(--strong); border: 1px solid rgba(96,165,250,0.3); }
+  .rating-moderate { background: rgba(167,139,250,0.15); color: var(--moderate); border: 1px solid rgba(167,139,250,0.3); }
+  .rating-lean { background: rgba(148,163,184,0.1); color: var(--text3); border: 1px solid var(--border); }
+
+  .game-time {
+    font-size: 11px;
+    color: var(--text3);
+    font-weight: 500;
+  }
+
+  /* PITCHERS ROW */
+  .pitchers-row {
+    padding: 8px 14px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .pitcher-chip {
+    font-size: 11px;
+    padding: 3px 8px;
+    background: var(--surface2);
+    border-radius: 4px;
+    color: var(--text2);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .pitcher-chip .era {
+    color: var(--text3);
+    font-size: 10px;
+  }
+  .pitcher-chip .team-label {
+    color: var(--text3);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .pitcher-vs { color: var(--text3); font-size: 11px; }
+
+  /* STATS GRID */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+
+  .stat-panel {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .stat-panel:nth-child(1) { border-right: 1px solid var(--border); }
+
+  .stat-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 6px;
+  }
+
+  .stat-pick {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #60a5fa;
+    margin-bottom: 4px;
+    line-height: 1.1;
+  }
+
+  .stat-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .win-pct-bar {
+    flex: 1;
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+  }
+  .win-pct-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+  .win-pct-fill.high { background: var(--green); }
+  .win-pct-fill.low { background: var(--red); }
+
+  .stat-nums {
+    display: flex;
+    gap: 12px;
+    margin-top: 6px;
+  }
+  .stat-num {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+  }
+  .stat-num .val {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .stat-num .lbl {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--text3);
+    text-transform: uppercase;
+  }
+
+  .conf-badge {
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+  }
+  .conf-high { background: rgba(22,163,74,0.15); color: #4ade80; }
+  .conf-med  { background: rgba(234,179,8,0.15);  color: #fbbf24; }
+  .conf-low  { background: rgba(148,163,184,0.1); color: var(--text3); }
+
+  /* VENUE / WEATHER ROW */
+  .venue-row {
+    padding: 7px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .venue-text {
+    font-size: 11px;
+    color: var(--text3);
+    flex: 1;
+  }
+  .park-badge {
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    font-weight: 600;
+  }
+  .park-hitter { background: rgba(239,68,68,0.12); color: #f87171; }
+  .park-pitcher { background: rgba(34,197,94,0.12); color: #4ade80; }
+  .park-neutral { background: rgba(148,163,184,0.1); color: var(--text3); }
+
+  /* EMPTY STATE */
+  #empty-state {
+    display: none;
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--text3);
+  }
+  #empty-state.visible { display: block; }
+  #empty-state .emoji { font-size: 48px; margin-bottom: 16px; }
+  #empty-state h3 { font-size: 18px; color: var(--text2); margin-bottom: 8px; }
+
+  /* LOADING */
+  #loading {
+    display: none;
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text3);
+  }
+  #loading.visible { display: block; }
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 600px) {
+    #games-grid { grid-template-columns: 1fr; padding: 8px 10px 40px; }
+    .controls { padding: 10px 12px; }
+    .sort-group { margin-left: 0; }
+  }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <div class="logo"><div class="logo-dot"></div>MLB PREDICTION MODEL</div>
-  <div class="header-meta">2026 SEASON · BETTING MODELS / GOOGLE DRIVE</div>
-</div>
+<header>
+  <div class="logo">⚾ MLB <span>PREDICTIONS</span></div>
+  <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+  <button class="refresh-btn" onclick="loadData()">↻ REFRESH</button>
+</header>
 
 <div class="controls">
-  <div class="day-tabs">
-    <button class="day-tab active" onclick="switchDay('today',this)">Today May 30</button>
-    <button class="day-tab" onclick="switchDay('tomorrow',this)">Tomorrow May 31</button>
+  <div class="tab-group">
+    <button class="tab-btn active" id="tab-today" onclick="setDay('today')">Today</button>
+    <button class="tab-btn" id="tab-tomorrow" onclick="setDay('tomorrow')">Tomorrow</button>
   </div>
   <div class="filter-group">
-    <span class="filter-label">Rating</span>
-    <button class="filter-chip active" onclick="setFilter('all',this)">All</button>
-    <button class="filter-chip" onclick="setFilter('Elite',this)">⭐⭐⭐ Elite</button>
-    <button class="filter-chip" onclick="setFilter('Strong',this)">⭐⭐ Strong</button>
-    <button class="filter-chip" onclick="setFilter('Moderate',this)">⭐ Moderate</button>
+    <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+    <button class="filter-btn" onclick="setFilter('elite',this)">⭐⭐⭐ Elite</button>
+    <button class="filter-btn" onclick="setFilter('strong',this)">⭐⭐ Strong</button>
+    <button class="filter-btn" onclick="setFilter('moderate',this)">⭐ Moderate</button>
   </div>
-  <select class="sort-sel" onchange="setSort(this.value)">
-    <option value="time">Sort: Game time</option>
-    <option value="rating">Sort: Confidence</option>
-    <option value="total">Sort: FG total ↓</option>
-  </select>
-  <span class="count-label" id="count-label"></span>
+  <div class="sort-group">
+    <button class="sort-btn active" id="sort-time" onclick="setSort('time',this)">Time</button>
+    <button class="sort-btn" id="sort-conf" onclick="setSort('conf',this)">Confidence</button>
+    <button class="sort-btn" id="sort-total" onclick="setSort('total',this)">FG Total ↓</button>
+  </div>
 </div>
 
-<div class="summary-bar" id="summary-bar"></div>
+<div id="status-bar"></div>
+<div class="game-count" id="game-count"></div>
 
-<div class="col-headers">
-  <div class="col-head">Matchup</div>
-  <div class="col-head">Starting pitchers / weather</div>
-  <div class="col-head">First 5 (SP only)</div>
-  <div class="col-head">Full game</div>
-  <div class="col-head" style="text-align:center">Rating</div>
-</div>
-
-<div class="game-list" id="game-list"></div>
+<div id="loading" class="visible"><div class="spinner"></div>Loading from Google Sheets...</div>
+<div id="games-grid"></div>
+<div id="empty-state"><div class="emoji">🔍</div><h3>No games match this filter</h3><p>Try selecting a different rating or day</p></div>
 
 <script>
-const BULLPEN={
-  "Tampa Bay Rays":{grade:"C",era:"4.21",closer:"Bryan Baker"},
-  "New York Yankees":{grade:"B",era:"3.36",closer:"David Bednar"},
-  "Toronto Blue Jays":{grade:"B",era:"3.40",closer:"Louis Varland"},
-  "Baltimore Orioles":{grade:"D",era:"4.59",closer:"Rico Garcia"},
-  "Boston Red Sox":{grade:"C",era:"3.89",closer:"Aroldis Chapman"},
-  "Cleveland Guardians":{grade:"B",era:"3.51",closer:"Cade Smith"},
-  "Chicago White Sox":{grade:"C",era:"4.48",closer:"Seranthony Dominguez"},
-  "Minnesota Twins":{grade:"D",era:"4.81",closer:"Yoendrys Gomez"},
-  "Kansas City Royals":{grade:"D",era:"5.25",closer:"Lucas Erceg"},
-  "Detroit Tigers":{grade:"C",era:"4.18",closer:"Kenley Jansen"},
-  "Seattle Mariners":{grade:"A",era:"2.99",closer:"Jose A. Ferrer"},
-  "Athletics":{grade:"C",era:"4.30",closer:"Hogan Harris"},
-  "Texas Rangers":{grade:"B",era:"3.15",closer:"Jakob Junis"},
-  "Houston Astros":{grade:"D",era:"5.27",closer:"Bryan King"},
-  "Los Angeles Angels":{grade:"D",era:"5.51",closer:"Jordan Romano"},
-  "Atlanta Braves":{grade:"A",era:"2.96",closer:"Robert Suarez"},
-  "Philadelphia Phillies":{grade:"C",era:"3.80",closer:"Jhoan Duran"},
-  "Washington Nationals":{grade:"D",era:"4.79",closer:"Richard Lovelady"},
-  "Miami Marlins":{grade:"B",era:"3.46",closer:"Pete Fairbanks"},
-  "New York Mets":{grade:"B",era:"3.12",closer:"Devin Williams"},
-  "Milwaukee Brewers":{grade:"B",era:"3.14",closer:"Abner Uribe"},
-  "St. Louis Cardinals":{grade:"C",era:"4.26",closer:"Riley O'Brien"},
-  "Chicago Cubs":{grade:"B",era:"3.39",closer:"Daniel Palencia"},
-  "Cincinnati Reds":{grade:"D",era:"4.81",closer:"Emilio Pagan"},
-  "Pittsburgh Pirates":{grade:"C",era:"4.16",closer:"Gregory Soto"},
-  "Los Angeles Dodgers":{grade:"B",era:"3.03",closer:"Tanner Scott"},
-  "San Diego Padres":{grade:"B",era:"3.37",closer:"Mason Miller"},
-  "Arizona Diamondbacks":{grade:"C",era:"4.24",closer:"Paul Sewald"},
-  "San Francisco Giants":{grade:"B",era:"3.61",closer:"Caleb Kilian"},
-  "Colorado Rockies":{grade:"C",era:"4.47",closer:"Antonio Senzatela"},
-};
+const BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub";
 
-const RO={Elite:0,Strong:1,Moderate:2,Lean:3};
+// All known tab GIDs — we'll try them until we find game data
+// From the previous session we know the dashboard/main tab has predictions
+const GIDS_TO_TRY = [0, 141272668, 596859801, 1, 2, 3, 4, 5, 6, 7, 8];
 
-// ── Google Sheets CSV URLs ─────────────────────────────────────────────────
-// Confirmed by browser debug:
-//   gid=141272668 = Predictions tab: col0="Away @ Home", col1=Time,
-//     col2=Away SP(ERA), col3=Home SP(ERA), col4=Park, col5=WxAdj,
-//     col6=F5 Away Win%, col7=F5 Home Win%, col8=F5 Pick, col9=F5 Conf,
-//     col10=F5 Total, col12=FG Away Win%, col13=FG Home Win%, col14=FG Pick,
-//     col15=FG Conf, col16=FG Total, col18=Rating
-//     Section labels: "📅  TODAY..." and "📅  TOMORROW..." in col0
-//   gid=596859801 = Schedule tab: col0=Time, col1=Day(Today/Tmrw),
-//     col2=Away, col4=Home, col5=Venue, col6=Away SP, col7=Away ERA,
-//     col8=Away WHIP, col9=Home SP, col10=Home ERA, col11=Home WHIP
+let ALL_GAMES = [];   // all parsed games (today + tomorrow)
+let currentDay = 'today';
+let currentFilter = 'all';
+let currentSort = 'time';
 
-const PREDS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=141272668&single=true&output=csv';
-const SCHED_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=596859801&single=true&output=csv';
-
-// GAMES object — populated live from Google Sheets on load
-const GAMES={today:[],tomorrow:[]};
-
-// ── RFC 4180 CSV parser ─────────────────────────────────────────────────────
-function parseCSV(text){
-  const rows=[];
-  let row=[],field='',inQ=false;
-  for(let i=0;i<text.length;i++){
-    const ch=text[i],nx=text[i+1];
-    if(inQ){
-      if(ch==='"'&&nx==='"'){field+='"';i++;}
-      else if(ch==='"'){inQ=false;}
-      else{field+=ch;}
+// ── CSV PARSER (RFC 4180) ─────────────────────────────────────────────────
+function parseCSV(text) {
+  const rows = [];
+  let row = [], cell = '', inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQ) {
+      if (c === '"' && text[i+1] === '"') { cell += '"'; i++; }
+      else if (c === '"') inQ = false;
+      else cell += c;
     } else {
-      if(ch==='"'){inQ=true;}
-      else if(ch===','){row.push(field.trim());field='';}
-      else if((ch==='\r'&&nx==='\n')||(ch==='\r'||ch==='\n')){
-        if(ch==='\r'&&nx==='\n')i++;
-        row.push(field.trim());rows.push(row);row=[];field='';
-      } else {field+=ch;}
+      if (c === '"') inQ = true;
+      else if (c === ',') { row.push(cell.trim()); cell = ''; }
+      else if (c === '\n') { row.push(cell.trim()); if (row.some(x=>x)) rows.push(row); row=[]; cell=''; }
+      else if (c !== '\r') cell += c;
     }
   }
-  if(field.length||row.length){row.push(field.trim());rows.push(row);}
+  if (cell || row.length) { row.push(cell.trim()); if (row.some(x=>x)) rows.push(row); }
   return rows;
 }
 
-// ── Parse predictions tab into GAMES.today / GAMES.tomorrow ───────────────
-function parsePreds(rows){
-  GAMES.today=[];GAMES.tomorrow=[];
-  let section='today';
-  for(const r of rows){
-    const c0=(r[0]||'').trim();
-    // Section label rows contain TODAY or TOMORROW but NOT @
-    if(!c0.includes('@')){
-      const up=c0.replace(/[^A-Za-z]/g,'').toUpperCase();
-      if(up.includes('TOMORROW'))section='tomorrow';
-      else if(up.includes('TODAY'))section='today';
+// ── FETCH ONE GID ─────────────────────────────────────────────────────────
+function fetchGID(gid) {
+  const url = BASE_URL + "?gid=" + gid + "&single=true&output=csv";
+  return fetch(url).then(r => r.text()).then(t => parseCSV(t));
+}
+
+// ── DETECT IF A ROW IS A GAME ROW ─────────────────────────────────────────
+// Game rows have a matchup like "Team A  @  Team B" in some column
+// and a day marker like "Today" or "Tmrw" or "Tomorrow"
+function isGameRow(row) {
+  return row.some(cell => / @ /.test(cell) || /\bvs\b/i.test(cell));
+}
+
+// ── PARSE ROW INTO GAME OBJECT ─────────────────────────────────────────────
+function parseGameRow(row, dayLabel) {
+  // Find the matchup cell
+  let matchupIdx = row.findIndex(c => / @ /.test(c) || /\bvs\b/i.test(c));
+  if (matchupIdx < 0) return null;
+
+  const matchupRaw = row[matchupIdx];
+  // "Toronto Blue Jays  @  Baltimore Orioles"
+  const parts = matchupRaw.split(/@|vs/i).map(s => s.trim()).filter(Boolean);
+  if (parts.length < 2) return null;
+
+  const away = parts[0].trim();
+  const home = parts[1].trim();
+
+  // Time is usually in one of the adjacent cells
+  const timeIdx = matchupIdx - 1 >= 0 ? matchupIdx - 1 : matchupIdx + 1;
+  const time = row[timeIdx] || '';
+
+  // Remaining cells after matchup
+  const rest = row.slice(matchupIdx + 1);
+
+  // Find away SP and home SP — formatted as "Name  (ERA)" or "Name (ERA)"
+  const spPattern = /^(.+?)\s*\(([\d.—–-]+)\)$/;
+  let awaySP = '', awaySPERA = '', homeSP = '', homeSPERA = '';
+  let spFound = 0;
+  for (let i = 0; i < rest.length && spFound < 2; i++) {
+    const m = rest[i].match(spPattern);
+    if (m) {
+      if (spFound === 0) { awaySP = m[1].trim(); awaySPERA = m[2]; }
+      else               { homeSP = m[1].trim(); homeSPERA = m[2]; }
+      spFound++;
+    }
+  }
+
+  // Park factor — first float-ish value after SPs
+  let parkFactor = '', wxAdj = '';
+  let numCells = rest.filter(c => /^[01]?\.\d+$/.test(c));
+  if (numCells.length > 0) parkFactor = numCells[0];
+
+  // Win percentages — look for cells with % sign or decimal win prob
+  const pctCells = rest.filter(c => /%/.test(c) || /^0\.\d+$/.test(c));
+
+  // F5 data — look for pattern: awayWin%, homeWin%, pick, conf, total, ou
+  // FG data similarly
+  let awayF5Win='', homeF5Win='', f5Pick='', f5Conf='', f5Total='', f5OU='';
+  let awayFGWin='', homeFGWin='', fgPick='', fgConf='', fgTotal='', fgOU='';
+  let rating = '';
+
+  // Scan rest for key patterns
+  const confPattern = /High|Med|Low/i;
+  const pickTeam = /^[A-Z][A-Za-z ]+$/;
+  let confCells = [];
+  let winPctCells = [];
+  let totalCells = [];
+  let pickCells = [];
+
+  for (let i = 0; i < rest.length; i++) {
+    const c = rest[i];
+    if (/⭐|Elite|Strong|Moderate|Lean/i.test(c)) { rating = c; continue; }
+    if (/High|Med|Low/i.test(c) && /🟢|🟡|🔴|High|Med|Low/.test(c)) { confCells.push({v:c,i}); continue; }
+    if (/\d+\.\d+%/.test(c)) { winPctCells.push({v:c,i}); continue; }
+    if (/^\d+\.\d$/.test(c) || /^\d+$/.test(c) && parseInt(c) > 3 && parseInt(c) < 30) { 
+      totalCells.push({v:c,i}); continue; 
+    }
+  }
+
+  // Assign win%s — expect 4 of them (awayF5, homeF5, awayFG, homeFG)
+  if (winPctCells.length >= 4) {
+    awayF5Win = winPctCells[0].v;
+    homeF5Win = winPctCells[1].v;
+    awayFGWin = winPctCells[2].v;
+    homeFGWin = winPctCells[3].v;
+  } else if (winPctCells.length >= 2) {
+    awayFGWin = winPctCells[0].v;
+    homeFGWin = winPctCells[1].v;
+  }
+
+  // Conf cells — expect 2 (F5 conf, FG conf)
+  if (confCells.length >= 2) {
+    f5Conf = confCells[0].v;
+    fgConf = confCells[1].v;
+  } else if (confCells.length === 1) {
+    fgConf = confCells[0].v;
+  }
+
+  // Totals — expect 2 (F5, FG)
+  if (totalCells.length >= 2) {
+    f5Total = totalCells[0].v;
+    fgTotal = totalCells[1].v;
+  } else if (totalCells.length === 1) {
+    fgTotal = totalCells[0].v;
+  }
+
+  // Determine pick from win%
+  if (awayFGWin && homeFGWin) {
+    const a = parseFloat(awayFGWin);
+    const h = parseFloat(homeFGWin);
+    fgPick = a > h ? away : home;
+  }
+  if (awayF5Win && homeF5Win) {
+    const a = parseFloat(awayF5Win);
+    const h = parseFloat(homeF5Win);
+    f5Pick = a > h ? away : home;
+  }
+
+  // Also try to find picks from explicit pick cells
+  for (const c of rest) {
+    if ([away, home].some(t => c.includes(t.split(' ')[0]) || t.includes(c.split(' ')[0]))) {
+      if (!fgPick) fgPick = c;
+    }
+  }
+
+  return {
+    day: dayLabel,
+    time, away, home,
+    awaySP, awaySPERA, homeSP, homeSPERA,
+    parkFactor, wxAdj,
+    awayF5Win, homeF5Win, f5Pick, f5Conf, f5Total, f5OU,
+    awayFGWin, homeFGWin, fgPick, fgConf, fgTotal, fgOU,
+    rating: rating || ''
+  };
+}
+
+// ── SMARTER STRUCTURED PARSE ───────────────────────────────────────────────
+// Your sheet has a well-defined header row for the predictions section.
+// Columns (from reading the sheet):
+// Matchup | Time | Away SP (ERA) | Home SP (ERA) | Park | Wx | 
+// AwayF5% | HomeF5% | F5Pick | F5Conf | F5Total | F5O/U |
+// AwayFG% | HomeFG% | FGPick | FGConf | FGTotal | FGO/U | Rating
+
+function parseStructured(rows) {
+  const games = [];
+  let headerIdx = -1;
+  let cols = {};
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const joined = row.join('|').toLowerCase();
+
+    // Detect the header row for the main predictions table
+    if (joined.includes('matchup') && joined.includes('away') && joined.includes('rating')) {
+      headerIdx = i;
+      // Map column names to indices
+      row.forEach((cell, idx) => {
+        const c = cell.toLowerCase().trim();
+        if (c.includes('matchup')) cols.matchup = idx;
+        else if (c.includes('time')) cols.time = idx;
+        else if (c === 'away sp' || (c.includes('away') && c.includes('sp'))) cols.awaySP = idx;
+        else if (c === 'home sp' || (c.includes('home') && c.includes('sp'))) cols.homeSP = idx;
+        else if (c.includes('park')) cols.park = idx;
+        else if (c.includes('wx') || c.includes('weather')) cols.wx = idx;
+        else if (c.includes('away win') || (c.includes('away') && c.includes('%') && !cols.awayF5Win)) cols.awayF5Win = idx;
+        else if (c.includes('home win') || (c.includes('home') && c.includes('%') && !cols.homeF5Win)) cols.homeF5Win = idx;
+        else if (c.includes('f5 pick') || c.includes('f5pick')) cols.f5Pick = idx;
+        else if (c.includes('f5 conf') || c.includes('f5conf')) cols.f5Conf = idx;
+        else if (c.includes('f5 total') || c.includes('f5total')) cols.f5Total = idx;
+        else if (c.includes('f5') && c.includes('o/u')) cols.f5OU = idx;
+        else if (c.includes('fg pick') || c.includes('fgpick')) cols.fgPick = idx;
+        else if (c.includes('fg conf') || c.includes('fgconf')) cols.fgConf = idx;
+        else if (c.includes('fg total') || c.includes('fgtotal') || c.includes('proj total') || c.includes('fg total')) cols.fgTotal = idx;
+        else if (c.includes('fg') && c.includes('o/u')) cols.fgOU = idx;
+        else if (c.includes('rating') || c.includes('⭐')) cols.rating = idx;
+      });
       continue;
     }
-    // Game row must have time in col1
-    const t=(r[1]||'').trim();
-    if(!t.match(/\d+:\d+/))continue;
-    const parts=c0.split('@');
-    if(parts.length<2)continue;
-    const away=parts[0].trim(),home=parts[1].trim();
-    if(!away||!home)continue;
 
-    // Parse SP name and ERA from "Name  (ERA)" format
-    function spParse(s){
-      if(!s)return{name:'TBD',era:null,whip:null};
-      const m=s.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
-      if(m){const era=m[2].trim()==='—'?null:m[2].trim();return{name:m[1].trim(),era,whip:null};}
-      return{name:s.trim(),era:null,whip:null};
-    }
-    const asp=spParse(r[2]),hsp=spParse(r[3]);
+    if (headerIdx < 0) continue;
 
-    function pct(s){return parseFloat((s||'').replace(/[^0-9.\-]/g,''))||0;}
-    function num(s){return parseFloat((s||'').replace(/[^0-9.\-]/g,''))||0;}
-    function conf(s){
-      const u=(s||'').toUpperCase();
-      if(u.includes('HIGH'))return'High';
-      if(u.includes('MED'))return'Med';
-      return'Low';
-    }
-    function rating(s){
-      const u=(s||'').toUpperCase();
-      if(u.includes('ELITE'))return'Elite';
-      if(u.includes('STRONG'))return'Strong';
-      if(u.includes('MODERATE'))return'Moderate';
-      return'Lean';
+    const row0 = (row[0] || '').trim();
+    const dayMatch = /today|tmrw|tomorrow/i.test(row0) || /📅/.test(row0);
+    if (dayMatch) continue; // section header rows
+
+    // Find matchup in the row
+    let matchupCell = cols.matchup !== undefined ? row[cols.matchup] : 
+                      row.find(c => / @ /i.test(c));
+
+    if (!matchupCell || !/ @ /i.test(matchupCell)) continue;
+
+    const parts = matchupCell.split('@').map(s => s.trim());
+    if (parts.length < 2) continue;
+
+    const away = parts[0].trim();
+    const home = parts[1].trim();
+    if (!away || !home) continue;
+
+    // Day: scan earlier rows for "Today" or "Tomorrow" section header
+    let dayLabel = 'today';
+    for (let j = i - 1; j >= Math.max(0, i - 20); j--) {
+      const r0 = (rows[j][0] || '').trim();
+      if (/today/i.test(r0) || /📅.*today/i.test(rows[j].join(''))) { dayLabel = 'today'; break; }
+      if (/tmrw|tomorrow/i.test(r0) || /📅.*tmrw/i.test(rows[j].join(''))) { dayLabel = 'tomorrow'; break; }
     }
 
-    const f5aw=pct(r[6]),f5hw=pct(r[7]);
-    const fgaw=pct(r[12]),fghw=pct(r[13]);
-    const f5Pick=(r[8]||'').trim(),fgPick=(r[14]||'').trim();
+    // Extract SP info — formatted "Name (ERA)"
+    const spPattern = /^(.+?)\s*\(([\d.]+|—)\)/;
+    let awaySP='', awaySPERA='', homeSP='', homeSPERA='';
+    const awaySpCell = cols.awaySP !== undefined ? row[cols.awaySP] : '';
+    const homeSpCell = cols.homeSP !== undefined ? row[cols.homeSP] : '';
+    const awayM = awaySpCell.match(spPattern);
+    const homeM = homeSpCell.match(spPattern);
+    if (awayM) { awaySP = awayM[1].trim(); awaySPERA = awayM[2]; }
+    else awaySP = awaySpCell.replace(/\(.*\)/,'').trim();
+    if (homeM) { homeSP = homeM[1].trim(); homeSPERA = homeM[2]; }
+    else homeSP = homeSpCell.replace(/\(.*\)/,'').trim();
 
-    const g={
-      time:t, away, home, venue:'',
-      awaySP:asp.name, awayERA:asp.era, awayWHIP:null,
-      homeSP:hsp.name, homeERA:hsp.era, homeWHIP:null,
-      park:num(r[4]),
-      wxAdj:(r[5]||'+0%').trim(),
-      f5aw, f5hw,
-      f5p: f5Pick.toLowerCase().includes(away.toLowerCase().split(' ').pop())?'away':'home',
-      f5Pick, f5c:conf(r[9]), f5t:num(r[10]),
-      fgaw, fghw,
-      fgp: fgPick.toLowerCase().includes(away.toLowerCase().split(' ').pop())?'away':'home',
-      fgPick, fgc:conf(r[15]), fgt:num(r[16]),
-      rating:rating(r[18]),
-      h2h:'—',
-    };
-    GAMES[section].push(g);
+    const get = (key) => cols[key] !== undefined ? (row[cols[key]] || '') : '';
+
+    games.push({
+      day: dayLabel,
+      time: get('time'),
+      away, home,
+      awaySP, awaySPERA, homeSP, homeSPERA,
+      parkFactor: get('park'),
+      wxAdj: get('wx'),
+      awayF5Win: get('awayF5Win'),
+      homeF5Win: get('homeF5Win'),
+      f5Pick: get('f5Pick'),
+      f5Conf: get('f5Conf'),
+      f5Total: get('f5Total'),
+      f5OU: get('f5OU'),
+      awayFGWin: get('awayFG') || get('awayFGWin'),
+      homeFGWin: get('homeFG') || get('homeFGWin'),
+      fgPick: get('fgPick'),
+      fgConf: get('fgConf'),
+      fgTotal: get('fgTotal'),
+      fgOU: get('fgOU'),
+      rating: get('rating')
+    });
   }
+  return games;
 }
 
-// ── Parse schedule tab and inject WHIP + venue ─────────────────────────────
-function parseSchedWHIP(rows){
-  const map={};
-  for(const r of rows){
-    if(r.length<12)continue;
-    const d=(r[1]||'').toLowerCase();
-    if(!d.includes('today')&&!d.includes('tmrw')&&!d.includes('tomorrow'))continue;
-    if(!(r[0]||'').match(/\d+:\d+/))continue;
-    const away=(r[2]||'').trim(),home=(r[4]||'').trim();
-    if(!away||!home)continue;
-    const aw=(r[8]||'').trim(),hw=(r[11]||'').trim();
-    map[away+'|'+home]={
-      awayWHIP:aw===''||aw==='—'?null:aw,
-      homeWHIP:hw===''||hw==='—'?null:hw,
-      venue:(r[5]||'').trim(),
-    };
+// ── FALLBACK: FLAT ROW PARSE ───────────────────────────────────────────────
+function parseFlatRows(rows) {
+  const games = [];
+  let currentDay = 'today';
+
+  for (const row of rows) {
+    const flat = row.join('|');
+
+    // Section day markers
+    if (/today/i.test(flat) && !/ @ /i.test(flat)) { currentDay = 'today'; continue; }
+    if (/tmrw|tomorrow/i.test(flat) && !/ @ /i.test(flat)) { currentDay = 'tomorrow'; continue; }
+
+    // Must contain @ to be a game row
+    if (!/ @ /i.test(flat)) continue;
+
+    const g = parseGameRow(row, currentDay);
+    if (g && g.away && g.home) games.push(g);
   }
-  // Inject into GAMES
-  for(const section of['today','tomorrow']){
-    for(const g of GAMES[section]){
-      const w=map[g.away+'|'+g.home];
-      if(w){
-        if(w.awayWHIP)g.awayWHIP=w.awayWHIP;
-        if(w.homeWHIP)g.homeWHIP=w.homeWHIP;
-        if(w.venue)g.venue=w.venue;
+  return games;
+}
+
+// ── MAIN LOAD ──────────────────────────────────────────────────────────────
+async function loadData() {
+  setStatus('Loading from Google Sheets...', false);
+  document.getElementById('loading').classList.add('visible');
+  document.getElementById('games-grid').innerHTML = '';
+  document.getElementById('empty-state').classList.remove('visible');
+  ALL_GAMES = [];
+
+  let bestGames = [];
+  let triedGIDs = [];
+
+  // Try each GID, pick the one that gives most games
+  for (const gid of GIDS_TO_TRY) {
+    try {
+      setStatus(`Trying sheet tab ${gid}...`, false);
+      const rows = await fetchGID(gid);
+      triedGIDs.push(gid);
+
+      let games = parseStructured(rows);
+      if (games.length === 0) games = parseFlatRows(rows);
+
+      if (games.length > bestGames.length) {
+        bestGames = games;
       }
+
+      // If we found good data, stop early (try a couple more to be sure)
+      if (bestGames.length >= 5 && triedGIDs.length >= 3) break;
+
+    } catch(e) {
+      console.warn('GID', gid, 'failed:', e.message);
     }
   }
-}
 
-// ── Load data then render ──────────────────────────────────────────────────
-async function loadSheets(){
-  try{
-    const [pr,sr]=await Promise.all([fetch(PREDS_URL),fetch(SCHED_URL)]);
-    const [pt,st]=await Promise.all([pr.text(),sr.text()]);
-    parsePreds(parseCSV(pt));
-    parseSchedWHIP(parseCSV(st));
-    document.getElementById('tab-today').textContent=
-      'Today May 31'+(GAMES.today.length?' ('+GAMES.today.length+')':'');
-    document.getElementById('tab-tomorrow').textContent=
-      'Tomorrow Jun 1'+(GAMES.tomorrow.length?' ('+GAMES.tomorrow.length+')':'');
-  }catch(e){
-    console.error('Sheet load failed:',e);
+  ALL_GAMES = bestGames;
+  document.getElementById('loading').classList.remove('visible');
+
+  if (ALL_GAMES.length === 0) {
+    setStatus('⚠️ Could not load game data. Check that your sheet is published to the web.', true);
+  } else {
+    const today = ALL_GAMES.filter(g => g.day === 'today').length;
+    const tmrw  = ALL_GAMES.filter(g => g.day === 'tomorrow').length;
+    setStatus('', false);
+    document.getElementById('tab-today').textContent =
+      `Today${today ? ' (' + today + ')' : ''}`;
+    document.getElementById('tab-tomorrow').textContent =
+      `Tomorrow${tmrw ? ' (' + tmrw + ')' : ''}`;
   }
+
   render();
 }
 
+// ── STATUS ─────────────────────────────────────────────────────────────────
+function setStatus(msg, isError) {
+  const el = document.getElementById('status-bar');
+  if (msg) {
+    el.textContent = msg;
+    el.className = 'visible' + (isError ? ' error' : '');
+  } else {
+    el.className = '';
+  }
+}
 
-let day='today', filt='all', sort='time';
+// ── RENDER ─────────────────────────────────────────────────────────────────
+function ratingKey(r) {
+  if (/elite|⭐⭐⭐/.test(r)) return 'elite';
+  if (/strong|⭐⭐/.test(r)) return 'strong';
+  if (/moderate|⭐/.test(r)) return 'moderate';
+  return 'lean';
+}
 
-function buildRow(g){
-  const f5n=g.f5p==='away'?g.away:g.home, fgn=g.fgp==='away'?g.away:g.home;
-  const abp=BULLPEN[g.away]||{grade:'?',era:'?',closer:'?'}, hbp=BULLPEN[g.home]||{grade:'?',era:'?',closer:'?'};
-  const rl=g.rating.toLowerCase();
-  const row=document.createElement('div');
-  row.className='game-row'; row.setAttribute('data-rating',g.rating);
-  row.innerHTML=`
-    <div class="cell">
-      <div class="matchup-time">${g.time}</div>
-      <div class="matchup-teams">${g.away} <span style="color:var(--muted);font-size:11px;font-weight:400"> @ </span>${g.home}</div>
-      <div class="matchup-venue">${g.venue}</div>
-    </div>
-    <div class="cell">
-      <div class="pitcher-line">
-        <span class="pitcher-side">AWY</span>
-        <span class="pitcher-name">${g.awaySP}</span>
-        ${pstat(g.awayERA,g.awayWHIP)}
-      </div>
-      <div class="pitcher-line" style="margin-top:2px">
-        <span class="pitcher-side">HME</span>
-        <span class="pitcher-name">${g.homeSP}</span>
-        ${pstat(g.homeERA,g.homeWHIP)}
-      </div>
-      <div style="margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap">
-        <span>${g.wx}</span>${g.wind!=='—'?`<span>${g.wind}</span>`:''}${g.wxAdj!=='+0%'?`<span style="color:var(--green)">${g.wxAdj} run adj</span>`:''}
-      </div>
-    </div>
-    <div class="cell">
-      <div class="pred-header">F5 pick</div>
-      <div class="pred-pick ${g.f5p}">${sn(f5n)}</div>
-      <div class="pred-totals">
-        <span style="color:var(--green)">${g.f5a}</span><span style="color:var(--muted)">—</span><span style="color:var(--purple)">${g.f5h}</span>
-        <span style="color:var(--muted);margin-left:4px">tot</span><span class="tv">${g.f5t}</span>
-      </div>
-      <div class="win-mini"><div class="wma" style="width:${g.f5aw}%"></div><div class="wmh" style="width:${g.f5hw}%"></div></div>
-      <div class="win-pcts">${g.f5aw}% · ${g.f5hw}% · ${g.f5c} conf</div>
-    </div>
-    <div class="cell">
-      <div class="pred-header">Full game pick</div>
-      <div class="pred-pick ${g.fgp}">${sn(fgn)}</div>
-      <div class="pred-totals">
-        <span style="color:var(--green)">${g.fga}</span><span style="color:var(--muted)">—</span><span style="color:var(--purple)">${g.fgh}</span>
-        <span style="color:var(--muted);margin-left:4px">tot</span><span class="tv">${g.fgt}</span>
-      </div>
-      <div class="win-mini"><div class="wma" style="width:${g.fgaw}%"></div><div class="wmh" style="width:${g.fghw}%"></div></div>
-      <div class="win-pcts">${g.fgaw}% · ${g.fghw}% · ${g.fgc} conf</div>
-    </div>
-    <div class="cell rating-cell">
-      <div class="rating-stars">${g.rating==='Elite'?'★★★':g.rating==='Strong'?'★★':g.rating==='Moderate'?'★':'·'}</div>
-      <div class="rating-label ${rl}">${g.rating.toUpperCase()}</div>
-      <div class="conf-indicator">${pips(g.fgc)}</div>
-    </div>
-    <div class="expand-panel">
+function confClass(c) {
+  if (/high/i.test(c)) return 'conf-high';
+  if (/med/i.test(c)) return 'conf-med';
+  return 'conf-low';
+}
+
+function parkClass(pf) {
+  const v = parseFloat(pf);
+  if (!v) return 'park-neutral';
+  if (v > 1.03) return 'park-hitter';
+  if (v < 0.97) return 'park-pitcher';
+  return 'park-neutral';
+}
+
+function parkLabel(pf) {
+  const v = parseFloat(pf);
+  if (!v) return 'Neutral Park';
+  if (v > 1.15) return 'Extreme Hitter (' + pf + ')';
+  if (v > 1.05) return 'Hitter Friendly (' + pf + ')';
+  if (v < 0.93) return 'Pitcher Friendly (' + pf + ')';
+  return 'Neutral Park (' + pf + ')';
+}
+
+function winBar(pct, teamName, fgPick) {
+  const v = parseFloat(pct);
+  if (!v) return '';
+  const cls = v >= 55 ? 'high' : v <= 45 ? 'low' : '';
+  const isFav = teamName === fgPick;
+  return `<div class="stat-row">
+    <span style="font-size:10px;color:var(--text3);width:36px">${pct}</span>
+    <div class="win-pct-bar"><div class="win-pct-fill ${cls}" style="width:${Math.min(v,100)}%"></div></div>
+    ${isFav ? '<span style="font-size:10px;color:var(--green)">★</span>' : ''}
+  </div>`;
+}
+
+function ratingBadge(r) {
+  const k = ratingKey(r);
+  const labels = {elite:'⭐⭐⭐ Elite', strong:'⭐⭐ Strong', moderate:'⭐ Moderate', lean:'📊 Lean'};
+  return `<span class="rating-badge rating-${k}">${labels[k]}</span>`;
+}
+
+function gameCard(g) {
+  const fgFav = parseFloat(g.awayFGWin) > parseFloat(g.homeFGWin) ? g.away : g.home;
+  const awayIsWinner = fgFav === g.away;
+
+  const awaySpStr = g.awaySP ? `${g.awaySP}${g.awaySPERA ? ' <span class="era">('+g.awaySPERA+')</span>' : ''}` : 'TBD';
+  const homeSpStr = g.homeSP ? `${g.homeSP}${g.homeSPERA ? ' <span class="era">('+g.homeSPERA+')</span>' : ''}` : 'TBD';
+
+  const awayWinClass = awayIsWinner ? ' winner' : '';
+  const homeWinClass = !awayIsWinner ? ' winner' : '';
+
+  return `<div class="game-card" data-day="${g.day}" data-rating="${ratingKey(g.rating)}">
+    <div class="card-header">
       <div>
-        <div class="expand-head">F5 breakdown</div>
-        <div class="expand-row"><span class="expand-key">Away win%</span><span class="expand-val" style="color:var(--green)">${g.f5aw}%</span></div>
-        <div class="expand-row"><span class="expand-key">Home win%</span><span class="expand-val" style="color:var(--purple)">${g.f5hw}%</span></div>
-        <div class="expand-row"><span class="expand-key">F5 total</span><span class="expand-val">${g.f5t}</span></div>
-        <div class="expand-row"><span class="expand-key">Confidence</span><span class="expand-val">${g.f5c}</span></div>
-        <div class="expand-bar-wrap">
-          <div class="expand-bar-row"><span class="expand-bar-label">AWY</span><div class="expand-bar-track"><div class="expand-bar-fill-a" style="width:${g.f5aw}%"></div></div><span class="expand-bar-pct">${g.f5aw}%</span></div>
-          <div class="expand-bar-row"><span class="expand-bar-label">HME</span><div class="expand-bar-track"><div class="expand-bar-fill-h" style="width:${g.f5hw}%"></div></div><span class="expand-bar-pct">${g.f5hw}%</span></div>
+        <div class="matchup">
+          <span class="${awayWinClass}">${g.away}</span>
+          <span class="at">@</span>
+          <span class="${homeWinClass}">${g.home}</span>
         </div>
       </div>
-      <div>
-        <div class="expand-head">Full game breakdown</div>
-        <div class="expand-row"><span class="expand-key">Away win%</span><span class="expand-val" style="color:var(--green)">${g.fgaw}%</span></div>
-        <div class="expand-row"><span class="expand-key">Home win%</span><span class="expand-val" style="color:var(--purple)">${g.fghw}%</span></div>
-        <div class="expand-row"><span class="expand-key">FG total</span><span class="expand-val">${g.fgt}</span></div>
-        <div class="expand-row"><span class="expand-key">Confidence</span><span class="expand-val">${g.fgc}</span></div>
-        <div class="expand-row"><span class="expand-key">Park factor</span><span class="expand-val">${g.park}${g.park>=1.1?' 🔥':g.park<=0.92?' ❄️':''}</span></div>
-        <div class="expand-row"><span class="expand-key">Season H2H</span><span class="expand-val">${g.h2h}</span></div>
-        <div class="expand-bar-wrap" style="margin-top:8px">
-          <div class="expand-bar-row"><span class="expand-bar-label">AWY</span><div class="expand-bar-track"><div class="expand-bar-fill-a" style="width:${g.fgaw}%"></div></div><span class="expand-bar-pct">${g.fgaw}%</span></div>
-          <div class="expand-bar-row"><span class="expand-bar-label">HME</span><div class="expand-bar-track"><div class="expand-bar-fill-h" style="width:${g.fghw}%"></div></div><span class="expand-bar-pct">${g.fghw}%</span></div>
-        </div>
-      </div>
-      <div>
-        <div class="expand-head">Bullpens</div>
-        <div class="expand-row"><span class="expand-key">${sn(g.away)} bp</span><span class="grade-pill ${gc(abp.grade)}">${abp.grade}</span></div>
-        <div style="font-size:10px;color:var(--muted);margin-bottom:8px">${abp.closer} · ERA ${abp.era}</div>
-        <div class="expand-row"><span class="expand-key">${sn(g.home)} bp</span><span class="grade-pill ${gc(hbp.grade)}">${hbp.grade}</span></div>
-        <div style="font-size:10px;color:var(--muted)">${hbp.closer} · ERA ${hbp.era}</div>
-      </div>
-      <div>
-        <div class="expand-head">Pitcher detail</div>
-        <div class="expand-row"><span class="expand-key">Away ERA</span><span class="expand-val">${g.awayERA||'—'}</span></div>
-        <div class="expand-row"><span class="expand-key">Away WHIP</span><span class="expand-val">${g.awayWHIP||'—'}</span></div>
-        <div class="expand-row" style="margin-top:4px"><span class="expand-key">Home ERA</span><span class="expand-val">${g.homeERA||'—'}</span></div>
-        <div class="expand-row"><span class="expand-key">Home WHIP</span><span class="expand-val">${g.homeWHIP||'—'}</span></div>
-        <div class="expand-row" style="margin-top:8px"><span class="expand-key">Weather</span><span class="expand-val">${g.wx}</span></div>
-        <div class="expand-row"><span class="expand-key">Wind</span><span class="expand-val">${g.wind}</span></div>
-        <div class="expand-row"><span class="expand-key">Rain</span><span class="expand-val">${g.rain}</span></div>
-        <div class="expand-row"><span class="expand-key">Run adj</span><span class="expand-val" style="${g.wxAdj!=='+0%'?'color:var(--green)':''}">${g.wxAdj}</span></div>
+      <div class="card-meta">
+        ${ratingBadge(g.rating)}
+        <span class="game-time">${g.time}</span>
       </div>
     </div>
-    <span class="chevron">▼</span>
-  `;
-  row.addEventListener('click',()=>{
-    const p=row.querySelector('.expand-panel'), open=row.classList.toggle('expanded');
-    p.style.display=open?'grid':'none';
-  });
-  return row;
+
+    <div class="pitchers-row">
+      <div class="pitcher-chip">
+        <span class="team-label">Away SP</span>
+        ${awaySpStr}
+      </div>
+      <span class="pitcher-vs">vs</span>
+      <div class="pitcher-chip">
+        <span class="team-label">Home SP</span>
+        ${homeSpStr}
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-panel">
+        <div class="stat-label">⚡ First 5 (SP Only)</div>
+        ${g.f5Pick ? `<div class="stat-pick">${g.f5Pick}</div>` : ''}
+        <div class="stat-nums">
+          ${g.f5Total ? `<div class="stat-num"><span class="val">${g.f5Total}</span><span class="lbl">F5 Total</span></div>` : ''}
+          ${g.f5Conf ? `<div class="stat-num"><span class="conf-badge ${confClass(g.f5Conf)}">${g.f5Conf.replace(/[🟢🟡🔴]/g,'').trim()}</span><span class="lbl">Conf</span></div>` : ''}
+        </div>
+        ${winBar(g.awayF5Win, g.away, g.f5Pick)}
+        ${winBar(g.homeF5Win, g.home, g.f5Pick)}
+      </div>
+      <div class="stat-panel">
+        <div class="stat-label">🏆 Full Game</div>
+        ${g.fgPick ? `<div class="stat-pick">${g.fgPick}</div>` : ''}
+        <div class="stat-nums">
+          ${g.fgTotal ? `<div class="stat-num"><span class="val">${g.fgTotal}</span><span class="lbl">FG Total</span></div>` : ''}
+          ${g.fgConf ? `<div class="stat-num"><span class="conf-badge ${confClass(g.fgConf)}">${g.fgConf.replace(/[🟢🟡🔴]/g,'').trim()}</span><span class="lbl">Conf</span></div>` : ''}
+        </div>
+        ${winBar(g.awayFGWin, g.away, g.fgPick)}
+        ${winBar(g.homeFGWin, g.home, g.fgPick)}
+      </div>
+    </div>
+
+    ${g.parkFactor ? `<div class="venue-row">
+      <span class="venue-text">🏟️ Park Factor</span>
+      <span class="park-badge ${parkClass(g.parkFactor)}">${parkLabel(g.parkFactor)}</span>
+      ${g.wxAdj && g.wxAdj !== '+0%' ? `<span style="font-size:10px;color:var(--text3)">${g.wxAdj}</span>` : ''}
+    </div>` : ''}
+  </div>`;
 }
 
-function updateSummary(games){
-  const elite=games.filter(g=>g.rating==='Elite').length;
-  const strong=games.filter(g=>g.rating==='Strong').length;
-  const hc=games.filter(g=>g.fgc==='High').length;
-  const avg=(games.reduce((s,g)=>s+g.fgt,0)/games.length).toFixed(1);
-  document.getElementById('summary-bar').innerHTML=`
-    <div class="sum-item"><div class="sdot" style="background:var(--green)"></div><span class="sum-label">Elite plays</span><span class="sum-val">${elite}</span></div>
-    <div class="sum-item"><div class="sdot" style="background:var(--blue)"></div><span class="sum-label">Strong plays</span><span class="sum-val">${strong}</span></div>
-    <div class="sum-item"><div class="sdot" style="background:var(--amber)"></div><span class="sum-label">High conf FG</span><span class="sum-val">${hc}</span></div>
-    <div class="sum-item"><div class="sdot" style="background:var(--muted)"></div><span class="sum-label">Avg FG total</span><span class="sum-val">${avg}</span></div>
-    <div class="sum-meta">Click any row to expand · Source: MLB Prediction Model / Google Drive</div>
-  `;
+function render() {
+  let games = ALL_GAMES.filter(g => g.day === currentDay);
+
+  if (currentFilter !== 'all') {
+    games = games.filter(g => ratingKey(g.rating) === currentFilter);
+  }
+
+  if (currentSort === 'conf') {
+    const rank = {elite:0, strong:1, moderate:2, lean:3};
+    games.sort((a,b) => (rank[ratingKey(a.rating)]||3) - (rank[ratingKey(b.rating)]||3));
+  } else if (currentSort === 'total') {
+    games.sort((a,b) => (parseFloat(b.fgTotal)||0) - (parseFloat(a.fgTotal)||0));
+  }
+  // default: keep original order (time order from sheet)
+
+  const grid = document.getElementById('games-grid');
+  const empty = document.getElementById('empty-state');
+  const count = document.getElementById('game-count');
+
+  if (games.length === 0) {
+    grid.innerHTML = '';
+    empty.classList.add('visible');
+    count.textContent = '';
+  } else {
+    empty.classList.remove('visible');
+    grid.innerHTML = games.map(gameCard).join('');
+    count.textContent = `${games.length} game${games.length !== 1 ? 's' : ''}`;
+  }
 }
 
-function render(){
-  let games=[...GAMES[day]];
-  if(filt!=='all') games=games.filter(g=>g.rating===filt);
-  if(sort==='rating') games.sort((a,b)=>RO[a.rating]-RO[b.rating]);
-  else if(sort==='total') games.sort((a,b)=>b.fgt-a.fgt);
-  const list=document.getElementById('game-list');
-  list.innerHTML='';
-  document.getElementById('count-label').textContent=games.length+' game'+(games.length!==1?'s':'');
-  if(!games.length){list.innerHTML='<div class="no-games">NO GAMES MATCH THIS FILTER</div>';return}
-  games.forEach(g=>list.appendChild(buildRow(g)));
-  updateSummary(games);
+function setDay(day) {
+  currentDay = day;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + day).classList.add('active');
+  render();
 }
 
-function switchDay(d,btn){day=d;document.querySelectorAll('.day-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render()}
-function setFilter(f,btn){filt=f;document.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render()}
-function setSort(v){sort=v;render()}
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
 
-loadSheets();
+function setSort(s, btn) {
+  currentSort = s;
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+// Auto-load on startup
+loadData();
 </script>
 </body>
 </html>
