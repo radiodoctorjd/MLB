@@ -143,19 +143,18 @@ body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-ser
 </div>
 
 <script>
-// ── YOUR SHEET CSV URLS ────────────────────────────────────────────────────
-// Schedule tab (Today + Tomorrow games, ERA, WHIP, Win%, Proj Total, Edge)
+// ── Sheet CSV URLs ─────────────────────────────────────────────────────────
+// Schedule tab: Time, Day, Away, vs, Home, Venue, Away SP, Away ERA, Away WHIP,
+//               Home SP, Home ERA, Home WHIP, Vegas O/U, Vegas ML, Proj Total,
+//               Away Win%, Home Win%, Edge
 const SCHEDULE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=596859801&single=true&output=csv';
-// Predictions tab (F5/FG picks, conf, totals, rating)
+
+// Predictions tab: Matchup, Time, Away SP(ERA), Home SP(ERA), Park, WxAdj,
+//   F5 Away Win%, F5 Home Win%, F5 Pick, F5 Conf, F5 Total, F5 O/U,
+//   FG Away Win%, FG Home Win%, FG Pick, FG Conf, FG Total, FG O/U, Rating
 const PREDS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=141272668&single=true&output=csv';
 
-// ── Schedule tab column map (0-based) ─────────────────────────────────────
-// 0:Time  1:Day  2:Away  3:vs  4:Home  5:Venue
-// 6:Away SP  7:Away ERA  8:Away WHIP
-// 9:Home SP  10:Home ERA  11:Home WHIP
-// 12:Vegas O/U  13:Vegas ML  14:Proj Total  15:Away Win%  16:Home Win%  17:Edge
-
-// ── Bullpen lookup (live from your Bullpen Stats tab) ─────────────────────
+// ── Bullpen data (from Bullpen Stats tab) ──────────────────────────────────
 const BULLPEN = {
   "Atlanta Braves":{grade:"A",era:"2.90",closer:"Robert Suarez"},
   "Seattle Mariners":{grade:"A",era:"2.95",closer:"José A. Ferrer"},
@@ -193,149 +192,144 @@ const RO={Elite:0,Strong:1,Moderate:2,Lean:3};
 let allGames={today:[],tomorrow:[]};
 let currentDay='today',currentFilter='all',currentSort='time';
 
-// ── CSV parser ─────────────────────────────────────────────────────────────
-function parseCSV(text){
-  const rows=[];
-  const lines=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
-  for(const line of lines){
-    const cells=[];
-    let cur='',inQ=false;
-    for(let i=0;i<line.length;i++){
-      const c=line[i];
-      if(c==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}
-      else if(c===','&&!inQ){cells.push(cur.trim());cur='';}
-      else cur+=c;
+// ── RFC 4180 compliant CSV parser (handles newlines inside quoted fields) ──
+function parseCSV(text) {
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    const next = text[i+1];
+    if (inQuotes) {
+      if (ch === '"' && next === '"') { field += '"'; i++; }       // escaped quote
+      else if (ch === '"') { inQuotes = false; }                    // end quote
+      else { field += ch; }                                         // char inside quotes (incl newlines)
+    } else {
+      if (ch === '"') { inQuotes = true; }                          // start quote
+      else if (ch === ',') { row.push(field.trim()); field = ''; } // next field
+      else if (ch === '\r' && next === '\n') { row.push(field.trim()); rows.push(row); row = []; field = ''; i++; }
+      else if (ch === '\r' || ch === '\n') { row.push(field.trim()); rows.push(row); row = []; field = ''; }
+      else { field += ch; }
     }
-    cells.push(cur.trim());
-    rows.push(cells);
   }
+  if (field || row.length) { row.push(field.trim()); rows.push(row); }
   return rows;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
-function cleanPct(s){if(!s)return 0;return parseFloat(s.replace('%','').trim())||0;}
-function cleanNum(s){if(!s)return 0;return parseFloat(s.replace(/[^0-9.\-]/g,''))||0;}
-function isDash(s){return !s||s.trim()===''||s.trim()==='—'||s.trim()==='-'||s.trim()==='–';}
-function cleanVal(s){if(isDash(s))return null;return s.trim();}
-function cleanRating(s){
-  if(!s)return'Lean';const u=s.toUpperCase();
-  if(u.includes('ELITE'))return'Elite';
-  if(u.includes('STRONG'))return'Strong';
-  if(u.includes('MODERATE'))return'Moderate';
-  return'Lean';
+function pct(s){ return parseFloat((s||'').replace('%',''))||0; }
+function num(s){ return parseFloat((s||'').replace(/[^0-9.\-]/g,''))||0; }
+function dash(s){ const t=(s||'').trim(); return t===''||t==='—'||t==='-'||t==='–'; }
+function val(s){ return dash(s)?null:s.trim(); }
+function rating(s){
+  const u=(s||'').toUpperCase();
+  if(u.includes('ELITE')) return 'Elite';
+  if(u.includes('STRONG')) return 'Strong';
+  if(u.includes('MODERATE')) return 'Moderate';
+  return 'Lean';
 }
-function cleanConf(s){
-  if(!s)return'Low';const u=s.toUpperCase();
-  if(u.includes('HIGH'))return'High';
-  if(u.includes('MED'))return'Med';
-  return'Low';
+function conf(s){
+  const u=(s||'').toUpperCase();
+  if(u.includes('HIGH')) return 'High';
+  if(u.includes('MED')) return 'Med';
+  return 'Low';
 }
-function shortName(t){return t?t.split(' ').pop():''}
-function gradeClass(g){return'grade-'+g.toLowerCase();}
-
-// Schedule tab: detect game data rows
-// A game row has a time in col 0 and "Today" or "Tmrw" in col 1
-function isScheduleGameRow(row){
-  return row.length>=12
-    && row[0]&&row[0].match(/\d+:\d+/)
-    && row[1]&&(row[1].toLowerCase().includes('today')||row[1].toLowerCase().includes('tmrw')||row[1].toLowerCase().includes('tomorrow'));
-}
-
-// Predictions tab: detect game rows (matchup @ format, col 0)
-function isPredGameRow(row){
-  return row.length>=19 && row[0]&&row[0].includes('@') && row[1]&&row[1].match(/\d+:\d+/);
+function sn(t){ return (t||'').split(' ').pop(); }
+function gc(g){ return 'grade-'+g.toLowerCase(); }
+function timeMin(t){
+  const m=t.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if(!m) return 0;
+  let h=+m[1];
+  if(m[3].toUpperCase()==='PM'&&h!==12) h+=12;
+  if(m[3].toUpperCase()==='AM'&&h===12) h=0;
+  return h*60+(+m[2]);
 }
 
-// ── Parse schedule tab → base game objects with ERA/WHIP ──────────────────
+// ── Parse schedule tab ─────────────────────────────────────────────────────
+// Game rows: col1 is "Today" or "Tmrw", col0 has a time like "12:15 PM"
 function parseSchedule(rows){
-  const map={};// key: "Away@Home" → game object
-  for(const row of rows){
-    if(!isScheduleGameRow(row)) continue;
-    const away=(row[2]||'').trim(), home=(row[4]||'').trim();
+  const map={};
+  for(const r of rows){
+    if(r.length<12) continue;
+    const day=(r[1]||'').toLowerCase();
+    const time=(r[0]||'').trim();
+    if(!time.match(/\d+:\d+/)) continue;
+    if(!day.includes('today')&&!day.includes('tmrw')&&!day.includes('tomorrow')) continue;
+    const away=(r[2]||'').trim(), home=(r[4]||'').trim();
     if(!away||!home) continue;
-    const isTmrw=row[1].toLowerCase().includes('tmrw')||row[1].toLowerCase().includes('tomorrow');
-    const key=away+'@'+home;
-    map[key]={
+    map[away+'@'+home]={
       away, home,
-      time:(row[0]||'').trim(),
-      venue:(row[5]||'').trim(),
-      day:isTmrw?'tomorrow':'today',
-      awaySP:(row[6]||'').trim(),
-      awayERA:cleanVal(row[7]),
-      awayWHIP:cleanVal(row[8]),
-      homeSP:(row[9]||'').trim(),
-      homeERA:cleanVal(row[10]),
-      homeWHIP:cleanVal(row[11]),
-      projTotal:cleanNum(row[14]),
-      fgAwayWin:cleanPct(row[15]),
-      fgHomeWin:cleanPct(row[16]),
+      time,
+      venue:(r[5]||'').trim(),
+      day: day.includes('tmrw')||day.includes('tomorrow')?'tomorrow':'today',
+      awaySP:val(r[6])||'TBD',
+      awayERA:val(r[7]),
+      awayWHIP:val(r[8]),
+      homeSP:val(r[9])||'TBD',
+      homeERA:val(r[10]),
+      homeWHIP:val(r[11]),
+      projTotal:num(r[14]),
+      fgAwayWin:pct(r[15]),
+      fgHomeWin:pct(r[16]),
     };
   }
   return map;
 }
 
-// ── Parse predictions tab → F5/FG picks, conf, totals, rating ────────────
-// Predictions tab column map:
-// 0:Matchup  1:Time  2:Away SP(ERA)  3:Home SP(ERA)  4:Park  5:WxAdj
-// 6:F5 Away Win%  7:F5 Home Win%  8:F5 Pick  9:F5 Conf  10:F5 Total  11:F5 O/U
-// 12:FG Away Win%  13:FG Home Win%  14:FG Pick  15:FG Conf  16:FG Total  17:FG O/U
-// 18:Rating
-function parsePredictions(rows){
+// ── Parse predictions tab ──────────────────────────────────────────────────
+// Game rows: col0 has "Away @ Home", col1 has time
+function parsePreds(rows){
   const map={};
-  for(const row of rows){
-    if(!isPredGameRow(row)) continue;
-    const parts=row[0].split('@');
+  for(const r of rows){
+    if(r.length<18) continue;
+    if(!(r[0]||'').includes('@')) continue;
+    if(!(r[1]||'').match(/\d+:\d+/)) continue;
+    const parts=(r[0]||'').split('@');
     if(parts.length<2) continue;
     const away=parts[0].trim(), home=parts[1].trim();
-    const key=away+'@'+home;
-    const f5PickRaw=(row[8]||'').trim();
-    const fgPickRaw=(row[14]||'').trim();
-    map[key]={
-      park:cleanNum(row[4]),
-      wxAdj:(row[5]||'+0%').trim(),
-      f5aw:cleanPct(row[6]), f5hw:cleanPct(row[7]),
-      f5Pick:f5PickRaw,
-      f5p:f5PickRaw.toLowerCase().includes(away.toLowerCase().split(' ').pop())?'away':'home',
-      f5c:cleanConf(row[9]),
-      f5t:cleanNum(row[10]),
-      fgaw:cleanPct(row[12]), fghw:cleanPct(row[13]),
-      fgPick:fgPickRaw,
-      fgp:fgPickRaw.toLowerCase().includes(away.toLowerCase().split(' ').pop())?'away':'home',
-      fgc:cleanConf(row[15]),
-      fgt:cleanNum(row[16]),
-      rating:cleanRating(row[18]),
+    const f5Pick=(r[8]||'').trim();
+    const fgPick=(r[14]||'').trim();
+    const f5p=f5Pick.toLowerCase().includes(away.toLowerCase().split(' ').pop())?'away':'home';
+    const fgp=fgPick.toLowerCase().includes(away.toLowerCase().split(' ').pop())?'away':'home';
+    map[away+'@'+home]={
+      park:num(r[4]),
+      wxAdj:(r[5]||'+0%').trim(),
+      f5aw:pct(r[6]), f5hw:pct(r[7]),
+      f5Pick, f5p, f5c:conf(r[9]), f5t:num(r[10]),
+      fgaw:pct(r[12]), fghw:pct(r[13]),
+      fgPick, fgp, fgc:conf(r[15]), fgt:num(r[16]),
+      rating:rating(r[18]),
     };
   }
   return map;
 }
 
-// ── Merge schedule + predictions into game list ───────────────────────────
-function mergeGames(schedMap, predMap){
+// ── Merge both tabs into game list ─────────────────────────────────────────
+function merge(sched, preds){
   const today=[], tomorrow=[];
-  for(const [key,sched] of Object.entries(schedMap)){
-    const pred=predMap[key]||{};
-    const g={...sched,...pred};
-    // fallback: if pred missing, use schedule win% and total
-    if(!g.fgaw) g.fgaw=sched.fgAwayWin||0;
-    if(!g.fghw) g.fghw=sched.fgHomeWin||0;
-    if(!g.fgt) g.fgt=sched.projTotal||0;
-    if(!g.rating) g.rating='Lean';
-    if(!g.f5t) g.f5t=0;
-    if(!g.f5aw) g.f5aw=0;
-    if(!g.f5hw) g.f5hw=0;
-    if(!g.fgc) g.fgc='Low';
-    if(!g.f5c) g.f5c='Low';
-    if(!g.fgPick) g.fgPick=g.fgaw>g.fghw?g.away:g.home;
-    if(!g.fgp) g.fgp=g.fgaw>g.fghw?'away':'home';
-    if(!g.f5Pick) g.f5Pick=g.fgPick;
-    if(!g.f5p) g.f5p=g.fgp;
-    if(sched.day==='tomorrow') tomorrow.push(g);
+  for(const [key, s] of Object.entries(sched)){
+    const p=preds[key]||{};
+    const g={
+      away:s.away, home:s.home, time:s.time, venue:s.venue,
+      awaySP:s.awaySP, awayERA:s.awayERA, awayWHIP:s.awayWHIP,
+      homeSP:s.homeSP, homeERA:s.homeERA, homeWHIP:s.homeWHIP,
+      park:p.park||1.00, wxAdj:p.wxAdj||'+0%',
+      f5aw:p.f5aw||0, f5hw:p.f5hw||0,
+      f5Pick:p.f5Pick||(s.fgAwayWin>s.fgHomeWin?s.away:s.home),
+      f5p:p.f5p||(s.fgAwayWin>s.fgHomeWin?'away':'home'),
+      f5c:p.f5c||'Low', f5t:p.f5t||0,
+      fgaw:p.fgaw||s.fgAwayWin||0, fghw:p.fghw||s.fgHomeWin||0,
+      fgPick:p.fgPick||(s.fgAwayWin>s.fgHomeWin?s.away:s.home),
+      fgp:p.fgp||(s.fgAwayWin>s.fgHomeWin?'away':'home'),
+      fgc:p.fgc||'Low', fgt:p.fgt||s.projTotal||0,
+      rating:p.rating||'Lean',
+    };
+    if(s.day==='tomorrow') tomorrow.push(g);
     else today.push(g);
   }
-  return{today,tomorrow};
+  return {today, tomorrow};
 }
 
-// ── Fetch & load ───────────────────────────────────────────────────────────
+// ── Load & fetch ───────────────────────────────────────────────────────────
 async function loadData(){
   const btn=document.getElementById('refresh-btn');
   btn.disabled=true; btn.textContent='↻ LOADING...';
@@ -344,29 +338,21 @@ async function loadData(){
   document.getElementById('summary-bar').innerHTML=
     '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:var(--amber)">⟳ Fetching live data from Google Sheets...</span>';
   try{
-    // Fetch both tabs in parallel
-    const [schedResp, predResp]=await Promise.all([
-      fetch(SCHEDULE_URL),
-      fetch(PREDS_URL),
-    ]);
-    if(!schedResp.ok) throw new Error('Schedule tab HTTP '+schedResp.status);
-    if(!predResp.ok) throw new Error('Predictions tab HTTP '+predResp.status);
-    const [schedText, predText]=await Promise.all([schedResp.text(), predResp.text()]);
-    const schedRows=parseCSV(schedText);
-    const predRows=parseCSV(predText);
+    const [sr,pr]=await Promise.all([fetch(SCHEDULE_URL),fetch(PREDS_URL)]);
+    if(!sr.ok) throw new Error('Schedule tab: HTTP '+sr.status);
+    if(!pr.ok) throw new Error('Predictions tab: HTTP '+pr.status);
+    const [st,pt]=await Promise.all([sr.text(),pr.text()]);
+    const schedRows=parseCSV(st);
+    const predRows=parseCSV(pt);
 
-    // Extract date from schedule header
-    for(const row of schedRows.slice(0,3)){
-      const c=(row[0]||'').replace(/[^\x20-\x7E]/g,'').trim();
-      if(c.match(/(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)/i)){
-        document.getElementById('sheet-date').textContent=c.replace(/^[^A-Za-z]*/,'').substring(0,55);
-        break;
-      }
-    }
+    // Grab date from first row of schedule
+    const firstCell=(schedRows[0]||[])[0]||'';
+    const dm=firstCell.match(/(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)[,.\s]+\w+ \d+,?\s*\d*/i);
+    if(dm) document.getElementById('sheet-date').textContent=dm[0].trim().substring(0,55);
 
     const schedMap=parseSchedule(schedRows);
-    const predMap=parsePredictions(predRows);
-    allGames=mergeGames(schedMap,predMap);
+    const predMap=parsePreds(predRows);
+    allGames=merge(schedMap,predMap);
 
     document.getElementById('tab-today').textContent=
       'Today'+(allGames.today.length?' ('+allGames.today.length+')':'');
@@ -375,9 +361,11 @@ async function loadData(){
 
   }catch(e){
     document.getElementById('game-list').innerHTML=
-      '<div class="no-games">⚠ Could not load sheet data<br><span style="font-size:10px;color:var(--muted)">'+e.message+'<br>Open from a web server (GitHub Pages) — not a local file.</span></div>';
+      '<div class="no-games">⚠ Could not load sheet data<br><br>'
+      +'<span style="font-size:10px;color:var(--muted2)">'+e.message+'</span><br><br>'
+      +'<span style="font-size:10px;color:var(--muted)">Must be opened from GitHub Pages or a web server.<br>Local file:// URLs are blocked by Google Sheets CORS policy.</span></div>';
     document.getElementById('summary-bar').innerHTML=
-      '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:var(--red)">⚠ Load failed</span>';
+      '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:var(--red)">⚠ Load failed — see error in game panel</span>';
     btn.disabled=false; btn.textContent='↻ REFRESH'; return;
   }
   btn.disabled=false; btn.textContent='↻ REFRESH';
@@ -392,7 +380,7 @@ function pips(c){
 }
 function pstat(era,whip){
   if(!era) return '<span class="pitcher-stats">TBD</span>';
-  const w=whip?' <span style="color:var(--muted)">·</span> WHIP <span class="sv">'+whip+'</span>':'';
+  const w=whip?'<span style="color:var(--muted)"> · </span>WHIP <span class="sv">'+whip+'</span>':'';
   return '<span class="pitcher-stats">ERA <span class="sv">'+era+'</span>'+w+'</span>';
 }
 
@@ -400,7 +388,8 @@ function buildRow(g){
   const rl=g.rating.toLowerCase();
   const stars=g.rating==='Elite'?'★★★':g.rating==='Strong'?'★★':g.rating==='Moderate'?'★':'·';
   const parkLabel=g.park>=1.1?' 🔥':g.park<=0.92?' ❄️':'';
-  const wxLabel=g.wxAdj&&g.wxAdj!=='+0%'&&g.wxAdj!=='0%'?' <span style="color:var(--green)">'+g.wxAdj+' run adj</span>':'';
+  const wxStr=g.wxAdj&&g.wxAdj!=='+0%'&&g.wxAdj!=='0%'
+    ?' <span style="color:var(--green)">'+g.wxAdj+'</span>':'';
   const abp=BULLPEN[g.away]||{grade:'?',era:'?',closer:'?'};
   const hbp=BULLPEN[g.home]||{grade:'?',era:'?',closer:'?'};
 
@@ -410,23 +399,31 @@ function buildRow(g){
     '<div class="cell">'
       +'<div class="matchup-time">'+g.time+'</div>'
       +'<div class="matchup-teams">'+g.away+' <span style="color:var(--muted);font-size:11px;font-weight:400"> @ </span>'+g.home+'</div>'
-      +'<div class="matchup-sub">'+(g.park?'Park '+g.park+parkLabel:g.venue)+wxLabel+'</div>'
+      +'<div class="matchup-sub">Park '+g.park+parkLabel+wxStr+'</div>'
     +'</div>'
     +'<div class="cell">'
-      +'<div class="pitcher-line"><span class="pitcher-side">AWY</span><span class="pitcher-name">'+(g.awaySP||'TBD')+'</span>'+pstat(g.awayERA,g.awayWHIP)+'</div>'
-      +'<div class="pitcher-line" style="margin-top:3px"><span class="pitcher-side">HME</span><span class="pitcher-name">'+(g.homeSP||'TBD')+'</span>'+pstat(g.homeERA,g.homeWHIP)+'</div>'
+      +'<div class="pitcher-line"><span class="pitcher-side">AWY</span><span class="pitcher-name">'+g.awaySP+'</span>'+pstat(g.awayERA,g.awayWHIP)+'</div>'
+      +'<div class="pitcher-line" style="margin-top:3px"><span class="pitcher-side">HME</span><span class="pitcher-name">'+g.homeSP+'</span>'+pstat(g.homeERA,g.homeWHIP)+'</div>'
     +'</div>'
     +'<div class="cell">'
       +'<div class="pred-header">F5 pick</div>'
-      +'<div class="pred-pick '+g.f5p+'">'+shortName(g.f5Pick||g.away)+'</div>'
-      +'<div class="pred-totals"><span style="color:var(--green)">'+g.f5aw.toFixed(1)+'%</span><span style="color:var(--muted)">·</span><span style="color:var(--purple)">'+g.f5hw.toFixed(1)+'%</span><span style="color:var(--muted);margin-left:4px">tot</span><span class="tv">'+g.f5t+'</span></div>'
+      +'<div class="pred-pick '+g.f5p+'">'+sn(g.f5Pick)+'</div>'
+      +'<div class="pred-totals"><span style="color:var(--green)">'+g.f5aw.toFixed(1)+'%</span>'
+        +'<span style="color:var(--muted)">·</span>'
+        +'<span style="color:var(--purple)">'+g.f5hw.toFixed(1)+'%</span>'
+        +'<span style="color:var(--muted);margin-left:4px">tot</span>'
+        +'<span class="tv">'+g.f5t+'</span></div>'
       +'<div class="win-mini"><div class="wma" style="width:'+g.f5aw+'%"></div><div class="wmh" style="width:'+g.f5hw+'%"></div></div>'
       +'<div class="win-pcts">'+g.f5c+' conf</div>'
     +'</div>'
     +'<div class="cell">'
       +'<div class="pred-header">Full game pick</div>'
-      +'<div class="pred-pick '+g.fgp+'">'+shortName(g.fgPick||g.home)+'</div>'
-      +'<div class="pred-totals"><span style="color:var(--green)">'+g.fgaw.toFixed(1)+'%</span><span style="color:var(--muted)">·</span><span style="color:var(--purple)">'+g.fghw.toFixed(1)+'%</span><span style="color:var(--muted);margin-left:4px">tot</span><span class="tv">'+g.fgt+'</span></div>'
+      +'<div class="pred-pick '+g.fgp+'">'+sn(g.fgPick)+'</div>'
+      +'<div class="pred-totals"><span style="color:var(--green)">'+g.fgaw.toFixed(1)+'%</span>'
+        +'<span style="color:var(--muted)">·</span>'
+        +'<span style="color:var(--purple)">'+g.fghw.toFixed(1)+'%</span>'
+        +'<span style="color:var(--muted);margin-left:4px">tot</span>'
+        +'<span class="tv">'+g.fgt+'</span></div>'
       +'<div class="win-mini"><div class="wma" style="width:'+g.fgaw+'%"></div><div class="wmh" style="width:'+g.fghw+'%"></div></div>'
       +'<div class="win-pcts">'+g.fgc+' conf</div>'
     +'</div>'
@@ -455,7 +452,7 @@ function buildRow(g){
         +'<div class="expand-row"><span class="expand-key">Home win%</span><span class="expand-val" style="color:var(--purple)">'+g.fghw.toFixed(1)+'%</span></div>'
         +'<div class="expand-row"><span class="expand-key">FG total</span><span class="expand-val">'+g.fgt+'</span></div>'
         +'<div class="expand-row"><span class="expand-key">Confidence</span><span class="expand-val">'+g.fgc+'</span></div>'
-        +'<div class="expand-row"><span class="expand-key">Park factor</span><span class="expand-val">'+(g.park||'—')+parkLabel+'</span></div>'
+        +'<div class="expand-row"><span class="expand-key">Park factor</span><span class="expand-val">'+g.park+parkLabel+'</span></div>'
         +'<div class="expand-bar-wrap">'
           +'<div class="expand-bar-row"><span class="expand-bar-label">AWY</span><div class="expand-bar-track"><div class="expand-bar-fill-a" style="width:'+g.fgaw+'%"></div></div><span class="expand-bar-pct">'+g.fgaw.toFixed(1)+'%</span></div>'
           +'<div class="expand-bar-row"><span class="expand-bar-label">HME</span><div class="expand-bar-track"><div class="expand-bar-fill-h" style="width:'+g.fghw+'%"></div></div><span class="expand-bar-pct">'+g.fghw.toFixed(1)+'%</span></div>'
@@ -463,21 +460,21 @@ function buildRow(g){
       +'</div>'
       +'<div>'
         +'<div class="expand-head">Starting pitchers</div>'
-        +'<div class="expand-row"><span class="expand-key">Away SP</span><span class="expand-val">'+(g.awaySP||'TBD')+'</span></div>'
+        +'<div class="expand-row"><span class="expand-key">Away SP</span><span class="expand-val">'+g.awaySP+'</span></div>'
         +'<div class="expand-row"><span class="expand-key">Away ERA</span><span class="expand-val">'+(g.awayERA||'—')+'</span></div>'
         +'<div class="expand-row"><span class="expand-key">Away WHIP</span><span class="expand-val">'+(g.awayWHIP||'—')+'</span></div>'
-        +'<div class="expand-row" style="margin-top:6px"><span class="expand-key">Home SP</span><span class="expand-val">'+(g.homeSP||'TBD')+'</span></div>'
+        +'<div class="expand-row" style="margin-top:6px"><span class="expand-key">Home SP</span><span class="expand-val">'+g.homeSP+'</span></div>'
         +'<div class="expand-row"><span class="expand-key">Home ERA</span><span class="expand-val">'+(g.homeERA||'—')+'</span></div>'
         +'<div class="expand-row"><span class="expand-key">Home WHIP</span><span class="expand-val">'+(g.homeWHIP||'—')+'</span></div>'
       +'</div>'
       +'<div>'
         +'<div class="expand-head">Bullpens</div>'
-        +'<div class="expand-row"><span class="expand-key">'+shortName(g.away)+' bp</span><span class="grade-pill '+gradeClass(abp.grade)+'">'+abp.grade+'</span></div>'
+        +'<div class="expand-row"><span class="expand-key">'+sn(g.away)+' bp</span><span class="grade-pill '+gc(abp.grade)+'">'+abp.grade+'</span></div>'
         +'<div style="font-size:10px;color:var(--muted);margin-bottom:8px">'+abp.closer+' · ERA '+abp.era+'</div>'
-        +'<div class="expand-row"><span class="expand-key">'+shortName(g.home)+' bp</span><span class="grade-pill '+gradeClass(hbp.grade)+'">'+hbp.grade+'</span></div>'
+        +'<div class="expand-row"><span class="expand-key">'+sn(g.home)+' bp</span><span class="grade-pill '+gc(hbp.grade)+'">'+hbp.grade+'</span></div>'
         +'<div style="font-size:10px;color:var(--muted);margin-bottom:8px">'+hbp.closer+' · ERA '+hbp.era+'</div>'
         +(g.wxAdj&&g.wxAdj!=='+0%'?'<div class="expand-row"><span class="expand-key">Weather adj</span><span class="expand-val" style="color:var(--green)">'+g.wxAdj+'</span></div>':'')
-        +'<div class="expand-row"><span class="expand-key">Venue</span><span class="expand-val" style="font-size:10px">'+(g.venue||'—')+'</span></div>'
+        +'<div class="expand-row" style="margin-top:4px"><span class="expand-key">Venue</span><span class="expand-val" style="font-size:10px">'+(g.venue||'—')+'</span></div>'
       +'</div>'
     +'</div>'
     +'<span class="chevron">▼</span>';
@@ -510,11 +507,7 @@ function render(){
   if(currentFilter!=='all') games=games.filter(g=>g.rating===currentFilter);
   if(currentSort==='rating') games.sort((a,b)=>RO[a.rating]-RO[b.rating]);
   else if(currentSort==='total') games.sort((a,b)=>b.fgt-a.fgt);
-  // default: sort by time
-  else games.sort((a,b)=>{
-    const t=s=>{ const m=s.match(/(\d+):(\d+)\s*(AM|PM)/i); if(!m)return 0; let h=+m[1]; if(m[3].toUpperCase()==='PM'&&h!==12)h+=12; if(m[3].toUpperCase()==='AM'&&h===12)h=0; return h*60+(+m[2]); };
-    return t(a.time)-t(b.time);
-  });
+  else games.sort((a,b)=>timeMin(a.time)-timeMin(b.time));
   const list=document.getElementById('game-list');
   list.innerHTML='';
   document.getElementById('count-label').textContent=games.length+' game'+(games.length!==1?'s':'');
@@ -523,7 +516,7 @@ function render(){
   updateSummary(games);
 }
 
-function switchDay(day,btn){currentDay=day;document.querySelectorAll('.day-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render();}
+function switchDay(d,btn){currentDay=d;document.querySelectorAll('.day-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render();}
 function setFilter(f,btn){currentFilter=f;document.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render();}
 function setSort(v){currentSort=v;render();}
 
