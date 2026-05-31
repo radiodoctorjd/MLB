@@ -50,8 +50,7 @@ body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-ser
 .game-row[data-rating="Moderate"]::before{background:var(--amber)}
 .game-row[data-rating="Lean"]::before{background:var(--border2)}
 .cell{padding:10px 12px;border-right:1px solid var(--border);display:flex;flex-direction:column;justify-content:center;gap:3px}
-.cell:last-child{border-right:none}
-.cell:first-child{padding-left:16px}
+.cell:last-child{border-right:none}.cell:first-child{padding-left:16px}
 .matchup-time{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)}
 .matchup-teams{font-family:'Oswald',sans-serif;font-size:14px;font-weight:500;letter-spacing:.04em;line-height:1.2}
 .matchup-sub{font-size:10px;color:var(--muted)}
@@ -81,8 +80,7 @@ body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-ser
 .game-row.expanded .expand-panel{display:grid}
 .expand-head{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)}
 .expand-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:11px}
-.expand-key{color:var(--muted2)}
-.expand-val{font-family:'IBM Plex Mono',monospace;color:var(--text);font-size:11px}
+.expand-key{color:var(--muted2)}.expand-val{font-family:'IBM Plex Mono',monospace;color:var(--text);font-size:11px}
 .grade-pill{display:inline-block;padding:1px 7px;border-radius:2px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500}
 .grade-a{background:var(--green-bg);color:var(--green);border:1px solid rgba(0,230,118,0.2)}
 .grade-b{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(79,195,247,0.2)}
@@ -92,8 +90,7 @@ body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-ser
 .expand-bar-row{display:flex;align-items:center;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:10px}
 .expand-bar-label{color:var(--muted);width:28px}
 .expand-bar-track{flex:1;height:5px;background:var(--surface3);border-radius:2px;overflow:hidden}
-.expand-bar-fill-a{height:100%;background:var(--green)}
-.expand-bar-fill-h{height:100%;background:var(--purple)}
+.expand-bar-fill-a{height:100%;background:var(--green)}.expand-bar-fill-h{height:100%;background:var(--purple)}
 .expand-bar-pct{color:var(--muted2);width:34px;text-align:right}
 .no-games{text-align:center;padding:60px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:.08em}
 .skeleton{height:52px;background:linear-gradient(90deg,var(--surface) 0%,var(--surface2) 50%,var(--surface) 100%);background-size:200% 100%;animation:shimmer 1.4s ease infinite;border-radius:4px;border:1px solid var(--border);margin-bottom:6px}
@@ -143,19 +140,22 @@ body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-ser
 </div>
 
 <script>
-// ── Sheet CSV URLs ─────────────────────────────────────────────────────────
-// Schedule tab: Time, Day, Away, vs, Home, Venue, Away SP, Away ERA, Away WHIP,
-//               Home SP, Home ERA, Home WHIP, Vegas O/U, Vegas ML, Proj Total,
-//               Away Win%, Home Win%, Edge
-const SCHEDULE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=596859801&single=true&output=csv';
-
-// Predictions tab: Matchup, Time, Away SP(ERA), Home SP(ERA), Park, WxAdj,
-//   F5 Away Win%, F5 Home Win%, F5 Pick, F5 Conf, F5 Total, F5 O/U,
-//   FG Away Win%, FG Home Win%, FG Pick, FG Conf, FG Total, FG O/U, Rating
+// ── Sheet URLs ─────────────────────────────────────────────────────────────
+// Predictions tab (gid=141272668): col0=Matchup(@), col1=Time, col2=Away SP(ERA),
+//   col3=Home SP(ERA), col4=Park, col5=WxAdj, col6=F5 Away Win%, col7=F5 Home Win%,
+//   col8=F5 Pick, col9=F5 Conf, col10=F5 Total, col11=F5 O/U,
+//   col12=FG Away Win%, col13=FG Home Win%, col14=FG Pick, col15=FG Conf,
+//   col16=FG Total, col17=FG O/U, col18=Rating
+//   TODAY/TOMORROW sections separated by label rows containing "TODAY"/"TOMORROW"
 const PREDS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=141272668&single=true&output=csv';
 
+// Schedule tab (gid=596859801): col0=Time, col1=Day(Today/Tmrw), col2=Away,
+//   col3=vs, col4=Home, col5=Venue, col6=Away SP, col7=Away ERA, col8=Away WHIP,
+//   col9=Home SP, col10=Home ERA, col11=Home WHIP
+const SCHED_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=596859801&single=true&output=csv';
+
 // ── Bullpen data (from Bullpen Stats tab) ──────────────────────────────────
-const BULLPEN = {
+const BULLPEN={
   "Atlanta Braves":{grade:"A",era:"2.90",closer:"Robert Suarez"},
   "Seattle Mariners":{grade:"A",era:"2.95",closer:"José A. Ferrer"},
   "Los Angeles Dodgers":{grade:"B",era:"3.10",closer:"Tanner Scott"},
@@ -192,233 +192,198 @@ const RO={Elite:0,Strong:1,Moderate:2,Lean:3};
 let allGames={today:[],tomorrow:[]};
 let currentDay='today',currentFilter='all',currentSort='time';
 
-// ── RFC 4180 compliant CSV parser (handles newlines inside quoted fields) ──
-function parseCSV(text) {
-  const rows = [];
-  let row = [], field = '', inQuotes = false;
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
-    const next = text[i+1];
-    if (inQuotes) {
-      if (ch === '"' && next === '"') { field += '"'; i++; }       // escaped quote
-      else if (ch === '"') { inQuotes = false; }                    // end quote
-      else { field += ch; }                                         // char inside quotes (incl newlines)
+// ── RFC 4180 CSV parser (handles newlines inside quoted fields) ────────────
+function parseCSV(text){
+  const rows=[];
+  let row=[],field='',inQ=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i],nx=text[i+1];
+    if(inQ){
+      if(ch==='"'&&nx==='"'){field+='"';i++;}
+      else if(ch==='"'){inQ=false;}
+      else{field+=ch;}
     } else {
-      if (ch === '"') { inQuotes = true; }                          // start quote
-      else if (ch === ',') { row.push(field.trim()); field = ''; } // next field
-      else if (ch === '\r' && next === '\n') { row.push(field.trim()); rows.push(row); row = []; field = ''; i++; }
-      else if (ch === '\r' || ch === '\n') { row.push(field.trim()); rows.push(row); row = []; field = ''; }
-      else { field += ch; }
+      if(ch==='"'){inQ=true;}
+      else if(ch===','){row.push(field.trim());field='';}
+      else if(ch==='\r'&&nx==='\n'){row.push(field.trim());rows.push(row);row=[];field='';i++;}
+      else if(ch==='\r'||ch==='\n'){row.push(field.trim());rows.push(row);row=[];field='';}
+      else{field+=ch;}
     }
   }
-  if (field || row.length) { row.push(field.trim()); rows.push(row); }
+  if(field||row.length){row.push(field.trim());rows.push(row);}
   return rows;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
-function pct(s){ return parseFloat((s||'').replace('%',''))||0; }
-function num(s){ return parseFloat((s||'').replace(/[^0-9.\-]/g,''))||0; }
-function dash(s){ const t=(s||'').trim(); return t===''||t==='—'||t==='-'||t==='–'; }
-function val(s){ return dash(s)?null:s.trim(); }
+function pct(s){return parseFloat((s||'').replace(/[^0-9.\-]/g,''))||0;}
+function num(s){return parseFloat((s||'').replace(/[^0-9.\-]/g,''))||0;}
+function isDash(s){const t=(s||'').trim();return t===''||t==='—'||t==='-'||t==='–';}
+function cleanSP(s){
+  // "Spencer Miles  (2.16)" → {name:"Spencer Miles", era:"2.16"}
+  if(!s||isDash(s))return{name:'TBD',era:null,whip:null};
+  const m=s.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+  if(m){const era=isDash(m[2])?null:m[2].trim();return{name:m[1].trim(),era};}
+  return{name:s.trim(),era:null};
+}
 function rating(s){
   const u=(s||'').toUpperCase();
-  if(u.includes('ELITE')) return 'Elite';
-  if(u.includes('STRONG')) return 'Strong';
-  if(u.includes('MODERATE')) return 'Moderate';
-  return 'Lean';
+  if(u.includes('ELITE'))return'Elite';
+  if(u.includes('STRONG'))return'Strong';
+  if(u.includes('MODERATE'))return'Moderate';
+  return'Lean';
 }
 function conf(s){
   const u=(s||'').toUpperCase();
-  if(u.includes('HIGH')) return 'High';
-  if(u.includes('MED')) return 'Med';
-  return 'Low';
+  if(u.includes('HIGH'))return'High';
+  if(u.includes('MED'))return'Med';
+  return'Low';
 }
-function sn(t){ return (t||'').split(' ').pop(); }
-function gc(g){ return 'grade-'+g.toLowerCase(); }
+function sn(t){return(t||'').split(' ').pop();}
+function gc(g){return'grade-'+g.toLowerCase();}
 function timeMin(t){
-  const m=t.match(/(\d+):(\d+)\s*(AM|PM)/i);
-  if(!m) return 0;
+  const m=(t||'').match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if(!m)return 0;
   let h=+m[1];
-  if(m[3].toUpperCase()==='PM'&&h!==12) h+=12;
-  if(m[3].toUpperCase()==='AM'&&h===12) h=0;
+  if(m[3].toUpperCase()==='PM'&&h!==12)h+=12;
+  if(m[3].toUpperCase()==='AM'&&h===12)h=0;
   return h*60+(+m[2]);
 }
 
-// ── Parse schedule tab ─────────────────────────────────────────────────────
-// Game rows: col1 is "Today" or "Tmrw", col0 has a time like "12:15 PM"
-// Returns array of game objects (not a map) to avoid key collisions
-function parseSchedule(rows){
-  const games=[];
-  for(const r of rows){
-    if(r.length<12) continue;
-    const dayRaw=(r[1]||'').toLowerCase();
-    const time=(r[0]||'').trim();
-    if(!time.match(/\d+:\d+/)) continue;
-    if(!dayRaw.includes('today')&&!dayRaw.includes('tmrw')&&!dayRaw.includes('tomorrow')) continue;
-    const away=(r[2]||'').trim(), home=(r[4]||'').trim();
-    if(!away||!home) continue;
-    games.push({
-      away, home,
-      time,
-      venue:(r[5]||'').trim(),
-      day: dayRaw.includes('tmrw')||dayRaw.includes('tomorrow')?'tomorrow':'today',
-      awaySP:val(r[6])||'TBD',
-      awayERA:val(r[7]),
-      awayWHIP:val(r[8]),
-      homeSP:val(r[9])||'TBD',
-      homeERA:val(r[10]),
-      homeWHIP:val(r[11]),
-      projTotal:num(r[14]),
-      fgAwayWin:pct(r[15]),
-      fgHomeWin:pct(r[16]),
-    });
-  }
-  return games;
-}
-
 // ── Parse predictions tab ──────────────────────────────────────────────────
-// Game rows: col0 has "Away @ Home", col1 has time
+// Game rows: col0 contains "@" (matchup), col1 is time
+// Section label rows: col0 contains "TODAY" or "TOMORROW"
 function parsePreds(rows){
-  const map={};
+  const today=[],tomorrow=[];
+  let section='today';
   for(const r of rows){
-    if(r.length<18) continue;
-    if(!(r[0]||'').includes('@')) continue;
-    if(!(r[1]||'').match(/\d+:\d+/)) continue;
-    const parts=(r[0]||'').split('@');
-    if(parts.length<2) continue;
-    const away=parts[0].trim(), home=parts[1].trim();
-    const f5Pick=(r[8]||'').trim();
-    const fgPick=(r[14]||'').trim();
-    const f5p=f5Pick.toLowerCase().includes(away.toLowerCase().split(' ').pop())?'away':'home';
-    const fgp=fgPick.toLowerCase().includes(away.toLowerCase().split(' ').pop())?'away':'home';
-    map[away+'@'+home]={
+    const c0=(r[0]||'').trim();
+    const c0up=c0.toUpperCase().replace(/[^\x20-\x7E]/g,'').trim();
+    // Section label detection
+    if(c0up.includes('TODAY')&&!c0.includes('@')){section='today';continue;}
+    if(c0up.includes('TOMORROW')&&!c0.includes('@')){section='tomorrow';continue;}
+    // Game row: must have @ in col0 and time in col1
+    if(!c0.includes('@'))continue;
+    if(!(r[1]||'').match(/\d+:\d+/))continue;
+    const parts=c0.split('@');
+    if(parts.length<2)continue;
+    const away=parts[0].trim(),home=parts[1].trim();
+    if(!away||!home)continue;
+    const awaySP=cleanSP(r[2]),homeSP=cleanSP(r[3]);
+    const f5PickRaw=(r[8]||'').trim();
+    const fgPickRaw=(r[14]||'').trim();
+    const f5aw=pct(r[6]),f5hw=pct(r[7]);
+    const fgaw=pct(r[12]),fghw=pct(r[13]);
+    const g={
+      away,home,
+      time:(r[1]||'').trim(),
+      awaySP:awaySP.name, awayERA:awaySP.era, awayWHIP:null,
+      homeSP:homeSP.name, homeERA:homeSP.era, homeWHIP:null,
       park:num(r[4]),
       wxAdj:(r[5]||'+0%').trim(),
-      f5aw:pct(r[6]), f5hw:pct(r[7]),
-      f5Pick, f5p, f5c:conf(r[9]), f5t:num(r[10]),
-      fgaw:pct(r[12]), fghw:pct(r[13]),
-      fgPick, fgp, fgc:conf(r[15]), fgt:num(r[16]),
+      f5aw,f5hw,
+      f5Pick:f5PickRaw,
+      f5p:f5PickRaw.toLowerCase().includes(away.toLowerCase().split(' ').pop())?'away':'home',
+      f5c:conf(r[9]),f5t:num(r[10]),
+      fgaw,fghw,
+      fgPick:fgPickRaw,
+      fgp:fgPickRaw.toLowerCase().includes(away.toLowerCase().split(' ').pop())?'away':'home',
+      fgc:conf(r[15]),fgt:num(r[16]),
       rating:rating(r[18]),
+    };
+    if(section==='tomorrow')tomorrow.push(g);
+    else today.push(g);
+  }
+  return{today,tomorrow};
+}
+
+// ── Parse schedule tab for WHIP (col8=Away WHIP, col11=Home WHIP) ──────────
+// Returns map: "Away@Home" → {awayWHIP, homeWHIP}
+function parseSchedWHIP(rows){
+  const map={};
+  for(const r of rows){
+    if(r.length<12)continue;
+    const dayRaw=(r[1]||'').toLowerCase();
+    if(!dayRaw.includes('today')&&!dayRaw.includes('tmrw')&&!dayRaw.includes('tomorrow'))continue;
+    if(!(r[0]||'').match(/\d+:\d+/))continue;
+    const away=(r[2]||'').trim(),home=(r[4]||'').trim();
+    if(!away||!home)continue;
+    map[away+'@'+home]={
+      awayWHIP:isDash(r[8])?null:r[8].trim(),
+      homeWHIP:isDash(r[11])?null:r[11].trim(),
+      venue:(r[5]||'').trim(),
     };
   }
   return map;
 }
 
-// ── Merge schedule array + predictions map into today/tomorrow lists ────────
-function merge(schedGames, preds){
-  const today=[], tomorrow=[];
-  for(const s of schedGames){
-    const key=s.away+'@'+s.home;
-    const p=preds[key]||{};
-    const awPick=s.fgAwayWin>s.fgHomeWin?s.away:s.home;
-    const awSide=s.fgAwayWin>s.fgHomeWin?'away':'home';
-    const g={
-      away:s.away, home:s.home, time:s.time, venue:s.venue,
-      awaySP:s.awaySP, awayERA:s.awayERA, awayWHIP:s.awayWHIP,
-      homeSP:s.homeSP, homeERA:s.homeERA, homeWHIP:s.homeWHIP,
-      park:p.park||1.00,
-      wxAdj:p.wxAdj||'+0%',
-      f5aw:p.f5aw||0, f5hw:p.f5hw||0,
-      f5Pick:p.f5Pick||awPick,
-      f5p:p.f5p||awSide,
-      f5c:p.f5c||'Low',
-      f5t:p.f5t||0,
-      fgaw:p.fgaw||s.fgAwayWin||0,
-      fghw:p.fghw||s.fgHomeWin||0,
-      fgPick:p.fgPick||awPick,
-      fgp:p.fgp||awSide,
-      fgc:p.fgc||'Low',
-      fgt:p.fgt||s.projTotal||0,
-      rating:p.rating||'Lean',
-    };
-    if(s.day==='tomorrow') tomorrow.push(g);
-    else today.push(g);
-  }
-  return {today, tomorrow};
-}
-
 // ── Load & fetch ───────────────────────────────────────────────────────────
 async function loadData(){
   const btn=document.getElementById('refresh-btn');
-  btn.disabled=true; btn.textContent='↻ LOADING...';
-  document.getElementById('game-list').innerHTML=
-    Array(5).fill('<div class="skeleton"></div>').join('');
-  document.getElementById('summary-bar').innerHTML=
-    '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:var(--amber)">⟳ Fetching live data from Google Sheets...</span>';
+  btn.disabled=true;btn.textContent='↻ LOADING...';
+  document.getElementById('game-list').innerHTML=Array(5).fill('<div class="skeleton"></div>').join('');
+  document.getElementById('summary-bar').innerHTML='<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:var(--amber)">⟳ Fetching live data from Google Sheets...</span>';
   try{
-    const [sr,pr]=await Promise.all([fetch(SCHEDULE_URL),fetch(PREDS_URL)]);
-    if(!sr.ok) throw new Error('Schedule tab: HTTP '+sr.status);
-    if(!pr.ok) throw new Error('Predictions tab: HTTP '+pr.status);
-    const [st,pt]=await Promise.all([sr.text(),pr.text()]);
-    const schedRows=parseCSV(st);
+    const [pr,sr]=await Promise.all([fetch(PREDS_URL),fetch(SCHED_URL)]);
+    if(!pr.ok)throw new Error('Predictions tab HTTP '+pr.status);
+    if(!sr.ok)throw new Error('Schedule tab HTTP '+sr.status);
+    const [pt,st]=await Promise.all([pr.text(),sr.text()]);
     const predRows=parseCSV(pt);
+    const schedRows=parseCSV(st);
 
-    // Grab date from first row of schedule
-    const firstCell=(schedRows[0]||[])[0]||'';
-    const dm=firstCell.match(/(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)[,.\s]+\w+ \d+,?\s*\d*/i);
-    if(dm) document.getElementById('sheet-date').textContent=dm[0].trim().substring(0,55);
+    // Extract date from predictions tab header row
+    const hdr=((predRows[0]||[])[0]||'').replace(/[^\x20-\x7E]/g,'').trim();
+    const dm=hdr.match(/(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)[,.\s]+\w+\.?\s+\d+[,.\s]+\d{4}/i);
+    if(dm)document.getElementById('sheet-date').textContent=dm[0].trim().substring(0,55);
 
-    const schedGames=parseSchedule(schedRows);
-    const predMap=parsePreds(predRows);
+    allGames=parsePreds(predRows);
+    const whipMap=parseSchedWHIP(schedRows);
 
-    // DEBUG — remove after testing
-    console.log('Schedule CSV rows:', schedRows.length);
-    console.log('Schedule rows sample:', schedRows.slice(0,8).map(r=>r.slice(0,5)));
-    console.log('Games parsed from schedule:', schedGames.length);
-    console.log('First 3 games:', schedGames.slice(0,3));
-    console.log('Pred map keys:', Object.keys(predMap).slice(0,3));
+    // Inject WHIP into games
+    for(const day of['today','tomorrow']){
+      for(const g of allGames[day]){
+        const w=whipMap[g.away+'@'+g.home]||{};
+        if(w.awayWHIP)g.awayWHIP=w.awayWHIP;
+        if(w.homeWHIP)g.homeWHIP=w.homeWHIP;
+        if(w.venue)g.venue=w.venue;
+      }
+    }
 
-    // Extra debug — show col0 and col1 of every row
-    schedRows.forEach((r,i)=>console.log(`row[${i}] col0=[${r[0]}] col1=[${r[1]}] len=${r.length}`));
-
-    allGames=merge(schedGames,predMap);
-
-    document.getElementById('tab-today').textContent=
-      'Today'+(allGames.today.length?' ('+allGames.today.length+')':'');
-    document.getElementById('tab-tomorrow').textContent=
-      'Tomorrow'+(allGames.tomorrow.length?' ('+allGames.tomorrow.length+')':'');
-
+    document.getElementById('tab-today').textContent='Today'+(allGames.today.length?' ('+allGames.today.length+')':'');
+    document.getElementById('tab-tomorrow').textContent='Tomorrow'+(allGames.tomorrow.length?' ('+allGames.tomorrow.length+')':'');
   }catch(e){
-    document.getElementById('game-list').innerHTML=
-      '<div class="no-games">⚠ Could not load sheet data<br><br>'
-      +'<span style="font-size:10px;color:var(--muted2)">'+e.message+'</span><br><br>'
-      +'<span style="font-size:10px;color:var(--muted)">Must be opened from GitHub Pages or a web server.<br>Local file:// URLs are blocked by Google Sheets CORS policy.</span></div>';
-    document.getElementById('summary-bar').innerHTML=
-      '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:var(--red)">⚠ Load failed — see error in game panel</span>';
-    btn.disabled=false; btn.textContent='↻ REFRESH'; return;
+    document.getElementById('game-list').innerHTML='<div class="no-games">⚠ Could not load sheet data<br><br><span style="font-size:10px;color:var(--muted2)">'+e.message+'</span></div>';
+    document.getElementById('summary-bar').innerHTML='<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:var(--red)">⚠ Load failed</span>';
+    btn.disabled=false;btn.textContent='↻ REFRESH';return;
   }
-  btn.disabled=false; btn.textContent='↻ REFRESH';
+  btn.disabled=false;btn.textContent='↻ REFRESH';
   render();
 }
 
 // ── Build row ──────────────────────────────────────────────────────────────
 function pips(c){
-  const n=c==='High'?3:c==='Med'?2:1;
-  const cls=c==='High'?'pip-high':c==='Med'?'pip-med':'pip-low';
+  const n=c==='High'?3:c==='Med'?2:1,cls=c==='High'?'pip-high':c==='Med'?'pip-med':'pip-low';
   let h='';for(let i=0;i<3;i++)h+='<div class="conf-pip '+(i<n?cls:'pip-empty')+'"></div>';return h;
 }
 function pstat(era,whip){
-  if(!era) return '<span class="pitcher-stats">TBD</span>';
+  if(!era)return'<span class="pitcher-stats">TBD</span>';
   const w=whip?'<span style="color:var(--muted)"> · </span>WHIP <span class="sv">'+whip+'</span>':'';
-  return '<span class="pitcher-stats">ERA <span class="sv">'+era+'</span>'+w+'</span>';
+  return'<span class="pitcher-stats">ERA <span class="sv">'+era+'</span>'+w+'</span>';
 }
 
 function buildRow(g){
   const rl=g.rating.toLowerCase();
   const stars=g.rating==='Elite'?'★★★':g.rating==='Strong'?'★★':g.rating==='Moderate'?'★':'·';
   const parkLabel=g.park>=1.1?' 🔥':g.park<=0.92?' ❄️':'';
-  const wxStr=g.wxAdj&&g.wxAdj!=='+0%'&&g.wxAdj!=='0%'
-    ?' <span style="color:var(--green)">'+g.wxAdj+'</span>':'';
+  const wxStr=g.wxAdj&&g.wxAdj!=='+0%'&&g.wxAdj!=='0%'?' <span style="color:var(--green)">'+g.wxAdj+'</span>':'';
   const abp=BULLPEN[g.away]||{grade:'?',era:'?',closer:'?'};
   const hbp=BULLPEN[g.home]||{grade:'?',era:'?',closer:'?'};
-
   const row=document.createElement('div');
-  row.className='game-row'; row.setAttribute('data-rating',g.rating);
+  row.className='game-row';row.setAttribute('data-rating',g.rating);
   row.innerHTML=
     '<div class="cell">'
       +'<div class="matchup-time">'+g.time+'</div>'
       +'<div class="matchup-teams">'+g.away+' <span style="color:var(--muted);font-size:11px;font-weight:400"> @ </span>'+g.home+'</div>'
-      +'<div class="matchup-sub">Park '+g.park+parkLabel+wxStr+'</div>'
+      +'<div class="matchup-sub">'+(g.park?'Park '+g.park+parkLabel:'')+(g.venue?' · '+g.venue:'')+wxStr+'</div>'
     +'</div>'
     +'<div class="cell">'
       +'<div class="pitcher-line"><span class="pitcher-side">AWY</span><span class="pitcher-name">'+g.awaySP+'</span>'+pstat(g.awayERA,g.awayWHIP)+'</div>'
@@ -427,22 +392,14 @@ function buildRow(g){
     +'<div class="cell">'
       +'<div class="pred-header">F5 pick</div>'
       +'<div class="pred-pick '+g.f5p+'">'+sn(g.f5Pick)+'</div>'
-      +'<div class="pred-totals"><span style="color:var(--green)">'+g.f5aw.toFixed(1)+'%</span>'
-        +'<span style="color:var(--muted)">·</span>'
-        +'<span style="color:var(--purple)">'+g.f5hw.toFixed(1)+'%</span>'
-        +'<span style="color:var(--muted);margin-left:4px">tot</span>'
-        +'<span class="tv">'+g.f5t+'</span></div>'
+      +'<div class="pred-totals"><span style="color:var(--green)">'+g.f5aw.toFixed(1)+'%</span><span style="color:var(--muted)">·</span><span style="color:var(--purple)">'+g.f5hw.toFixed(1)+'%</span><span style="color:var(--muted);margin-left:4px">tot</span><span class="tv">'+g.f5t+'</span></div>'
       +'<div class="win-mini"><div class="wma" style="width:'+g.f5aw+'%"></div><div class="wmh" style="width:'+g.f5hw+'%"></div></div>'
       +'<div class="win-pcts">'+g.f5c+' conf</div>'
     +'</div>'
     +'<div class="cell">'
       +'<div class="pred-header">Full game pick</div>'
       +'<div class="pred-pick '+g.fgp+'">'+sn(g.fgPick)+'</div>'
-      +'<div class="pred-totals"><span style="color:var(--green)">'+g.fgaw.toFixed(1)+'%</span>'
-        +'<span style="color:var(--muted)">·</span>'
-        +'<span style="color:var(--purple)">'+g.fghw.toFixed(1)+'%</span>'
-        +'<span style="color:var(--muted);margin-left:4px">tot</span>'
-        +'<span class="tv">'+g.fgt+'</span></div>'
+      +'<div class="pred-totals"><span style="color:var(--green)">'+g.fgaw.toFixed(1)+'%</span><span style="color:var(--muted)">·</span><span style="color:var(--purple)">'+g.fghw.toFixed(1)+'%</span><span style="color:var(--muted);margin-left:4px">tot</span><span class="tv">'+g.fgt+'</span></div>'
       +'<div class="win-mini"><div class="wma" style="width:'+g.fgaw+'%"></div><div class="wmh" style="width:'+g.fghw+'%"></div></div>'
       +'<div class="win-pcts">'+g.fgc+' conf</div>'
     +'</div>'
@@ -459,10 +416,7 @@ function buildRow(g){
         +'<div class="expand-row"><span class="expand-key">Home win%</span><span class="expand-val" style="color:var(--purple)">'+g.f5hw.toFixed(1)+'%</span></div>'
         +'<div class="expand-row"><span class="expand-key">F5 total</span><span class="expand-val">'+g.f5t+'</span></div>'
         +'<div class="expand-row"><span class="expand-key">Confidence</span><span class="expand-val">'+g.f5c+'</span></div>'
-        +'<div class="expand-bar-wrap">'
-          +'<div class="expand-bar-row"><span class="expand-bar-label">AWY</span><div class="expand-bar-track"><div class="expand-bar-fill-a" style="width:'+g.f5aw+'%"></div></div><span class="expand-bar-pct">'+g.f5aw.toFixed(1)+'%</span></div>'
-          +'<div class="expand-bar-row"><span class="expand-bar-label">HME</span><div class="expand-bar-track"><div class="expand-bar-fill-h" style="width:'+g.f5hw+'%"></div></div><span class="expand-bar-pct">'+g.f5hw.toFixed(1)+'%</span></div>'
-        +'</div>'
+        +'<div class="expand-bar-wrap"><div class="expand-bar-row"><span class="expand-bar-label">AWY</span><div class="expand-bar-track"><div class="expand-bar-fill-a" style="width:'+g.f5aw+'%"></div></div><span class="expand-bar-pct">'+g.f5aw.toFixed(1)+'%</span></div><div class="expand-bar-row"><span class="expand-bar-label">HME</span><div class="expand-bar-track"><div class="expand-bar-fill-h" style="width:'+g.f5hw+'%"></div></div><span class="expand-bar-pct">'+g.f5hw.toFixed(1)+'%</span></div></div>'
       +'</div>'
       +'<div>'
         +'<div class="expand-head">Full game breakdown</div>'
@@ -472,10 +426,7 @@ function buildRow(g){
         +'<div class="expand-row"><span class="expand-key">FG total</span><span class="expand-val">'+g.fgt+'</span></div>'
         +'<div class="expand-row"><span class="expand-key">Confidence</span><span class="expand-val">'+g.fgc+'</span></div>'
         +'<div class="expand-row"><span class="expand-key">Park factor</span><span class="expand-val">'+g.park+parkLabel+'</span></div>'
-        +'<div class="expand-bar-wrap">'
-          +'<div class="expand-bar-row"><span class="expand-bar-label">AWY</span><div class="expand-bar-track"><div class="expand-bar-fill-a" style="width:'+g.fgaw+'%"></div></div><span class="expand-bar-pct">'+g.fgaw.toFixed(1)+'%</span></div>'
-          +'<div class="expand-bar-row"><span class="expand-bar-label">HME</span><div class="expand-bar-track"><div class="expand-bar-fill-h" style="width:'+g.fghw+'%"></div></div><span class="expand-bar-pct">'+g.fghw.toFixed(1)+'%</span></div>'
-        +'</div>'
+        +'<div class="expand-bar-wrap"><div class="expand-bar-row"><span class="expand-bar-label">AWY</span><div class="expand-bar-track"><div class="expand-bar-fill-a" style="width:'+g.fgaw+'%"></div></div><span class="expand-bar-pct">'+g.fgaw.toFixed(1)+'%</span></div><div class="expand-bar-row"><span class="expand-bar-label">HME</span><div class="expand-bar-track"><div class="expand-bar-fill-h" style="width:'+g.fghw+'%"></div></div><span class="expand-bar-pct">'+g.fghw.toFixed(1)+'%</span></div></div>'
       +'</div>'
       +'<div>'
         +'<div class="expand-head">Starting pitchers</div>'
@@ -493,11 +444,10 @@ function buildRow(g){
         +'<div class="expand-row"><span class="expand-key">'+sn(g.home)+' bp</span><span class="grade-pill '+gc(hbp.grade)+'">'+hbp.grade+'</span></div>'
         +'<div style="font-size:10px;color:var(--muted);margin-bottom:8px">'+hbp.closer+' · ERA '+hbp.era+'</div>'
         +(g.wxAdj&&g.wxAdj!=='+0%'?'<div class="expand-row"><span class="expand-key">Weather adj</span><span class="expand-val" style="color:var(--green)">'+g.wxAdj+'</span></div>':'')
-        +'<div class="expand-row" style="margin-top:4px"><span class="expand-key">Venue</span><span class="expand-val" style="font-size:10px">'+(g.venue||'—')+'</span></div>'
+        +(g.venue?'<div class="expand-row" style="margin-top:4px"><span class="expand-key">Venue</span><span class="expand-val" style="font-size:10px">'+g.venue+'</span></div>':'')
       +'</div>'
     +'</div>'
     +'<span class="chevron">▼</span>';
-
   row.addEventListener('click',()=>{
     const panel=row.querySelector('.expand-panel');
     const open=row.classList.toggle('expanded');
@@ -523,9 +473,9 @@ function updateSummary(games){
 
 function render(){
   let games=[...(allGames[currentDay]||[])];
-  if(currentFilter!=='all') games=games.filter(g=>g.rating===currentFilter);
-  if(currentSort==='rating') games.sort((a,b)=>RO[a.rating]-RO[b.rating]);
-  else if(currentSort==='total') games.sort((a,b)=>b.fgt-a.fgt);
+  if(currentFilter!=='all')games=games.filter(g=>g.rating===currentFilter);
+  if(currentSort==='rating')games.sort((a,b)=>RO[a.rating]-RO[b.rating]);
+  else if(currentSort==='total')games.sort((a,b)=>b.fgt-a.fgt);
   else games.sort((a,b)=>timeMin(a.time)-timeMin(b.time));
   const list=document.getElementById('game-list');
   list.innerHTML='';
