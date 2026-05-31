@@ -246,21 +246,22 @@ function timeMin(t){
 
 // ── Parse schedule tab ─────────────────────────────────────────────────────
 // Game rows: col1 is "Today" or "Tmrw", col0 has a time like "12:15 PM"
+// Returns array of game objects (not a map) to avoid key collisions
 function parseSchedule(rows){
-  const map={};
+  const games=[];
   for(const r of rows){
     if(r.length<12) continue;
-    const day=(r[1]||'').toLowerCase();
+    const dayRaw=(r[1]||'').toLowerCase();
     const time=(r[0]||'').trim();
     if(!time.match(/\d+:\d+/)) continue;
-    if(!day.includes('today')&&!day.includes('tmrw')&&!day.includes('tomorrow')) continue;
+    if(!dayRaw.includes('today')&&!dayRaw.includes('tmrw')&&!dayRaw.includes('tomorrow')) continue;
     const away=(r[2]||'').trim(), home=(r[4]||'').trim();
     if(!away||!home) continue;
-    map[away+'@'+home]={
+    games.push({
       away, home,
       time,
       venue:(r[5]||'').trim(),
-      day: day.includes('tmrw')||day.includes('tomorrow')?'tomorrow':'today',
+      day: dayRaw.includes('tmrw')||dayRaw.includes('tomorrow')?'tomorrow':'today',
       awaySP:val(r[6])||'TBD',
       awayERA:val(r[7]),
       awayWHIP:val(r[8]),
@@ -270,9 +271,9 @@ function parseSchedule(rows){
       projTotal:num(r[14]),
       fgAwayWin:pct(r[15]),
       fgHomeWin:pct(r[16]),
-    };
+    });
   }
-  return map;
+  return games;
 }
 
 // ── Parse predictions tab ──────────────────────────────────────────────────
@@ -303,24 +304,31 @@ function parsePreds(rows){
   return map;
 }
 
-// ── Merge both tabs into game list ─────────────────────────────────────────
-function merge(sched, preds){
+// ── Merge schedule array + predictions map into today/tomorrow lists ────────
+function merge(schedGames, preds){
   const today=[], tomorrow=[];
-  for(const [key, s] of Object.entries(sched)){
+  for(const s of schedGames){
+    const key=s.away+'@'+s.home;
     const p=preds[key]||{};
+    const awPick=s.fgAwayWin>s.fgHomeWin?s.away:s.home;
+    const awSide=s.fgAwayWin>s.fgHomeWin?'away':'home';
     const g={
       away:s.away, home:s.home, time:s.time, venue:s.venue,
       awaySP:s.awaySP, awayERA:s.awayERA, awayWHIP:s.awayWHIP,
       homeSP:s.homeSP, homeERA:s.homeERA, homeWHIP:s.homeWHIP,
-      park:p.park||1.00, wxAdj:p.wxAdj||'+0%',
+      park:p.park||1.00,
+      wxAdj:p.wxAdj||'+0%',
       f5aw:p.f5aw||0, f5hw:p.f5hw||0,
-      f5Pick:p.f5Pick||(s.fgAwayWin>s.fgHomeWin?s.away:s.home),
-      f5p:p.f5p||(s.fgAwayWin>s.fgHomeWin?'away':'home'),
-      f5c:p.f5c||'Low', f5t:p.f5t||0,
-      fgaw:p.fgaw||s.fgAwayWin||0, fghw:p.fghw||s.fgHomeWin||0,
-      fgPick:p.fgPick||(s.fgAwayWin>s.fgHomeWin?s.away:s.home),
-      fgp:p.fgp||(s.fgAwayWin>s.fgHomeWin?'away':'home'),
-      fgc:p.fgc||'Low', fgt:p.fgt||s.projTotal||0,
+      f5Pick:p.f5Pick||awPick,
+      f5p:p.f5p||awSide,
+      f5c:p.f5c||'Low',
+      f5t:p.f5t||0,
+      fgaw:p.fgaw||s.fgAwayWin||0,
+      fghw:p.fghw||s.fgHomeWin||0,
+      fgPick:p.fgPick||awPick,
+      fgp:p.fgp||awSide,
+      fgc:p.fgc||'Low',
+      fgt:p.fgt||s.projTotal||0,
       rating:p.rating||'Lean',
     };
     if(s.day==='tomorrow') tomorrow.push(g);
@@ -350,9 +358,9 @@ async function loadData(){
     const dm=firstCell.match(/(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)[,.\s]+\w+ \d+,?\s*\d*/i);
     if(dm) document.getElementById('sheet-date').textContent=dm[0].trim().substring(0,55);
 
-    const schedMap=parseSchedule(schedRows);
+    const schedGames=parseSchedule(schedRows);
     const predMap=parsePreds(predRows);
-    allGames=merge(schedMap,predMap);
+    allGames=merge(schedGames,predMap);
 
     document.getElementById('tab-today').textContent=
       'Today'+(allGames.today.length?' ('+allGames.today.length+')':'');
