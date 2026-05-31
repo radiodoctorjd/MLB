@@ -368,6 +368,9 @@ async function loadData(){
     console.log('First 3 games:', schedGames.slice(0,3));
     console.log('Pred map keys:', Object.keys(predMap).slice(0,3));
 
+    // Extra debug — show col0 and col1 of every row
+    schedRows.forEach((r,i)=>console.log(`row[${i}] col0=[${r[0]}] col1=[${r[1]}] len=${r.length}`));
+
     allGames=merge(schedGames,predMap);
 
     document.getElementById('tab-today').textContent=
