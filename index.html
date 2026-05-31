@@ -360,6 +360,14 @@ async function loadData(){
 
     const schedGames=parseSchedule(schedRows);
     const predMap=parsePreds(predRows);
+
+    // DEBUG — remove after testing
+    console.log('Schedule CSV rows:', schedRows.length);
+    console.log('Schedule rows sample:', schedRows.slice(0,8).map(r=>r.slice(0,5)));
+    console.log('Games parsed from schedule:', schedGames.length);
+    console.log('First 3 games:', schedGames.slice(0,3));
+    console.log('Pred map keys:', Object.keys(predMap).slice(0,3));
+
     allGames=merge(schedGames,predMap);
 
     document.getElementById('tab-today').textContent=
