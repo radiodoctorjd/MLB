@@ -281,16 +281,15 @@ function buildWhipLookup(rows) {
 }
 
 function buildTotalsLookup(rows) {
-  // DEBUG — log first game row so we can see all column values
-  const firstGameRow = rows.find(r => (r[0]||'').includes('@'));
-  if (firstGameRow) console.log('TOTALS first game row:', firstGameRow.map((v,i)=>`[${i}]=${v}`).join(' | '));
   const lu={}; let dayCtx='today';
   for(const r of rows){
     const flat=r.join(' ');
     if(/TODAY/i.test(flat)&&!/@/.test(flat)){dayCtx='today';continue;}
     if(/TOMORROW/i.test(flat)&&!/@/.test(flat)){dayCtx='tomorrow';continue;}
     const m=r[T.matchup]||'';
+    // Must have @ AND have actual run data in col 6 to be a real game row
     if(!m.includes('@')) continue;
+    if(!r[T.awayF5runs]||!/\d/.test(r[T.awayF5runs])) continue;
     const p=m.split('@').map(s=>s.trim());
     if(p.length<2||!p[0]||!p[1]) continue;
     lu[p[0]+'|'+p[1]]={
