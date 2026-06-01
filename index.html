@@ -211,7 +211,7 @@ const C = {matchup:0,time:1,awaySP:2,homeSP:3,park:4,wx:5,
   awayF5:6,homeF5:7,f5Pick:8,f5Conf:9,f5Total:10,f5OU:11,
   awayFG:12,homeFG:13,fgPick:14,fgConf:15,fgTotal:16,fgOU:17,rating:18};
 const S = {away:2,home:4,awayWHIP:8,homeWHIP:11};
-const T = {matchup:0,awayF5runs:12,homeF5runs:13,awayFGruns:6,homeFGruns:7};
+const T = {matchup:0,awayF5runs:6,homeF5runs:7,awayFGruns:12,homeFGruns:13};
 // Weather tab: game/venue in col 9, weather data cols 10-18
 const W = {game:9,temp:10,humidity:11,wind:12,dir:13,rain:14,cloud:15,conditions:16,impact:17,adj:18};
 
@@ -281,6 +281,9 @@ function buildWhipLookup(rows) {
 }
 
 function buildTotalsLookup(rows) {
+  // DEBUG — log first game row so we can see all column values
+  const firstGameRow = rows.find(r => (r[0]||'').includes('@'));
+  if (firstGameRow) console.log('TOTALS first game row:', firstGameRow.map((v,i)=>`[${i}]=${v}`).join(' | '));
   const lu={}; let dayCtx='today';
   for(const r of rows){
     const flat=r.join(' ');
