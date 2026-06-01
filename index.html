@@ -211,7 +211,7 @@ const C = {matchup:0,time:1,awaySP:2,homeSP:3,park:4,wx:5,
   awayF5:6,homeF5:7,f5Pick:8,f5Conf:9,f5Total:10,f5OU:11,
   awayFG:12,homeFG:13,fgPick:14,fgConf:15,fgTotal:16,fgOU:17,rating:18};
 const S = {away:2,home:4,awayWHIP:8,homeWHIP:11};
-const T = {matchup:0,awayF5runs:6,homeF5runs:7,awayFGruns:12,homeFGruns:13};
+const T = {matchup:0,awayF5runs:12,homeF5runs:13,awayFGruns:6,homeFGruns:7};
 // Weather tab: game/venue in col 9, weather data cols 10-18
 const W = {game:9,temp:10,humidity:11,wind:12,dir:13,rain:14,cloud:15,conditions:16,impact:17,adj:18};
 
@@ -261,7 +261,15 @@ function parseSP(raw) {
   const m=raw.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
   return m?{name:m[1].trim(),era:m[2].trim()}:{name:raw.trim(),era:''};
 }
-function parseRuns(s){return s?s.replace(/^[A-Z]+:\s*/,'').trim():'';}
+function parseRuns(s){
+  if(!s) return '';
+  // Handle "DET: 2.82" format → "2.82"
+  const stripped = s.replace(/^[A-Za-z]+:\s*/,'').trim();
+  // If it's a valid number return it formatted to 2 decimal places max
+  const n = parseFloat(stripped);
+  if(!isNaN(n)) return n % 1 === 0 ? String(n) : n.toFixed(2);
+  return stripped;
+}
 
 function buildWhipLookup(rows) {
   const lu={};
