@@ -17,9 +17,10 @@
 
   header{background:linear-gradient(135deg,#0f172a,#1e3a5f);border-bottom:1px solid var(--border);
     padding:14px 20px;display:flex;align-items:center;justify-content:space-between;
-    position:sticky;top:0;z-index:100}
+    position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,0,0,0.4)}
   .logo{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;letter-spacing:1px}
   .logo span{color:var(--accent)}
+  .header-right{display:flex;align-items:center;gap:12px}
   .live-badge{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:#16a34a;letter-spacing:1px}
   .live-dot{width:7px;height:7px;background:#16a34a;border-radius:50%;animation:pulse 1.5s infinite}
   @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
@@ -40,91 +41,93 @@
   .sort-btn{padding:6px 12px;border-radius:6px;border:1px solid var(--border);cursor:pointer;
     font-family:'Barlow',sans-serif;font-size:12px;font-weight:500;background:none;color:var(--text3);transition:all .2s}
   .sort-btn.active{border-color:var(--accent);color:var(--text)}
+  .sort-btn:hover:not(.active){color:var(--text2)}
 
   #status-bar{padding:8px 20px;font-size:12px;color:var(--text3);background:var(--bg);
-    border-bottom:1px solid var(--border);display:none}
-  #status-bar.visible{display:block}
+    border-bottom:1px solid var(--border)}
   #status-bar.error{color:#f87171}
+  #status-bar:empty{display:none}
 
   .game-count{padding:10px 20px 4px;font-size:12px;color:var(--text3);font-weight:600;
     letter-spacing:.5px;text-transform:uppercase}
 
   #games-grid{padding:8px 16px 40px;display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:12px}
+    grid-template-columns:repeat(auto-fill,minmax(440px,1fr));gap:12px}
 
   .game-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;
     overflow:hidden;transition:transform .15s,border-color .15s}
   .game-card:hover{transform:translateY(-2px);border-color:#2e4a6e}
-  .card-header{padding:12px 14px 10px;display:flex;align-items:center;
-    justify-content:space-between;border-bottom:1px solid var(--border)}
-  .matchup{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;line-height:1.2}
-  .matchup .at{color:var(--text3);font-weight:400;margin:0 4px}
+
+  .card-header{padding:12px 14px 10px;display:flex;align-items:flex-start;
+    justify-content:space-between;border-bottom:1px solid var(--border);gap:8px}
+  .matchup{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;line-height:1.2;flex:1}
+  .matchup .at{color:var(--text3);font-weight:400;margin:0 4px;font-size:14px}
   .matchup .winner{color:#60a5fa}
-  .card-meta{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
-  .rating-badge{font-size:12px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap}
+  .card-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+  .rating-badge{font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap}
   .rating-elite{background:rgba(245,158,11,.15);color:var(--elite);border:1px solid rgba(245,158,11,.3)}
   .rating-strong{background:rgba(96,165,250,.15);color:var(--strong);border:1px solid rgba(96,165,250,.3)}
   .rating-moderate{background:rgba(167,139,250,.15);color:var(--moderate);border:1px solid rgba(167,139,250,.3)}
   .rating-lean{background:rgba(148,163,184,.1);color:var(--text3);border:1px solid var(--border)}
   .game-time{font-size:11px;color:var(--text3);font-weight:500}
 
-  .pitchers-row{padding:8px 14px;display:flex;gap:8px;align-items:center;
+  .pitchers-row{padding:8px 14px;display:flex;gap:6px;align-items:center;
     border-bottom:1px solid var(--border);flex-wrap:wrap}
-  .pitcher-chip{font-size:11px;padding:3px 8px;background:var(--surface2);border-radius:4px;
-    color:var(--text2);display:flex;align-items:center;gap:4px}
-  .pitcher-chip .era{color:var(--text3);font-size:10px}
-  .pitcher-chip .lbl{color:var(--text3);font-size:10px;font-weight:600;text-transform:uppercase}
-  .pitcher-vs{color:var(--text3);font-size:11px}
+  .pitcher-chip{font-size:11px;padding:4px 9px;background:var(--surface2);border-radius:5px;
+    color:var(--text2);display:flex;align-items:center;gap:5px;flex:1;min-width:0}
+  .pitcher-chip .p-lbl{color:var(--text3);font-size:10px;font-weight:700;text-transform:uppercase;flex-shrink:0}
+  .pitcher-chip .p-name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pitcher-chip .p-era{color:var(--text3);font-size:10px;flex-shrink:0}
+  .pitcher-vs{color:var(--text3);font-size:11px;flex-shrink:0}
 
   .stats-grid{display:grid;grid-template-columns:1fr 1fr}
-  .stat-panel{padding:10px 14px;border-bottom:1px solid var(--border)}
+  .stat-panel{padding:11px 14px}
   .stat-panel:nth-child(1){border-right:1px solid var(--border)}
   .stat-label{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
-    color:var(--text3);margin-bottom:5px}
-  .stat-pick{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;
-    color:#60a5fa;margin-bottom:4px;line-height:1.1}
-  .stat-nums{display:flex;gap:10px;margin-bottom:4px;flex-wrap:wrap}
-  .stat-num{display:flex;flex-direction:column;align-items:center}
-  .stat-num .val{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--text)}
+    color:var(--text3);margin-bottom:6px}
+  .stat-pick{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;
+    color:#60a5fa;margin-bottom:5px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .stat-row-nums{display:flex;gap:10px;margin-bottom:6px;flex-wrap:wrap}
+  .stat-num{display:flex;flex-direction:column;align-items:center;gap:1px}
+  .stat-num .val{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:700;color:var(--text)}
   .stat-num .lbl{font-size:9px;font-weight:600;letter-spacing:.5px;color:var(--text3);text-transform:uppercase}
-  .conf-badge{font-size:10px;padding:2px 6px;border-radius:3px;font-weight:600}
+  .conf-badge{font-size:10px;padding:2px 7px;border-radius:3px;font-weight:700}
   .conf-high{background:rgba(22,163,74,.15);color:#4ade80}
   .conf-med{background:rgba(234,179,8,.15);color:#fbbf24}
   .conf-low{background:rgba(148,163,184,.1);color:var(--text3)}
 
-  .win-row{display:flex;align-items:center;gap:6px;margin-top:3px}
+  .win-row{display:flex;align-items:center;gap:6px;margin-top:4px}
   .win-lbl{font-size:10px;color:var(--text3);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .win-bar{width:80px;height:3px;background:var(--surface2);border-radius:2px;overflow:hidden;flex-shrink:0}
-  .win-fill{height:100%;border-radius:2px}
+  .win-bar-wrap{width:70px;height:3px;background:var(--surface2);border-radius:2px;overflow:hidden;flex-shrink:0}
+  .win-bar-fill{height:100%;border-radius:2px}
   .fill-high{background:#16a34a}.fill-mid{background:var(--accent)}.fill-low{background:var(--red)}
-  .win-pct{font-size:10px;color:var(--text2);width:36px;text-align:right;flex-shrink:0}
+  .win-pct{font-size:10px;color:var(--text2);width:38px;text-align:right;flex-shrink:0;font-weight:600}
 
   .venue-row{padding:7px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
-    border-bottom:1px solid var(--border)}
+    border-top:1px solid var(--border)}
   .park-badge{font-size:10px;padding:2px 7px;border-radius:3px;font-weight:600}
   .park-hitter{background:rgba(239,68,68,.12);color:#f87171}
   .park-pitcher{background:rgba(34,197,94,.12);color:#4ade80}
   .park-neutral{background:rgba(148,163,184,.1);color:var(--text3)}
+  .wx-badge{font-size:10px;color:var(--text3)}
 
   #empty-state{display:none;text-align:center;padding:80px 20px;color:var(--text3)}
-  #empty-state.visible{display:block}
+  #empty-state.show{display:block}
   #empty-state .emoji{font-size:48px;margin-bottom:16px}
   #empty-state h3{font-size:18px;color:var(--text2);margin-bottom:8px}
 
   #loading{text-align:center;padding:60px 20px;color:var(--text3)}
+  #loading.hide{display:none}
   .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);
     border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
   @keyframes spin{to{transform:rotate(360deg)}}
 
-  /* DEBUG PANEL */
-  #debug-panel{background:#0d1117;border:1px solid #1e2d45;border-radius:8px;
-    margin:12px 16px;padding:12px;font-size:11px;font-family:monospace;color:#94a3b8;
-    max-height:300px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
-
   @media(max-width:600px){
     #games-grid{grid-template-columns:1fr;padding:8px 10px 40px}
     .controls{padding:10px 12px}
-    .sort-group{margin-left:0}
+    .sort-group{margin-left:0;width:100%}
+    .pitchers-row{gap:4px}
+    .pitcher-chip{font-size:10px;padding:3px 7px}
   }
 </style>
 </head>
@@ -132,8 +135,10 @@
 
 <header>
   <div class="logo">⚾ MLB <span>PREDICTIONS</span></div>
-  <div class="live-badge"><div class="live-dot"></div>LIVE</div>
-  <button class="refresh-btn" onclick="loadData()">↻ REFRESH</button>
+  <div class="header-right">
+    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+    <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
+  </div>
 </header>
 
 <div class="controls">
@@ -148,387 +153,313 @@
     <button class="filter-btn" onclick="setFilter('moderate',this)">⭐ Moderate</button>
   </div>
   <div class="sort-group">
-    <button class="sort-btn active" onclick="setSort('time',this)">Time</button>
-    <button class="sort-btn" onclick="setSort('conf',this)">Confidence</button>
-    <button class="sort-btn" onclick="setSort('total',this)">FG Total ↓</button>
+    <button class="sort-btn active" onclick="setSort('time',this)">⏰ Time</button>
+    <button class="sort-btn" onclick="setSort('conf',this)">⭐ Rating</button>
+    <button class="sort-btn" onclick="setSort('total',this)">📊 FG Total</button>
   </div>
 </div>
 
 <div id="status-bar"></div>
-<div id="debug-panel">⏳ Waiting to load...</div>
 <div class="game-count" id="game-count"></div>
-<div id="loading"><div class="spinner"></div>Loading from Google Sheets...</div>
+<div id="loading"><div class="spinner"></div>Loading predictions...</div>
 <div id="games-grid"></div>
-<div id="empty-state"><div class="emoji">🔍</div><h3>No games match this filter</h3><p>Try a different rating or day</p></div>
+<div id="empty-state">
+  <div class="emoji">🔍</div>
+  <h3>No games match this filter</h3>
+  <p>Try selecting a different rating or day</p>
+</div>
 
 <script>
 const SHEET_ID = "1D1sOPDBV4WAT6W_8jabZRjr3UdKp3sIC8qk9dbZ4NjE";
 const GID      = "596859801";
 
+// Exact column indices from the sheet (row 3 header):
+// Matchup(0) Time(1) AwaySpEra(2) HomeSpEra(3) Park(4) Wx(5)
+// AwayF5Win%(6) HomeF5Win%(7) F5Pick(8) F5Conf(9) F5Total(10) F5OU(11)
+// AwayFGWin%(12) HomeFGWin%(13) FGPick(14) FGConf(15) FGTotal(16) FGOU(17) Rating(18)
+const C = {
+  matchup:0, time:1, awaySP:2, homeSP:3, park:4, wx:5,
+  awayF5:6, homeF5:7, f5Pick:8, f5Conf:9, f5Total:10, f5OU:11,
+  awayFG:12, homeFG:13, fgPick:14, fgConf:15, fgTotal:16, fgOU:17, rating:18
+};
+
 let ALL_GAMES = [];
-let currentDay    = 'today';
-let currentFilter = 'all';
-let currentSort   = 'time';
+let currentDay = 'today', currentFilter = 'all', currentSort = 'time';
 
-function dbg(msg) {
-  console.log(msg);
-  const el = document.getElementById('debug-panel');
-  el.textContent += '\n' + msg;
-}
-
-// ── Fetch sheet as JSON using gviz endpoint ───────────────────────────────
-// The gviz/tq endpoint returns:  google.visualization.Query.setResponse({...})
-// We intercept it by overriding that function before loading the script.
-function fetchSheetJSON() {
+// ── Fetch via gviz (no CORS) ──────────────────────────────────────────────
+function fetchSheet() {
   return new Promise((resolve, reject) => {
-    const cbName = '__mlbGviz';
-
-    // The response calls google.visualization.Query.setResponse(data)
-    // So we mock that namespace
     window.google = window.google || {};
     window.google.visualization = window.google.visualization || {};
     window.google.visualization.Query = window.google.visualization.Query || {};
     window.google.visualization.Query.setResponse = function(data) {
-      cleanup();
-      if (data && data.table) {
-        resolve(data);
-      } else {
-        reject(new Error('No table in response: ' + JSON.stringify(data).slice(0,200)));
-      }
-    };
-
-    const timer = setTimeout(() => { cleanup(); reject(new Error('Timeout')); }, 10000);
-
-    function cleanup() {
-      clearTimeout(timer);
       const s = document.getElementById('gviz-script');
       if (s) s.remove();
-    }
-
+      if (data && data.table) resolve(data.table);
+      else reject(new Error('Access denied or no data. Make sure the sheet is shared publicly (Anyone with link = Viewer).'));
+    };
     const script = document.createElement('script');
     script.id = 'gviz-script';
-    // tqx=out:json tells it to use setResponse callback
-    script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${GID}&t=${Date.now()}`;
-    script.onerror = () => { cleanup(); reject(new Error('Script failed to load')); };
+    script.src = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID +
+                 '/gviz/tq?tqx=out:json&gid=' + GID + '&t=' + Date.now();
+    script.onerror = () => reject(new Error('Failed to load sheet script'));
     document.head.appendChild(script);
   });
 }
 
-// ── Extract rows from gviz DataTable ─────────────────────────────────────
-function extractFromGviz(data) {
-  const table = data.table;
-  const cols = table.cols.map((c, i) => ({
-    idx: i,
-    label: (c.label || '').trim(),
-    type: c.type
-  }));
-
-  dbg('=== COLUMNS (' + cols.length + ') ===');
-  cols.forEach(c => dbg(`  [${c.idx}] "${c.label}" (${c.type})`));
-
-  const rows = (table.rows || []).map(row =>
-    (row.c || []).map(cell => {
-      if (!cell || cell.v === null || cell.v === undefined) return '';
-      // Prefer formatted value (f) for display; fall back to raw (v)
-      return (cell.f !== undefined && cell.f !== null) ? String(cell.f).trim()
-           : String(cell.v).trim();
-    })
-  );
-
-  dbg('\n=== ROWS (' + rows.length + ') ===');
-  rows.forEach((r, i) => {
-    const flat = r.join(' | ');
-    if (flat.trim()) dbg(`  [${i}] ${flat.slice(0,120)}`);
-  });
-
-  return { cols: cols.map(c => c.label), rows };
+// ── Parse SP cell: "Spencer Miles  (3.47)" → {name, era} ─────────────────
+function parseSP(raw) {
+  if (!raw) return {name:'TBD', era:''};
+  const m = raw.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+  if (m) return {name: m[1].trim(), era: m[2].trim()};
+  return {name: raw.trim(), era: ''};
 }
 
-// ── Map column labels to indices ──────────────────────────────────────────
-function buildColMap(cols) {
-  const map = {};
-  cols.forEach((raw, i) => {
-    const c = raw.toLowerCase().replace(/[^a-z0-9%\/@ ]/g,' ').replace(/\s+/g,' ').trim();
-
-    if      (c === 'matchup' || c.includes('matchup'))                     map.matchup  = i;
-    else if (c.includes('time'))                                            map.time     = i;
-    else if (c.includes('away sp'))                                         map.awaySP   = i;
-    else if (c.includes('home sp'))                                         map.homeSP   = i;
-    else if (c.includes('park factor') || c === 'park')                    map.park     = i;
-    else if (c.includes('wx') || c.includes('weather adj'))               map.wx       = i;
-    else if (/away.*f5|f5.*away/.test(c))                                   map.awayF5   = i;
-    else if (/home.*f5|f5.*home/.test(c))                                   map.homeF5   = i;
-    else if (/f5.*pick/.test(c))                                             map.f5Pick   = i;
-    else if (/f5.*conf/.test(c))                                             map.f5Conf   = i;
-    else if (/f5.*total/.test(c))                                            map.f5Total  = i;
-    else if (/f5.*o.u/.test(c))                                              map.f5OU     = i;
-    else if (/away.*fg|fg.*away/.test(c))                                   map.awayFG   = i;
-    else if (/home.*fg|fg.*home/.test(c))                                   map.homeFG   = i;
-    else if (/fg.*pick/.test(c))                                             map.fgPick   = i;
-    else if (/fg.*conf/.test(c))                                             map.fgConf   = i;
-    else if (/fg.*total|proj.*total/.test(c))                               map.fgTotal  = i;
-    else if (/fg.*o.u/.test(c))                                             map.fgOU     = i;
-    else if (c === 'rating' || c.includes('rating'))                       map.rating   = i;
-    else if (/day|today|tmrw|tomorrow/.test(c))                             map.day      = i;
-  });
-
-  dbg('\n=== COL MAP ===');
-  dbg(JSON.stringify(map, null, 2));
-  return map;
-}
-
-// ── Parse rows into game objects ──────────────────────────────────────────
-function parseGames(cols, rows) {
-  const map = buildColMap(cols);
+// ── Main parse ────────────────────────────────────────────────────────────
+function parseTable(table) {
   const games = [];
   let dayCtx = 'today';
 
-  const get = (row, key) =>
-    (map[key] !== undefined && row[map[key]] !== undefined) ? row[map[key]] : '';
+  // Each row.c is an array of cell objects {v, f}
+  // Use formatted value (f) when available, else raw (v)
+  const cellVal = (cell) => {
+    if (!cell) return '';
+    if (cell.f !== undefined && cell.f !== null && cell.f !== '') return String(cell.f).trim();
+    if (cell.v !== undefined && cell.v !== null) return String(cell.v).trim();
+    return '';
+  };
 
-  dbg('\n=== GAME ROWS ===');
+  for (const row of (table.rows || [])) {
+    const c = row.c || [];
+    // Build string array for this row
+    const r = c.map(cellVal);
+    const flat = r.join(' ');
 
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
-    const flat = row.join(' ');
+    // Day markers — these rows contain TODAY or TOMORROW but NOT @
+    if (/TODAY/i.test(flat) && !/@/.test(flat))     { dayCtx = 'today';    continue; }
+    if (/TOMORROW/i.test(flat) && !/@/.test(flat))   { dayCtx = 'tomorrow'; continue; }
 
-    // Skip fully empty rows
-    if (!flat.trim()) continue;
+    // Game rows must have @ in col 0
+    const matchupRaw = r[C.matchup] || '';
+    if (!matchupRaw.includes('@')) continue;
 
-    // Day context markers
-    if (/\btoday\b/i.test(flat) && !/@/.test(flat)) { dayCtx = 'today';    dbg(`[${i}] DAY→today`);    continue; }
-    if (/\b(tmrw|tomorrow)\b/i.test(flat) && !/@/.test(flat)) { dayCtx = 'tomorrow'; dbg(`[${i}] DAY→tomorrow`); continue; }
-
-    // Game rows must have @ in matchup col or anywhere
-    const matchupRaw = map.matchup !== undefined ? row[map.matchup] || ''
-                     : row.find(c => / @ /i.test(c)) || '';
-
-    if (!/ @ /i.test(matchupRaw)) continue;
-
+    // Split matchup: "Toronto Blue Jays  @  Baltimore Orioles"
     const parts = matchupRaw.split('@').map(s => s.trim());
     if (parts.length < 2 || !parts[0] || !parts[1]) continue;
 
-    const away = parts[0];
-    const home = parts[1];
+    const awaySP = parseSP(r[C.awaySP]);
+    const homeSP = parseSP(r[C.homeSP]);
 
-    // Parse "Name (ERA)" SP format
-    const spParse = raw => {
-      const m = raw.match(/^(.+?)\s*\(([\d.]+|—|--)\)\s*$/);
-      return m ? {name: m[1].trim(), era: m[2]}
-               : {name: raw.replace(/\(.*?\)/g,'').trim(), era: ''};
-    };
-
-    const asp = spParse(get(row, 'awaySP'));
-    const hsp = spParse(get(row, 'homeSP'));
-
-    // If day col exists in the data, use it
-    if (map.day !== undefined && row[map.day]) {
-      const dv = row[map.day].toLowerCase();
-      if (/today/.test(dv)) dayCtx = 'today';
-      else if (/tmrw|tomorrow/.test(dv)) dayCtx = 'tomorrow';
-    }
-
-    const g = {
-      day: dayCtx,
-      time:      get(row, 'time'),
-      away, home,
-      awaySP:    asp.name, awaySPERA: asp.era,
-      homeSP:    hsp.name, homeSPERA: hsp.era,
-      park:      get(row, 'park'),
-      wx:        get(row, 'wx'),
-      awayF5:    get(row, 'awayF5'),
-      homeF5:    get(row, 'homeF5'),
-      f5Pick:    get(row, 'f5Pick'),
-      f5Conf:    get(row, 'f5Conf'),
-      f5Total:   get(row, 'f5Total'),
-      f5OU:      get(row, 'f5OU'),
-      awayFG:    get(row, 'awayFG'),
-      homeFG:    get(row, 'homeFG'),
-      fgPick:    get(row, 'fgPick'),
-      fgConf:    get(row, 'fgConf'),
-      fgTotal:   get(row, 'fgTotal'),
-      fgOU:      get(row, 'fgOU'),
-      rating:    get(row, 'rating'),
-      _raw:      row   // keep raw for debugging
-    };
-
-    dbg(`[${i}] ${away} @ ${home} | day=${g.day} | SP: ${asp.name||'?'} vs ${hsp.name||'?'} | fgPick=${g.fgPick} | rating=${g.rating}`);
-    games.push(g);
+    games.push({
+      day:      dayCtx,
+      time:     r[C.time]    || '',
+      away:     parts[0],
+      home:     parts[1],
+      awaySP:   awaySP.name,
+      awaySPERA:awaySP.era,
+      homeSP:   homeSP.name,
+      homeSPERA:homeSP.era,
+      park:     r[C.park]    || '',
+      wx:       r[C.wx]      || '',
+      awayF5:   r[C.awayF5]  || '',
+      homeF5:   r[C.homeF5]  || '',
+      f5Pick:   r[C.f5Pick]  || '',
+      f5Conf:   r[C.f5Conf]  || '',
+      f5Total:  r[C.f5Total] || '',
+      f5OU:     r[C.f5OU]    || '',
+      awayFG:   r[C.awayFG]  || '',
+      homeFG:   r[C.homeFG]  || '',
+      fgPick:   r[C.fgPick]  || '',
+      fgConf:   r[C.fgConf]  || '',
+      fgTotal:  r[C.fgTotal] || '',
+      fgOU:     r[C.fgOU]    || '',
+      rating:   r[C.rating]  || '',
+    });
   }
   return games;
 }
 
 // ── Load ──────────────────────────────────────────────────────────────────
 async function loadData() {
-  document.getElementById('debug-panel').textContent = '⏳ Loading...';
-  document.getElementById('loading').style.display = 'block';
+  setStatus('Loading...', false);
+  document.getElementById('loading').classList.remove('hide');
   document.getElementById('games-grid').innerHTML = '';
-  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('empty-state').classList.remove('show');
   document.getElementById('game-count').textContent = '';
-  setStatus('', false);
   ALL_GAMES = [];
 
   try {
-    dbg('Fetching sheet via gviz API...');
-    const data = await fetchSheetJSON();
-    const {cols, rows} = extractFromGviz(data);
-    ALL_GAMES = parseGames(cols, rows);
-
-    document.getElementById('loading').style.display = 'none';
-
-    const td = ALL_GAMES.filter(g => g.day === 'today').length;
-    const tm = ALL_GAMES.filter(g => g.day === 'tomorrow').length;
-    dbg(`\n✅ Total games: ${ALL_GAMES.length} (today: ${td}, tomorrow: ${tm})`);
+    const table = await fetchSheet();
+    ALL_GAMES = parseTable(table);
+    document.getElementById('loading').classList.add('hide');
 
     if (ALL_GAMES.length === 0) {
-      setStatus('⚠️ Sheet loaded but 0 games parsed — see debug panel', true);
+      setStatus('⚠️ Sheet loaded but no game rows found. Check column structure.', true);
     } else {
-      setStatus(`✅ Loaded ${ALL_GAMES.length} games`, false);
+      const td = ALL_GAMES.filter(g => g.day==='today').length;
+      const tm = ALL_GAMES.filter(g => g.day==='tomorrow').length;
+      setStatus('', false);
       document.getElementById('tab-today').textContent    = `Today (${td})`;
       document.getElementById('tab-tomorrow').textContent = `Tomorrow (${tm})`;
     }
   } catch(e) {
-    document.getElementById('loading').style.display = 'none';
-    dbg('❌ ERROR: ' + e.message);
+    document.getElementById('loading').classList.add('hide');
     setStatus('❌ ' + e.message, true);
   }
-
   render();
 }
 
-// ── UI ────────────────────────────────────────────────────────────────────
-function setStatus(msg, isErr) {
+// ── Helpers ───────────────────────────────────────────────────────────────
+function setStatus(msg, err) {
   const el = document.getElementById('status-bar');
   el.textContent = msg;
-  el.style.display = msg ? 'block' : 'none';
-  el.className = isErr ? 'visible error' : 'visible';
+  el.className = err ? 'error' : '';
 }
 function setDay(d) {
   currentDay = d;
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-' + d).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+d).classList.add('active');
   render();
 }
-function setFilter(f, btn) {
+function setFilter(f,btn) {
   currentFilter = f;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   render();
 }
-function setSort(s, btn) {
+function setSort(s,btn) {
   currentSort = s;
-  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   render();
 }
-
-// ── Cards ─────────────────────────────────────────────────────────────────
 function ratingKey(r) {
-  if (/elite|⭐⭐⭐/.test(r))  return 'elite';
-  if (/strong|⭐⭐/.test(r))   return 'strong';
-  if (/moderate|⭐/.test(r))  return 'moderate';
+  if (/Elite/.test(r))    return 'elite';
+  if (/Strong/.test(r))   return 'strong';
+  if (/Moderate/.test(r)) return 'moderate';
   return 'lean';
 }
-function confCls(c)   { return /high/i.test(c) ? 'conf-high' : /med/i.test(c) ? 'conf-med' : 'conf-low'; }
-function confLabel(c) { return /high/i.test(c) ? '🟢 High' : /med/i.test(c) ? '🟡 Med' : /low/i.test(c) ? '🔴 Low' : c; }
-function fillCls(v)   { return v >= 58 ? 'fill-high' : v <= 42 ? 'fill-low' : 'fill-mid'; }
-function parkCls(pf)  { const v=parseFloat(pf); return v>1.03?'park-hitter':v<0.97?'park-pitcher':'park-neutral'; }
-function parkLbl(pf)  {
+function confCls(c) {
+  return /High/i.test(c) ? 'conf-high' : /Med/i.test(c) ? 'conf-med' : 'conf-low';
+}
+function confLbl(c) {
+  return /High/i.test(c) ? '🟢 High' : /Med/i.test(c) ? '🟡 Med' : /Low/i.test(c) ? '🔴 Low' : c;
+}
+function fillCls(v) { return v>=58?'fill-high':v<=42?'fill-low':'fill-mid'; }
+function pctNum(s) { return parseFloat(String(s).replace('%',''))||0; }
+function parkCls(pf) {
   const v=parseFloat(pf);
-  if(!v) return pf;
+  return v>1.03?'park-hitter':v<0.97?'park-pitcher':'park-neutral';
+}
+function parkLbl(pf) {
+  const v=parseFloat(pf);
+  if(!v||v===1) return `⚪ Neutral (${pf})`;
   if(v>=1.30) return `🔴 Extreme Hitter (${pf})`;
   if(v>=1.05) return `🟠 Hitter Friendly (${pf})`;
   if(v<=0.94) return `🟢 Pitcher Friendly (${pf})`;
   return `⚪ Neutral (${pf})`;
 }
-function ratingBadge(r) {
-  const k = ratingKey(r);
-  const lbl = {elite:'⭐⭐⭐ Elite',strong:'⭐⭐ Strong',moderate:'⭐ Moderate',lean:'📊 Lean'}[k];
-  return `<span class="rating-badge rating-${k}">${lbl}</span>`;
-}
-function winBar(pct, label) {
-  if (!pct) return '';
-  const v = Math.min(Math.max(parseFloat(pct)||50, 0), 100);
-  const disp = String(pct).includes('%') ? pct : v.toFixed(1)+'%';
-  return `<div class="win-row">
-    <span class="win-lbl">${label}</span>
-    <div class="win-bar"><div class="win-fill ${fillCls(v)}" style="width:${v}%"></div></div>
-    <span class="win-pct">${disp}</span>
-  </div>`;
-}
 
+// ── Card ──────────────────────────────────────────────────────────────────
 function gameCard(g) {
-  const awayV = parseFloat(g.awayFG)||0, homeV = parseFloat(g.homeFG)||0;
-  const awayWin = awayV > homeV;
+  const awayFGv = pctNum(g.awayFG), homeFGv = pctNum(g.homeFG);
+  const awayWin = awayFGv > homeFGv;
+
+  const rk = ratingKey(g.rating);
+  const ratingLabels = {elite:'⭐⭐⭐ Elite',strong:'⭐⭐ Strong',moderate:'⭐ Moderate',lean:'📊 Lean'};
+
   const spChip = (lbl, name, era) =>
-    `<div class="pitcher-chip"><span class="lbl">${lbl}</span>&nbsp;${name||'TBD'}${era?` <span class="era">(${era})</span>`:''}</div>`;
+    `<div class="pitcher-chip">
+      <span class="p-lbl">${lbl}</span>
+      <span class="p-name">${name||'TBD'}</span>
+      ${era ? `<span class="p-era">(${era})</span>` : ''}
+    </div>`;
+
+  const winBar = (pct, label) => {
+    if (!pct) return '';
+    const v = Math.min(Math.max(pctNum(pct), 0), 100);
+    const disp = String(pct).includes('%') ? pct : v.toFixed(1)+'%';
+    return `<div class="win-row">
+      <span class="win-lbl">${label}</span>
+      <div class="win-bar-wrap"><div class="win-bar-fill ${fillCls(v)}" style="width:${v}%"></div></div>
+      <span class="win-pct">${disp}</span>
+    </div>`;
+  };
+
+  const wxClean = g.wx && g.wx !== '+0%' && g.wx !== '0%' ? g.wx : '';
 
   return `<div class="game-card">
     <div class="card-header">
       <div class="matchup">
         <span class="${awayWin?'winner':''}">${g.away}</span>
         <span class="at">@</span>
-        <span class="${awayWin?'':' winner'}">${g.home}</span>
+        <span class="${awayWin?'':'winner'}">${g.home}</span>
       </div>
       <div class="card-meta">
-        ${ratingBadge(g.rating)}
-        ${g.time?`<span class="game-time">${g.time}</span>`:''}
+        <span class="rating-badge rating-${rk}">${ratingLabels[rk]}</span>
+        ${g.time ? `<span class="game-time">${g.time}</span>` : ''}
       </div>
     </div>
+
     <div class="pitchers-row">
-      ${spChip('Away',g.awaySP,g.awaySPERA)}
+      ${spChip('Away', g.awaySP, g.awaySPERA)}
       <span class="pitcher-vs">vs</span>
-      ${spChip('Home',g.homeSP,g.homeSPERA)}
+      ${spChip('Home', g.homeSP, g.homeSPERA)}
     </div>
+
     <div class="stats-grid">
       <div class="stat-panel">
         <div class="stat-label">⚡ First 5 Innings</div>
-        ${g.f5Pick?`<div class="stat-pick">${g.f5Pick}</div>`:''}
-        <div class="stat-nums">
-          ${g.f5Total?`<div class="stat-num"><span class="val">${g.f5Total}</span><span class="lbl">Total</span></div>`:''}
-          ${g.f5OU?`<div class="stat-num"><span class="val">${g.f5OU}</span><span class="lbl">O/U</span></div>`:''}
-          ${g.f5Conf?`<div class="stat-num"><span class="conf-badge ${confCls(g.f5Conf)}">${confLabel(g.f5Conf)}</span><span class="lbl">Conf</span></div>`:''}
+        ${g.f5Pick ? `<div class="stat-pick" title="${g.f5Pick}">${g.f5Pick}</div>` : ''}
+        <div class="stat-row-nums">
+          ${g.f5Total ? `<div class="stat-num"><span class="val">${g.f5Total}</span><span class="lbl">F5 Total</span></div>` : ''}
+          ${g.f5Conf  ? `<div class="stat-num"><span class="conf-badge ${confCls(g.f5Conf)}">${confLbl(g.f5Conf)}</span><span class="lbl">Conf</span></div>` : ''}
         </div>
-        ${winBar(g.awayF5,g.away)}
-        ${winBar(g.homeF5,g.home)}
+        ${winBar(g.awayF5, g.away)}
+        ${winBar(g.homeF5, g.home)}
       </div>
       <div class="stat-panel">
         <div class="stat-label">🏆 Full Game</div>
-        ${g.fgPick?`<div class="stat-pick">${g.fgPick}</div>`:''}
-        <div class="stat-nums">
-          ${g.fgTotal?`<div class="stat-num"><span class="val">${g.fgTotal}</span><span class="lbl">Total</span></div>`:''}
-          ${g.fgOU?`<div class="stat-num"><span class="val">${g.fgOU}</span><span class="lbl">O/U</span></div>`:''}
-          ${g.fgConf?`<div class="stat-num"><span class="conf-badge ${confCls(g.fgConf)}">${confLabel(g.fgConf)}</span><span class="lbl">Conf</span></div>`:''}
+        ${g.fgPick ? `<div class="stat-pick" title="${g.fgPick}">${g.fgPick}</div>` : ''}
+        <div class="stat-row-nums">
+          ${g.fgTotal ? `<div class="stat-num"><span class="val">${g.fgTotal}</span><span class="lbl">FG Total</span></div>` : ''}
+          ${g.fgConf  ? `<div class="stat-num"><span class="conf-badge ${confCls(g.fgConf)}">${confLbl(g.fgConf)}</span><span class="lbl">Conf</span></div>` : ''}
         </div>
-        ${winBar(g.awayFG,g.away)}
-        ${winBar(g.homeFG,g.home)}
+        ${winBar(g.awayFG, g.away)}
+        ${winBar(g.homeFG, g.home)}
       </div>
     </div>
-    ${(g.park||g.wx)?`<div class="venue-row">
-      ${g.park?`<span class="park-badge ${parkCls(g.park)}">${parkLbl(g.park)}</span>`:''}
-      ${g.wx&&g.wx!=='0%'&&g.wx!=='+0%'?`<span style="font-size:10px;color:var(--text3)">Wx: ${g.wx}</span>`:''}
-    </div>`:''}
+
+    ${(g.park || wxClean) ? `<div class="venue-row">
+      ${g.park ? `<span class="park-badge ${parkCls(g.park)}">${parkLbl(g.park)}</span>` : ''}
+      ${wxClean ? `<span class="wx-badge">Wx Adj: ${wxClean}</span>` : ''}
+    </div>` : ''}
   </div>`;
 }
 
+// ── Render ────────────────────────────────────────────────────────────────
 function render() {
   let games = ALL_GAMES.filter(g => g.day === currentDay);
   if (currentFilter !== 'all') games = games.filter(g => ratingKey(g.rating) === currentFilter);
   if (currentSort === 'conf') {
     const rank = {elite:0,strong:1,moderate:2,lean:3};
-    games.sort((a,b)=>(rank[ratingKey(a.rating)]||3)-(rank[ratingKey(b.rating)]||3));
+    games.sort((a,b) => (rank[ratingKey(a.rating)]||3) - (rank[ratingKey(b.rating)]||3));
   } else if (currentSort === 'total') {
-    games.sort((a,b)=>(parseFloat(b.fgTotal)||0)-(parseFloat(a.fgTotal)||0));
+    games.sort((a,b) => (parseFloat(b.fgTotal)||0) - (parseFloat(a.fgTotal)||0));
   }
-  const grid=document.getElementById('games-grid');
-  const empty=document.getElementById('empty-state');
-  const count=document.getElementById('game-count');
-  if (games.length===0) {
-    grid.innerHTML=''; empty.style.display='block'; count.textContent='';
+
+  const grid  = document.getElementById('games-grid');
+  const empty = document.getElementById('empty-state');
+  const count = document.getElementById('game-count');
+
+  if (games.length === 0) {
+    grid.innerHTML = '';
+    empty.classList.add('show');
+    count.textContent = '';
   } else {
-    empty.style.display='none';
-    grid.innerHTML=games.map(gameCard).join('');
-    count.textContent=`${games.length} game${games.length!==1?'s':''}`;
+    empty.classList.remove('show');
+    grid.innerHTML = games.map(gameCard).join('');
+    count.textContent = `${games.length} game${games.length!==1?'s':''}`;
   }
 }
 
