@@ -6,405 +6,128 @@
 <title>MLB Prediction Model</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap');
-
   :root {
-    --bg: #0a0e1a;
-    --surface: #111827;
-    --surface2: #1a2235;
-    --border: #1e2d45;
-    --accent: #2563eb;
-    --accent2: #1d4ed8;
-    --green: #16a34a;
-    --red: #dc2626;
-    --yellow: #ca8a04;
-    --text: #f1f5f9;
-    --text2: #94a3b8;
-    --text3: #64748b;
-    --elite: #f59e0b;
-    --strong: #60a5fa;
-    --moderate: #a78bfa;
+    --bg:#0a0e1a; --surface:#111827; --surface2:#1a2235; --border:#1e2d45;
+    --accent:#2563eb; --green:#16a34a; --red:#dc2626; --text:#f1f5f9;
+    --text2:#94a3b8; --text3:#64748b;
+    --elite:#f59e0b; --strong:#60a5fa; --moderate:#a78bfa;
   }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  header{background:linear-gradient(135deg,#0f172a,#1e3a5f);border-bottom:1px solid var(--border);
+    padding:14px 20px;display:flex;align-items:center;justify-content:space-between;
+    position:sticky;top:0;z-index:100}
+  .logo{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;letter-spacing:1px}
+  .logo span{color:var(--accent)}
+  .live-badge{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:#16a34a;letter-spacing:1px}
+  .live-dot{width:7px;height:7px;background:#16a34a;border-radius:50%;animation:pulse 1.5s infinite}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+  .refresh-btn{background:none;border:1px solid var(--border);color:var(--text2);padding:6px 12px;
+    border-radius:6px;cursor:pointer;font-size:13px;font-family:'Barlow',sans-serif;transition:all .2s}
+  .refresh-btn:hover{border-color:var(--accent);color:var(--text)}
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Barlow', sans-serif;
-    min-height: 100vh;
-  }
+  .controls{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 20px;
+    display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .tab-group,.filter-group{display:flex;gap:4px;background:var(--bg);border-radius:8px;padding:3px}
+  .tab-btn,.filter-btn{padding:6px 14px;border-radius:6px;border:none;cursor:pointer;
+    font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;transition:all .2s;
+    background:none;color:var(--text2)}
+  .tab-btn.active{background:var(--accent);color:white}
+  .filter-btn.active{background:var(--surface2);color:var(--text)}
+  .tab-btn:hover:not(.active),.filter-btn:hover:not(.active){color:var(--text)}
+  .sort-group{display:flex;gap:4px;margin-left:auto}
+  .sort-btn{padding:6px 12px;border-radius:6px;border:1px solid var(--border);cursor:pointer;
+    font-family:'Barlow',sans-serif;font-size:12px;font-weight:500;background:none;color:var(--text3);transition:all .2s}
+  .sort-btn.active{border-color:var(--accent);color:var(--text)}
 
-  /* HEADER */
-  header {
-    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
-    border-bottom: 1px solid var(--border);
-    padding: 14px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
+  #status-bar{padding:8px 20px;font-size:12px;color:var(--text3);background:var(--bg);
+    border-bottom:1px solid var(--border);display:none}
+  #status-bar.visible{display:block}
+  #status-bar.error{color:#f87171}
 
-  .logo {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 22px;
-    font-weight: 800;
-    letter-spacing: 1px;
-    color: var(--text);
-  }
-  .logo span { color: var(--accent); }
+  .game-count{padding:10px 20px 4px;font-size:12px;color:var(--text3);font-weight:600;
+    letter-spacing:.5px;text-transform:uppercase}
 
-  .live-badge {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--green);
-    letter-spacing: 1px;
-  }
-  .live-dot {
-    width: 7px; height: 7px;
-    background: var(--green);
-    border-radius: 50%;
-    animation: pulse 1.5s ease-in-out infinite;
-  }
-  @keyframes pulse {
-    0%,100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(1.3); }
-  }
+  #games-grid{padding:8px 16px 40px;display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:12px}
 
-  .refresh-btn {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--text2);
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 13px;
-    font-family: 'Barlow', sans-serif;
-    transition: all 0.2s;
-  }
-  .refresh-btn:hover { border-color: var(--accent); color: var(--text); }
+  .game-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    overflow:hidden;transition:transform .15s,border-color .15s}
+  .game-card:hover{transform:translateY(-2px);border-color:#2e4a6e}
 
-  /* CONTROLS */
-  .controls {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 12px 20px;
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    align-items: center;
-  }
+  .card-header{padding:12px 14px 10px;display:flex;align-items:center;
+    justify-content:space-between;border-bottom:1px solid var(--border)}
+  .matchup{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;line-height:1.2}
+  .matchup .at{color:var(--text3);font-weight:400;margin:0 4px}
+  .matchup .winner{color:#60a5fa}
+  .card-meta{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+  .rating-badge{font-size:12px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap}
+  .rating-elite{background:rgba(245,158,11,.15);color:var(--elite);border:1px solid rgba(245,158,11,.3)}
+  .rating-strong{background:rgba(96,165,250,.15);color:var(--strong);border:1px solid rgba(96,165,250,.3)}
+  .rating-moderate{background:rgba(167,139,250,.15);color:var(--moderate);border:1px solid rgba(167,139,250,.3)}
+  .rating-lean{background:rgba(148,163,184,.1);color:var(--text3);border:1px solid var(--border)}
+  .game-time{font-size:11px;color:var(--text3);font-weight:500}
 
-  .tab-group, .filter-group {
-    display: flex;
-    gap: 4px;
-    background: var(--bg);
-    border-radius: 8px;
-    padding: 3px;
-  }
+  .pitchers-row{padding:8px 14px;display:flex;gap:8px;align-items:center;
+    border-bottom:1px solid var(--border);flex-wrap:wrap}
+  .pitcher-chip{font-size:11px;padding:3px 8px;background:var(--surface2);border-radius:4px;
+    color:var(--text2);display:flex;align-items:center;gap:4px}
+  .pitcher-chip .era{color:var(--text3);font-size:10px}
+  .pitcher-chip .lbl{color:var(--text3);font-size:10px;font-weight:600;text-transform:uppercase}
+  .pitcher-vs{color:var(--text3);font-size:11px}
 
-  .tab-btn, .filter-btn {
-    padding: 6px 14px;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-    font-family: 'Barlow', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    transition: all 0.2s;
-    background: none;
-    color: var(--text2);
-  }
-  .tab-btn.active { background: var(--accent); color: white; }
-  .filter-btn.active { background: var(--surface2); color: var(--text); }
-  .tab-btn:hover:not(.active), .filter-btn:hover:not(.active) { color: var(--text); }
+  .stats-grid{display:grid;grid-template-columns:1fr 1fr}
+  .stat-panel{padding:10px 14px;border-bottom:1px solid var(--border)}
+  .stat-panel:nth-child(1){border-right:1px solid var(--border)}
+  .stat-label{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+    color:var(--text3);margin-bottom:5px}
+  .stat-pick{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;
+    color:#60a5fa;margin-bottom:4px;line-height:1.1}
+  .stat-nums{display:flex;gap:10px;margin-bottom:4px}
+  .stat-num{display:flex;flex-direction:column;align-items:center}
+  .stat-num .val{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--text)}
+  .stat-num .lbl{font-size:9px;font-weight:600;letter-spacing:.5px;color:var(--text3);text-transform:uppercase}
+  .conf-badge{font-size:10px;padding:2px 6px;border-radius:3px;font-weight:600}
+  .conf-high{background:rgba(22,163,74,.15);color:#4ade80}
+  .conf-med{background:rgba(234,179,8,.15);color:#fbbf24}
+  .conf-low{background:rgba(148,163,184,.1);color:var(--text3)}
 
-  .sort-group {
-    display: flex;
-    gap: 4px;
-    margin-left: auto;
-  }
-  .sort-btn {
-    padding: 6px 12px;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    cursor: pointer;
-    font-family: 'Barlow', sans-serif;
-    font-size: 12px;
-    font-weight: 500;
-    background: none;
-    color: var(--text3);
-    transition: all 0.2s;
-  }
-  .sort-btn.active { border-color: var(--accent); color: var(--text); }
-  .sort-btn:hover:not(.active) { color: var(--text2); }
+  .win-row{display:flex;align-items:center;gap:6px;margin-top:3px}
+  .win-lbl{font-size:10px;color:var(--text3);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .win-bar{width:80px;height:3px;background:var(--surface2);border-radius:2px;overflow:hidden;flex-shrink:0}
+  .win-fill{height:100%;border-radius:2px}
+  .fill-high{background:#16a34a}
+  .fill-mid{background:var(--accent)}
+  .fill-low{background:var(--red)}
+  .win-pct{font-size:10px;color:var(--text2);width:36px;text-align:right;flex-shrink:0}
 
-  /* STATUS BAR */
-  #status-bar {
-    padding: 8px 20px;
-    font-size: 12px;
-    color: var(--text3);
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
-    display: none;
-  }
-  #status-bar.visible { display: block; }
-  #status-bar.error { color: #f87171; }
+  .venue-row{padding:7px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    border-bottom:1px solid var(--border)}
+  .park-badge{font-size:10px;padding:2px 7px;border-radius:3px;font-weight:600}
+  .park-hitter{background:rgba(239,68,68,.12);color:#f87171}
+  .park-pitcher{background:rgba(34,197,94,.12);color:#4ade80}
+  .park-neutral{background:rgba(148,163,184,.1);color:var(--text3)}
 
-  /* GAME COUNT */
-  .game-count {
-    padding: 10px 20px 4px;
-    font-size: 12px;
-    color: var(--text3);
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-  }
+  #empty-state{display:none;text-align:center;padding:80px 20px;color:var(--text3)}
+  #empty-state.visible{display:block}
+  #empty-state .emoji{font-size:48px;margin-bottom:16px}
+  #empty-state h3{font-size:18px;color:var(--text2);margin-bottom:8px}
 
-  /* GRID */
-  #games-grid {
-    padding: 8px 16px 40px;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
-    gap: 12px;
-  }
+  #loading{display:none;text-align:center;padding:60px 20px;color:var(--text3)}
+  #loading.visible{display:block}
+  .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);
+    border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+  @keyframes spin{to{transform:rotate(360deg)}}
 
-  /* CARD */
-  .game-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-    transition: transform 0.15s, border-color 0.15s;
-    cursor: pointer;
-  }
-  .game-card:hover { transform: translateY(-2px); border-color: #2e4a6e; }
+  #debug-panel{background:#111827;border:1px solid #1e2d45;border-radius:8px;
+    margin:12px 16px;padding:12px;font-size:11px;font-family:monospace;color:#94a3b8;
+    display:none;max-height:200px;overflow-y:auto}
 
-  .card-header {
-    padding: 12px 14px 10px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .matchup {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 17px;
-    font-weight: 700;
-    color: var(--text);
-    line-height: 1.2;
-  }
-  .matchup .at { color: var(--text3); font-weight: 400; margin: 0 4px; }
-  .matchup .winner { color: #60a5fa; }
-
-  .card-meta {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 3px;
-  }
-
-  .rating-badge {
-    font-size: 12px;
-    font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 20px;
-    white-space: nowrap;
-  }
-  .rating-elite { background: rgba(245,158,11,0.15); color: var(--elite); border: 1px solid rgba(245,158,11,0.3); }
-  .rating-strong { background: rgba(96,165,250,0.15); color: var(--strong); border: 1px solid rgba(96,165,250,0.3); }
-  .rating-moderate { background: rgba(167,139,250,0.15); color: var(--moderate); border: 1px solid rgba(167,139,250,0.3); }
-  .rating-lean { background: rgba(148,163,184,0.1); color: var(--text3); border: 1px solid var(--border); }
-
-  .game-time {
-    font-size: 11px;
-    color: var(--text3);
-    font-weight: 500;
-  }
-
-  /* PITCHERS ROW */
-  .pitchers-row {
-    padding: 8px 14px;
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    border-bottom: 1px solid var(--border);
-    flex-wrap: wrap;
-  }
-  .pitcher-chip {
-    font-size: 11px;
-    padding: 3px 8px;
-    background: var(--surface2);
-    border-radius: 4px;
-    color: var(--text2);
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .pitcher-chip .era {
-    color: var(--text3);
-    font-size: 10px;
-  }
-  .pitcher-chip .team-label {
-    color: var(--text3);
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-  }
-  .pitcher-vs { color: var(--text3); font-size: 11px; }
-
-  /* STATS GRID */
-  .stats-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0;
-  }
-
-  .stat-panel {
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--border);
-  }
-  .stat-panel:nth-child(1) { border-right: 1px solid var(--border); }
-
-  .stat-label {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    color: var(--text3);
-    margin-bottom: 6px;
-  }
-
-  .stat-pick {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 16px;
-    font-weight: 700;
-    color: #60a5fa;
-    margin-bottom: 4px;
-    line-height: 1.1;
-  }
-
-  .stat-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 4px;
-  }
-
-  .win-pct-bar {
-    flex: 1;
-    height: 4px;
-    background: var(--surface2);
-    border-radius: 2px;
-    overflow: hidden;
-    position: relative;
-  }
-  .win-pct-fill {
-    height: 100%;
-    background: var(--accent);
-    border-radius: 2px;
-    transition: width 0.6s ease;
-  }
-  .win-pct-fill.high { background: var(--green); }
-  .win-pct-fill.low { background: var(--red); }
-
-  .stat-nums {
-    display: flex;
-    gap: 12px;
-    margin-top: 6px;
-  }
-  .stat-num {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1px;
-  }
-  .stat-num .val {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text);
-  }
-  .stat-num .lbl {
-    font-size: 9px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    color: var(--text3);
-    text-transform: uppercase;
-  }
-
-  .conf-badge {
-    font-size: 11px;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-weight: 600;
-  }
-  .conf-high { background: rgba(22,163,74,0.15); color: #4ade80; }
-  .conf-med  { background: rgba(234,179,8,0.15);  color: #fbbf24; }
-  .conf-low  { background: rgba(148,163,184,0.1); color: var(--text3); }
-
-  /* VENUE / WEATHER ROW */
-  .venue-row {
-    padding: 7px 14px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  .venue-text {
-    font-size: 11px;
-    color: var(--text3);
-    flex: 1;
-  }
-  .park-badge {
-    font-size: 10px;
-    padding: 2px 7px;
-    border-radius: 3px;
-    font-weight: 600;
-  }
-  .park-hitter { background: rgba(239,68,68,0.12); color: #f87171; }
-  .park-pitcher { background: rgba(34,197,94,0.12); color: #4ade80; }
-  .park-neutral { background: rgba(148,163,184,0.1); color: var(--text3); }
-
-  /* EMPTY STATE */
-  #empty-state {
-    display: none;
-    text-align: center;
-    padding: 80px 20px;
-    color: var(--text3);
-  }
-  #empty-state.visible { display: block; }
-  #empty-state .emoji { font-size: 48px; margin-bottom: 16px; }
-  #empty-state h3 { font-size: 18px; color: var(--text2); margin-bottom: 8px; }
-
-  /* LOADING */
-  #loading {
-    display: none;
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--text3);
-  }
-  #loading.visible { display: block; }
-  .spinner {
-    width: 32px; height: 32px;
-    border: 3px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin: 0 auto 16px;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  @media (max-width: 600px) {
-    #games-grid { grid-template-columns: 1fr; padding: 8px 10px 40px; }
-    .controls { padding: 10px 12px; }
-    .sort-group { margin-left: 0; }
+  @media(max-width:600px){
+    #games-grid{grid-template-columns:1fr;padding:8px 10px 40px}
+    .controls{padding:10px 12px}
+    .sort-group{margin-left:0}
   }
 </style>
 </head>
@@ -428,541 +151,259 @@
     <button class="filter-btn" onclick="setFilter('moderate',this)">⭐ Moderate</button>
   </div>
   <div class="sort-group">
-    <button class="sort-btn active" id="sort-time" onclick="setSort('time',this)">Time</button>
-    <button class="sort-btn" id="sort-conf" onclick="setSort('conf',this)">Confidence</button>
-    <button class="sort-btn" id="sort-total" onclick="setSort('total',this)">FG Total ↓</button>
+    <button class="sort-btn active" onclick="setSort('time',this)">Time</button>
+    <button class="sort-btn" onclick="setSort('conf',this)">Confidence</button>
+    <button class="sort-btn" onclick="setSort('total',this)">FG Total ↓</button>
   </div>
 </div>
 
 <div id="status-bar"></div>
+<div id="debug-panel"></div>
 <div class="game-count" id="game-count"></div>
-
 <div id="loading" class="visible"><div class="spinner"></div>Loading from Google Sheets...</div>
 <div id="games-grid"></div>
-<div id="empty-state"><div class="emoji">🔍</div><h3>No games match this filter</h3><p>Try selecting a different rating or day</p></div>
+<div id="empty-state"><div class="emoji">🔍</div><h3>No games match this filter</h3><p>Try a different rating or day</p></div>
 
 <script>
-const BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub";
+const SHEET_ID = "1D1sOPDBV4WAT6W_8jabZRjr3UdKp3sIC8qk9dbZ4NjE";
+const GID      = "596859801";
 
-// All known tab GIDs — we'll try them until we find game data
-// From the previous session we know the dashboard/main tab has predictions
-const GIDS_TO_TRY = [0, 141272668, 596859801, 1, 2, 3, 4, 5, 6, 7, 8];
-
-let ALL_GAMES = [];   // all parsed games (today + tomorrow)
-let currentDay = 'today';
+let ALL_GAMES = [];
+let currentDay    = 'today';
 let currentFilter = 'all';
-let currentSort = 'time';
+let currentSort   = 'time';
+let debugLog      = [];
 
-// ── CSV PARSER (RFC 4180) ─────────────────────────────────────────────────
-function parseCSV(text) {
+function log(msg) {
+  debugLog.push(msg);
+  console.log(msg);
+}
+
+// ── Google Visualization Query API (no CORS issues) ──────────────────────
+// Returns JSON with a DataTable — works from any domain on published sheets
+function loadVizData() {
+  return new Promise((resolve, reject) => {
+    const cb = 'mlbCB_' + Date.now();
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&tq=select%20*&gid=${GID}&cb=${cb}`;
+
+    window[cb] = function(data) {
+      delete window[cb];
+      document.getElementById('vizScript')?.remove();
+      resolve(data);
+    };
+
+    const script = document.createElement('script');
+    script.id = 'vizScript';
+    script.src = url;
+    script.onerror = () => { delete window[cb]; reject(new Error('Script load failed')); };
+    document.head.appendChild(script);
+  });
+}
+
+// ── Parse Google Visualization DataTable into rows of strings ────────────
+function vizToRows(data) {
+  const table = data.table;
+  if (!table || !table.rows) return [];
+
+  // Column labels
+  const cols = table.cols.map(c => (c.label || '').trim());
+  log('Columns (' + cols.length + '): ' + cols.map((c,i) => i+':'+JSON.stringify(c)).join(' | '));
+
   const rows = [];
-  let row = [], cell = '', inQ = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (inQ) {
-      if (c === '"' && text[i+1] === '"') { cell += '"'; i++; }
-      else if (c === '"') inQ = false;
-      else cell += c;
-    } else {
-      if (c === '"') inQ = true;
-      else if (c === ',') { row.push(cell.trim()); cell = ''; }
-      else if (c === '\n') { row.push(cell.trim()); if (row.some(x=>x)) rows.push(row); row=[]; cell=''; }
-      else if (c !== '\r') cell += c;
-    }
-  }
-  if (cell || row.length) { row.push(cell.trim()); if (row.some(x=>x)) rows.push(row); }
-  return rows;
-}
-
-// ── FETCH ONE GID ─────────────────────────────────────────────────────────
-function fetchGID(gid) {
-  const url = BASE_URL + "?gid=" + gid + "&single=true&output=csv";
-  return fetch(url).then(r => r.text()).then(t => parseCSV(t));
-}
-
-// ── DETECT IF A ROW IS A GAME ROW ─────────────────────────────────────────
-// Game rows have a matchup like "Team A  @  Team B" in some column
-// and a day marker like "Today" or "Tmrw" or "Tomorrow"
-function isGameRow(row) {
-  return row.some(cell => / @ /.test(cell) || /\bvs\b/i.test(cell));
-}
-
-// ── PARSE ROW INTO GAME OBJECT ─────────────────────────────────────────────
-function parseGameRow(row, dayLabel) {
-  // Find the matchup cell
-  let matchupIdx = row.findIndex(c => / @ /.test(c) || /\bvs\b/i.test(c));
-  if (matchupIdx < 0) return null;
-
-  const matchupRaw = row[matchupIdx];
-  // "Toronto Blue Jays  @  Baltimore Orioles"
-  const parts = matchupRaw.split(/@|vs/i).map(s => s.trim()).filter(Boolean);
-  if (parts.length < 2) return null;
-
-  const away = parts[0].trim();
-  const home = parts[1].trim();
-
-  // Time is usually in one of the adjacent cells
-  const timeIdx = matchupIdx - 1 >= 0 ? matchupIdx - 1 : matchupIdx + 1;
-  const time = row[timeIdx] || '';
-
-  // Remaining cells after matchup
-  const rest = row.slice(matchupIdx + 1);
-
-  // Find away SP and home SP — formatted as "Name  (ERA)" or "Name (ERA)"
-  const spPattern = /^(.+?)\s*\(([\d.—–-]+)\)$/;
-  let awaySP = '', awaySPERA = '', homeSP = '', homeSPERA = '';
-  let spFound = 0;
-  for (let i = 0; i < rest.length && spFound < 2; i++) {
-    const m = rest[i].match(spPattern);
-    if (m) {
-      if (spFound === 0) { awaySP = m[1].trim(); awaySPERA = m[2]; }
-      else               { homeSP = m[1].trim(); homeSPERA = m[2]; }
-      spFound++;
-    }
-  }
-
-  // Park factor — first float-ish value after SPs
-  let parkFactor = '', wxAdj = '';
-  let numCells = rest.filter(c => /^[01]?\.\d+$/.test(c));
-  if (numCells.length > 0) parkFactor = numCells[0];
-
-  // Win percentages — look for cells with % sign or decimal win prob
-  const pctCells = rest.filter(c => /%/.test(c) || /^0\.\d+$/.test(c));
-
-  // F5 data — look for pattern: awayWin%, homeWin%, pick, conf, total, ou
-  // FG data similarly
-  let awayF5Win='', homeF5Win='', f5Pick='', f5Conf='', f5Total='', f5OU='';
-  let awayFGWin='', homeFGWin='', fgPick='', fgConf='', fgTotal='', fgOU='';
-  let rating = '';
-
-  // Scan rest for key patterns
-  const confPattern = /High|Med|Low/i;
-  const pickTeam = /^[A-Z][A-Za-z ]+$/;
-  let confCells = [];
-  let winPctCells = [];
-  let totalCells = [];
-  let pickCells = [];
-
-  for (let i = 0; i < rest.length; i++) {
-    const c = rest[i];
-    if (/⭐|Elite|Strong|Moderate|Lean/i.test(c)) { rating = c; continue; }
-    if (/High|Med|Low/i.test(c) && /🟢|🟡|🔴|High|Med|Low/.test(c)) { confCells.push({v:c,i}); continue; }
-    if (/\d+\.\d+%/.test(c)) { winPctCells.push({v:c,i}); continue; }
-    if (/^\d+\.\d$/.test(c) || /^\d+$/.test(c) && parseInt(c) > 3 && parseInt(c) < 30) { 
-      totalCells.push({v:c,i}); continue; 
-    }
-  }
-
-  // Assign win%s — expect 4 of them (awayF5, homeF5, awayFG, homeFG)
-  if (winPctCells.length >= 4) {
-    awayF5Win = winPctCells[0].v;
-    homeF5Win = winPctCells[1].v;
-    awayFGWin = winPctCells[2].v;
-    homeFGWin = winPctCells[3].v;
-  } else if (winPctCells.length >= 2) {
-    awayFGWin = winPctCells[0].v;
-    homeFGWin = winPctCells[1].v;
-  }
-
-  // Conf cells — expect 2 (F5 conf, FG conf)
-  if (confCells.length >= 2) {
-    f5Conf = confCells[0].v;
-    fgConf = confCells[1].v;
-  } else if (confCells.length === 1) {
-    fgConf = confCells[0].v;
-  }
-
-  // Totals — expect 2 (F5, FG)
-  if (totalCells.length >= 2) {
-    f5Total = totalCells[0].v;
-    fgTotal = totalCells[1].v;
-  } else if (totalCells.length === 1) {
-    fgTotal = totalCells[0].v;
-  }
-
-  // Determine pick from win%
-  if (awayFGWin && homeFGWin) {
-    const a = parseFloat(awayFGWin);
-    const h = parseFloat(homeFGWin);
-    fgPick = a > h ? away : home;
-  }
-  if (awayF5Win && homeF5Win) {
-    const a = parseFloat(awayF5Win);
-    const h = parseFloat(homeF5Win);
-    f5Pick = a > h ? away : home;
-  }
-
-  // Also try to find picks from explicit pick cells
-  for (const c of rest) {
-    if ([away, home].some(t => c.includes(t.split(' ')[0]) || t.includes(c.split(' ')[0]))) {
-      if (!fgPick) fgPick = c;
-    }
-  }
-
-  return {
-    day: dayLabel,
-    time, away, home,
-    awaySP, awaySPERA, homeSP, homeSPERA,
-    parkFactor, wxAdj,
-    awayF5Win, homeF5Win, f5Pick, f5Conf, f5Total, f5OU,
-    awayFGWin, homeFGWin, fgPick, fgConf, fgTotal, fgOU,
-    rating: rating || ''
-  };
-}
-
-// ── SMARTER STRUCTURED PARSE ───────────────────────────────────────────────
-// Your sheet has a well-defined header row for the predictions section.
-// Columns (from reading the sheet):
-// Matchup | Time | Away SP (ERA) | Home SP (ERA) | Park | Wx | 
-// AwayF5% | HomeF5% | F5Pick | F5Conf | F5Total | F5O/U |
-// AwayFG% | HomeFG% | FGPick | FGConf | FGTotal | FGO/U | Rating
-
-function parseStructured(rows) {
-  const games = [];
-  let headerIdx = -1;
-  let cols = {};
-
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
-    const joined = row.join('|').toLowerCase();
-
-    // Detect the header row for the main predictions table
-    if (joined.includes('matchup') && joined.includes('away') && joined.includes('rating')) {
-      headerIdx = i;
-      // Map column names to indices
-      row.forEach((cell, idx) => {
-        const c = cell.toLowerCase().trim();
-        if (c.includes('matchup')) cols.matchup = idx;
-        else if (c.includes('time')) cols.time = idx;
-        else if (c === 'away sp' || (c.includes('away') && c.includes('sp'))) cols.awaySP = idx;
-        else if (c === 'home sp' || (c.includes('home') && c.includes('sp'))) cols.homeSP = idx;
-        else if (c.includes('park')) cols.park = idx;
-        else if (c.includes('wx') || c.includes('weather')) cols.wx = idx;
-        else if (c.includes('away win') || (c.includes('away') && c.includes('%') && !cols.awayF5Win)) cols.awayF5Win = idx;
-        else if (c.includes('home win') || (c.includes('home') && c.includes('%') && !cols.homeF5Win)) cols.homeF5Win = idx;
-        else if (c.includes('f5 pick') || c.includes('f5pick')) cols.f5Pick = idx;
-        else if (c.includes('f5 conf') || c.includes('f5conf')) cols.f5Conf = idx;
-        else if (c.includes('f5 total') || c.includes('f5total')) cols.f5Total = idx;
-        else if (c.includes('f5') && c.includes('o/u')) cols.f5OU = idx;
-        else if (c.includes('fg pick') || c.includes('fgpick')) cols.fgPick = idx;
-        else if (c.includes('fg conf') || c.includes('fgconf')) cols.fgConf = idx;
-        else if (c.includes('fg total') || c.includes('fgtotal') || c.includes('proj total') || c.includes('fg total')) cols.fgTotal = idx;
-        else if (c.includes('fg') && c.includes('o/u')) cols.fgOU = idx;
-        else if (c.includes('rating') || c.includes('⭐')) cols.rating = idx;
-      });
-      continue;
-    }
-
-    if (headerIdx < 0) continue;
-
-    const row0 = (row[0] || '').trim();
-    const dayMatch = /today|tmrw|tomorrow/i.test(row0) || /📅/.test(row0);
-    if (dayMatch) continue; // section header rows
-
-    // Find matchup in the row
-    let matchupCell = cols.matchup !== undefined ? row[cols.matchup] : 
-                      row.find(c => / @ /i.test(c));
-
-    if (!matchupCell || !/ @ /i.test(matchupCell)) continue;
-
-    const parts = matchupCell.split('@').map(s => s.trim());
-    if (parts.length < 2) continue;
-
-    const away = parts[0].trim();
-    const home = parts[1].trim();
-    if (!away || !home) continue;
-
-    // Day: scan earlier rows for "Today" or "Tomorrow" section header
-    let dayLabel = 'today';
-    for (let j = i - 1; j >= Math.max(0, i - 20); j--) {
-      const r0 = (rows[j][0] || '').trim();
-      if (/today/i.test(r0) || /📅.*today/i.test(rows[j].join(''))) { dayLabel = 'today'; break; }
-      if (/tmrw|tomorrow/i.test(r0) || /📅.*tmrw/i.test(rows[j].join(''))) { dayLabel = 'tomorrow'; break; }
-    }
-
-    // Extract SP info — formatted "Name (ERA)"
-    const spPattern = /^(.+?)\s*\(([\d.]+|—)\)/;
-    let awaySP='', awaySPERA='', homeSP='', homeSPERA='';
-    const awaySpCell = cols.awaySP !== undefined ? row[cols.awaySP] : '';
-    const homeSpCell = cols.homeSP !== undefined ? row[cols.homeSP] : '';
-    const awayM = awaySpCell.match(spPattern);
-    const homeM = homeSpCell.match(spPattern);
-    if (awayM) { awaySP = awayM[1].trim(); awaySPERA = awayM[2]; }
-    else awaySP = awaySpCell.replace(/\(.*\)/,'').trim();
-    if (homeM) { homeSP = homeM[1].trim(); homeSPERA = homeM[2]; }
-    else homeSP = homeSpCell.replace(/\(.*\)/,'').trim();
-
-    const get = (key) => cols[key] !== undefined ? (row[cols[key]] || '') : '';
-
-    games.push({
-      day: dayLabel,
-      time: get('time'),
-      away, home,
-      awaySP, awaySPERA, homeSP, homeSPERA,
-      parkFactor: get('park'),
-      wxAdj: get('wx'),
-      awayF5Win: get('awayF5Win'),
-      homeF5Win: get('homeF5Win'),
-      f5Pick: get('f5Pick'),
-      f5Conf: get('f5Conf'),
-      f5Total: get('f5Total'),
-      f5OU: get('f5OU'),
-      awayFGWin: get('awayFG') || get('awayFGWin'),
-      homeFGWin: get('homeFG') || get('homeFGWin'),
-      fgPick: get('fgPick'),
-      fgConf: get('fgConf'),
-      fgTotal: get('fgTotal'),
-      fgOU: get('fgOU'),
-      rating: get('rating')
+  for (const row of table.rows) {
+    if (!row.c) continue;
+    const cells = row.c.map(cell => {
+      if (!cell) return '';
+      // Use formatted value if available, else raw value
+      const v = cell.f !== undefined && cell.f !== null ? String(cell.f)
+              : cell.v !== undefined && cell.v !== null ? String(cell.v)
+              : '';
+      return v.trim();
     });
+    rows.push(cells);
   }
-  return games;
+  return { cols, rows };
 }
 
-// ── FALLBACK: FLAT ROW PARSE ───────────────────────────────────────────────
-function parseFlatRows(rows) {
+// ── Find the predictions table and map columns ───────────────────────────
+function findColMap(cols) {
+  const map = {};
+  cols.forEach((c, i) => {
+    const s = c.toLowerCase().replace(/[^a-z0-9%\/@]/g,' ').replace(/\s+/g,' ').trim();
+    log(`  col[${i}] = "${c}" → normalized: "${s}"`);
+
+    if (s === 'matchup' || s.includes('matchup'))           map.matchup  = i;
+    else if (s === 'time' || s === 'time et' || s.includes('time')) map.time = i;
+    else if (s.includes('away sp'))                          map.awaySP   = i;
+    else if (s.includes('home sp'))                          map.homeSP   = i;
+    else if (s.includes('park factor') || s === 'park')     map.park     = i;
+    else if (s.includes('wx') || s.includes('weather'))     map.wx       = i;
+    // Win% columns — order matters: first away/home pair = F5, second = FG
+    else if (/away.*win|away.*%/.test(s) && map.awayF5 === undefined) map.awayF5 = i;
+    else if (/home.*win|home.*%/.test(s) && map.homeF5 === undefined) map.homeF5 = i;
+    else if (/away.*win|away.*%/.test(s) && map.awayFG === undefined) map.awayFG = i;
+    else if (/home.*win|home.*%/.test(s) && map.homeFG === undefined) map.homeFG = i;
+    // Pick columns
+    else if (/f5.*pick|f5pick/.test(s))                     map.f5Pick   = i;
+    else if (/fg.*pick|fgpick/.test(s))                     map.fgPick   = i;
+    // Conf columns
+    else if (/f5.*conf/.test(s))                            map.f5Conf   = i;
+    else if (/fg.*conf/.test(s))                            map.fgConf   = i;
+    // Total columns
+    else if (/f5.*total/.test(s))                           map.f5Total  = i;
+    else if (/fg.*total|proj.*total|total/.test(s) && map.fgTotal === undefined) map.fgTotal = i;
+    // O/U
+    else if (/f5.*o.u/.test(s))                             map.f5OU     = i;
+    else if (/fg.*o.u|o.u/.test(s) && map.fgOU === undefined) map.fgOU  = i;
+    // Rating
+    else if (s === 'rating' || s.includes('rating') || s.includes('⭐')) map.rating = i;
+  });
+  log('colMap: ' + JSON.stringify(map));
+  return map;
+}
+
+// ── Parse rows into game objects ─────────────────────────────────────────
+function parseGames(cols, rows) {
+  const map = findColMap(cols);
   const games = [];
   let currentDay = 'today';
 
-  for (const row of rows) {
-    const flat = row.join('|');
+  const get = (row, key) => (map[key] !== undefined && row[map[key]] !== undefined)
+                           ? row[map[key]] : '';
 
-    // Section day markers
-    if (/today/i.test(flat) && !/ @ /i.test(flat)) { currentDay = 'today'; continue; }
-    if (/tmrw|tomorrow/i.test(flat) && !/ @ /i.test(flat)) { currentDay = 'tomorrow'; continue; }
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const flat = row.join(' ');
 
-    // Must contain @ to be a game row
-    if (!/ @ /i.test(flat)) continue;
+    // Day markers
+    if (/today/i.test(flat) && !/@/.test(flat))     { currentDay = 'today';    continue; }
+    if (/tmrw|tomorrow/i.test(flat) && !/@/.test(flat)) { currentDay = 'tomorrow'; continue; }
 
-    const g = parseGameRow(row, currentDay);
-    if (g && g.away && g.home) games.push(g);
+    // Must have @ for game rows
+    const matchupRaw = map.matchup !== undefined ? row[map.matchup]
+                     : row.find(c => / @ /i.test(c)) || '';
+    if (!/ @ /i.test(matchupRaw)) continue;
+
+    const parts = matchupRaw.split('@').map(s => s.trim());
+    if (parts.length < 2 || !parts[0] || !parts[1]) continue;
+
+    const away = parts[0];
+    const home = parts[1];
+
+    // Parse SP: "Name (ERA)" format
+    const spParse = raw => {
+      const m = raw.match(/^(.+?)\s*\(([\d.]+|—|--)\)\s*$/);
+      return m ? { name: m[1].trim(), era: m[2] }
+               : { name: raw.replace(/\(.*\)/g,'').trim(), era: '' };
+    };
+
+    const awaySPInfo = spParse(get(row, 'awaySP'));
+    const homeSPInfo = spParse(get(row, 'homeSP'));
+
+    const g = {
+      day:      currentDay,
+      time:     get(row, 'time'),
+      away, home,
+      awaySP:   awaySPInfo.name,
+      awaySPERA: awaySPInfo.era,
+      homeSP:   homeSPInfo.name,
+      homeSPERA: homeSPInfo.era,
+      park:     get(row, 'park'),
+      wx:       get(row, 'wx'),
+      awayF5:   get(row, 'awayF5'),
+      homeF5:   get(row, 'homeF5'),
+      f5Pick:   get(row, 'f5Pick'),
+      f5Conf:   get(row, 'f5Conf'),
+      f5Total:  get(row, 'f5Total'),
+      f5OU:     get(row, 'f5OU'),
+      awayFG:   get(row, 'awayFG'),
+      homeFG:   get(row, 'homeFG'),
+      fgPick:   get(row, 'fgPick'),
+      fgConf:   get(row, 'fgConf'),
+      fgTotal:  get(row, 'fgTotal'),
+      fgOU:     get(row, 'fgOU'),
+      rating:   get(row, 'rating'),
+    };
+
+    // Fallback: derive pick from win%
+    if (!g.fgPick && g.awayFG && g.homeFG) {
+      g.fgPick = parseFloat(g.awayFG) > parseFloat(g.homeFG) ? away : home;
+    }
+    if (!g.f5Pick && g.awayF5 && g.homeF5) {
+      g.f5Pick = parseFloat(g.awayF5) > parseFloat(g.homeF5) ? away : home;
+    }
+
+    log(`Game: ${away} @ ${home} | day=${currentDay} | fgPick=${g.fgPick} | rating=${g.rating}`);
+    games.push(g);
   }
   return games;
 }
 
-// ── MAIN LOAD ──────────────────────────────────────────────────────────────
+// ── Main load ─────────────────────────────────────────────────────────────
 async function loadData() {
+  debugLog = [];
   setStatus('Loading from Google Sheets...', false);
-  document.getElementById('loading').classList.add('visible');
+  document.getElementById('loading').style.display = 'block';
   document.getElementById('games-grid').innerHTML = '';
-  document.getElementById('empty-state').classList.remove('visible');
+  document.getElementById('empty-state').style.display = 'none';
   ALL_GAMES = [];
 
-  let bestGames = [];
-  let triedGIDs = [];
+  try {
+    log('Fetching via Google Visualization API...');
+    const data = await loadVizData();
+    const { cols, rows } = vizToRows(data);
+    log(`Got ${rows.length} data rows, ${cols.length} columns`);
 
-  // Try each GID, pick the one that gives most games
-  for (const gid of GIDS_TO_TRY) {
-    try {
-      setStatus(`Trying sheet tab ${gid}...`, false);
-      const rows = await fetchGID(gid);
-      triedGIDs.push(gid);
+    ALL_GAMES = parseGames(cols, rows);
+    log(`Parsed ${ALL_GAMES.length} games`);
 
-      let games = parseStructured(rows);
-      if (games.length === 0) games = parseFlatRows(rows);
+    document.getElementById('loading').style.display = 'none';
 
-      if (games.length > bestGames.length) {
-        bestGames = games;
-      }
+    // Show debug panel (can be hidden after confirming it works)
+    const dp = document.getElementById('debug-panel');
+    dp.style.display = 'block';
+    dp.textContent = debugLog.join('\n');
 
-      // If we found good data, stop early (try a couple more to be sure)
-      if (bestGames.length >= 5 && triedGIDs.length >= 3) break;
-
-    } catch(e) {
-      console.warn('GID', gid, 'failed:', e.message);
+    if (ALL_GAMES.length === 0) {
+      setStatus('⚠️ Sheet loaded but no games found — check debug panel below', true);
+    } else {
+      const td = ALL_GAMES.filter(g => g.day === 'today').length;
+      const tm = ALL_GAMES.filter(g => g.day === 'tomorrow').length;
+      setStatus(`✅ Loaded ${ALL_GAMES.length} games (Today: ${td}, Tomorrow: ${tm})`, false);
+      document.getElementById('tab-today').textContent    = `Today (${td})`;
+      document.getElementById('tab-tomorrow').textContent = `Tomorrow (${tm})`;
     }
-  }
-
-  ALL_GAMES = bestGames;
-  document.getElementById('loading').classList.remove('visible');
-
-  if (ALL_GAMES.length === 0) {
-    setStatus('⚠️ Could not load game data. Check that your sheet is published to the web.', true);
-  } else {
-    const today = ALL_GAMES.filter(g => g.day === 'today').length;
-    const tmrw  = ALL_GAMES.filter(g => g.day === 'tomorrow').length;
-    setStatus('', false);
-    document.getElementById('tab-today').textContent =
-      `Today${today ? ' (' + today + ')' : ''}`;
-    document.getElementById('tab-tomorrow').textContent =
-      `Tomorrow${tmrw ? ' (' + tmrw + ')' : ''}`;
+  } catch(e) {
+    document.getElementById('loading').style.display = 'none';
+    log('ERROR: ' + e.message);
+    const dp = document.getElementById('debug-panel');
+    dp.style.display = 'block';
+    dp.textContent = debugLog.join('\n');
+    setStatus('❌ Failed to load: ' + e.message, true);
   }
 
   render();
 }
 
-// ── STATUS ─────────────────────────────────────────────────────────────────
-function setStatus(msg, isError) {
+// ── UI Helpers ────────────────────────────────────────────────────────────
+function setStatus(msg, isErr) {
   const el = document.getElementById('status-bar');
-  if (msg) {
-    el.textContent = msg;
-    el.className = 'visible' + (isError ? ' error' : '');
-  } else {
-    el.className = '';
-  }
+  el.textContent = msg;
+  el.style.display = msg ? 'block' : 'none';
+  el.className = isErr ? 'visible error' : 'visible';
 }
-
-// ── RENDER ─────────────────────────────────────────────────────────────────
-function ratingKey(r) {
-  if (/elite|⭐⭐⭐/.test(r)) return 'elite';
-  if (/strong|⭐⭐/.test(r)) return 'strong';
-  if (/moderate|⭐/.test(r)) return 'moderate';
-  return 'lean';
-}
-
-function confClass(c) {
-  if (/high/i.test(c)) return 'conf-high';
-  if (/med/i.test(c)) return 'conf-med';
-  return 'conf-low';
-}
-
-function parkClass(pf) {
-  const v = parseFloat(pf);
-  if (!v) return 'park-neutral';
-  if (v > 1.03) return 'park-hitter';
-  if (v < 0.97) return 'park-pitcher';
-  return 'park-neutral';
-}
-
-function parkLabel(pf) {
-  const v = parseFloat(pf);
-  if (!v) return 'Neutral Park';
-  if (v > 1.15) return 'Extreme Hitter (' + pf + ')';
-  if (v > 1.05) return 'Hitter Friendly (' + pf + ')';
-  if (v < 0.93) return 'Pitcher Friendly (' + pf + ')';
-  return 'Neutral Park (' + pf + ')';
-}
-
-function winBar(pct, teamName, fgPick) {
-  const v = parseFloat(pct);
-  if (!v) return '';
-  const cls = v >= 55 ? 'high' : v <= 45 ? 'low' : '';
-  const isFav = teamName === fgPick;
-  return `<div class="stat-row">
-    <span style="font-size:10px;color:var(--text3);width:36px">${pct}</span>
-    <div class="win-pct-bar"><div class="win-pct-fill ${cls}" style="width:${Math.min(v,100)}%"></div></div>
-    ${isFav ? '<span style="font-size:10px;color:var(--green)">★</span>' : ''}
-  </div>`;
-}
-
-function ratingBadge(r) {
-  const k = ratingKey(r);
-  const labels = {elite:'⭐⭐⭐ Elite', strong:'⭐⭐ Strong', moderate:'⭐ Moderate', lean:'📊 Lean'};
-  return `<span class="rating-badge rating-${k}">${labels[k]}</span>`;
-}
-
-function gameCard(g) {
-  const fgFav = parseFloat(g.awayFGWin) > parseFloat(g.homeFGWin) ? g.away : g.home;
-  const awayIsWinner = fgFav === g.away;
-
-  const awaySpStr = g.awaySP ? `${g.awaySP}${g.awaySPERA ? ' <span class="era">('+g.awaySPERA+')</span>' : ''}` : 'TBD';
-  const homeSpStr = g.homeSP ? `${g.homeSP}${g.homeSPERA ? ' <span class="era">('+g.homeSPERA+')</span>' : ''}` : 'TBD';
-
-  const awayWinClass = awayIsWinner ? ' winner' : '';
-  const homeWinClass = !awayIsWinner ? ' winner' : '';
-
-  return `<div class="game-card" data-day="${g.day}" data-rating="${ratingKey(g.rating)}">
-    <div class="card-header">
-      <div>
-        <div class="matchup">
-          <span class="${awayWinClass}">${g.away}</span>
-          <span class="at">@</span>
-          <span class="${homeWinClass}">${g.home}</span>
-        </div>
-      </div>
-      <div class="card-meta">
-        ${ratingBadge(g.rating)}
-        <span class="game-time">${g.time}</span>
-      </div>
-    </div>
-
-    <div class="pitchers-row">
-      <div class="pitcher-chip">
-        <span class="team-label">Away SP</span>
-        ${awaySpStr}
-      </div>
-      <span class="pitcher-vs">vs</span>
-      <div class="pitcher-chip">
-        <span class="team-label">Home SP</span>
-        ${homeSpStr}
-      </div>
-    </div>
-
-    <div class="stats-grid">
-      <div class="stat-panel">
-        <div class="stat-label">⚡ First 5 (SP Only)</div>
-        ${g.f5Pick ? `<div class="stat-pick">${g.f5Pick}</div>` : ''}
-        <div class="stat-nums">
-          ${g.f5Total ? `<div class="stat-num"><span class="val">${g.f5Total}</span><span class="lbl">F5 Total</span></div>` : ''}
-          ${g.f5Conf ? `<div class="stat-num"><span class="conf-badge ${confClass(g.f5Conf)}">${g.f5Conf.replace(/[🟢🟡🔴]/g,'').trim()}</span><span class="lbl">Conf</span></div>` : ''}
-        </div>
-        ${winBar(g.awayF5Win, g.away, g.f5Pick)}
-        ${winBar(g.homeF5Win, g.home, g.f5Pick)}
-      </div>
-      <div class="stat-panel">
-        <div class="stat-label">🏆 Full Game</div>
-        ${g.fgPick ? `<div class="stat-pick">${g.fgPick}</div>` : ''}
-        <div class="stat-nums">
-          ${g.fgTotal ? `<div class="stat-num"><span class="val">${g.fgTotal}</span><span class="lbl">FG Total</span></div>` : ''}
-          ${g.fgConf ? `<div class="stat-num"><span class="conf-badge ${confClass(g.fgConf)}">${g.fgConf.replace(/[🟢🟡🔴]/g,'').trim()}</span><span class="lbl">Conf</span></div>` : ''}
-        </div>
-        ${winBar(g.awayFGWin, g.away, g.fgPick)}
-        ${winBar(g.homeFGWin, g.home, g.fgPick)}
-      </div>
-    </div>
-
-    ${g.parkFactor ? `<div class="venue-row">
-      <span class="venue-text">🏟️ Park Factor</span>
-      <span class="park-badge ${parkClass(g.parkFactor)}">${parkLabel(g.parkFactor)}</span>
-      ${g.wxAdj && g.wxAdj !== '+0%' ? `<span style="font-size:10px;color:var(--text3)">${g.wxAdj}</span>` : ''}
-    </div>` : ''}
-  </div>`;
-}
-
-function render() {
-  let games = ALL_GAMES.filter(g => g.day === currentDay);
-
-  if (currentFilter !== 'all') {
-    games = games.filter(g => ratingKey(g.rating) === currentFilter);
-  }
-
-  if (currentSort === 'conf') {
-    const rank = {elite:0, strong:1, moderate:2, lean:3};
-    games.sort((a,b) => (rank[ratingKey(a.rating)]||3) - (rank[ratingKey(b.rating)]||3));
-  } else if (currentSort === 'total') {
-    games.sort((a,b) => (parseFloat(b.fgTotal)||0) - (parseFloat(a.fgTotal)||0));
-  }
-  // default: keep original order (time order from sheet)
-
-  const grid = document.getElementById('games-grid');
-  const empty = document.getElementById('empty-state');
-  const count = document.getElementById('game-count');
-
-  if (games.length === 0) {
-    grid.innerHTML = '';
-    empty.classList.add('visible');
-    count.textContent = '';
-  } else {
-    empty.classList.remove('visible');
-    grid.innerHTML = games.map(gameCard).join('');
-    count.textContent = `${games.length} game${games.length !== 1 ? 's' : ''}`;
-  }
-}
-
-function setDay(day) {
-  currentDay = day;
+function setDay(d) {
+  currentDay = d;
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-' + day).classList.add('active');
+  document.getElementById('tab-' + d).classList.add('active');
   render();
 }
-
 function setFilter(f, btn) {
   currentFilter = f;
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   render();
 }
-
 function setSort(s, btn) {
   currentSort = s;
   document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
@@ -970,7 +411,150 @@ function setSort(s, btn) {
   render();
 }
 
-// Auto-load on startup
+// ── Card rendering ────────────────────────────────────────────────────────
+function ratingKey(r) {
+  if (/elite|⭐⭐⭐/.test(r))    return 'elite';
+  if (/strong|⭐⭐/.test(r))     return 'strong';
+  if (/moderate|⭐/.test(r))    return 'moderate';
+  return 'lean';
+}
+function confCls(c) {
+  if (/high/i.test(c)) return 'conf-high';
+  if (/med/i.test(c))  return 'conf-med';
+  return 'conf-low';
+}
+function confLabel(c) {
+  if (!c) return '';
+  if (/high/i.test(c)) return '🟢 High';
+  if (/med/i.test(c))  return '🟡 Med';
+  if (/low/i.test(c))  return '🔴 Low';
+  return c;
+}
+function fillCls(pct) {
+  const v = parseFloat(pct);
+  if (v >= 58) return 'fill-high';
+  if (v <= 42) return 'fill-low';
+  return 'fill-mid';
+}
+function parkCls(pf) {
+  const v = parseFloat(pf);
+  if (v > 1.03) return 'park-hitter';
+  if (v < 0.97) return 'park-pitcher';
+  return 'park-neutral';
+}
+function parkLbl(pf) {
+  const v = parseFloat(pf);
+  if (!v) return `Park Factor: ${pf}`;
+  if (v >= 1.30) return `🔴 Extreme Hitter (${pf})`;
+  if (v >= 1.05) return `🟠 Hitter Friendly (${pf})`;
+  if (v <= 0.94) return `🟢 Pitcher Friendly (${pf})`;
+  return `⚪ Neutral Park (${pf})`;
+}
+function ratingBadge(r) {
+  const k = ratingKey(r);
+  const lbl = {elite:'⭐⭐⭐ Elite', strong:'⭐⭐ Strong', moderate:'⭐ Moderate', lean:'📊 Lean'}[k];
+  return `<span class="rating-badge rating-${k}">${lbl}</span>`;
+}
+function winBar(pct, label) {
+  if (!pct) return '';
+  const v = Math.min(Math.max(parseFloat(pct)||50, 0), 100);
+  const display = pct.includes('%') ? pct : v.toFixed(1) + '%';
+  return `<div class="win-row">
+    <span class="win-lbl">${label}</span>
+    <div class="win-bar"><div class="win-fill ${fillCls(v)}" style="width:${v}%"></div></div>
+    <span class="win-pct">${display}</span>
+  </div>`;
+}
+
+function gameCard(g) {
+  const awayFGv = parseFloat(g.awayFG) || 0;
+  const homeFGv = parseFloat(g.homeFG) || 0;
+  const awayWinner = awayFGv > homeFGv;
+  const awayCls = awayWinner ? ' winner' : '';
+  const homeCls = awayWinner ? '' : ' winner';
+
+  const spChip = (lbl, name, era) => {
+    const nameStr = name || 'TBD';
+    const eraStr  = era  ? ` <span class="era">(${era})</span>` : '';
+    return `<div class="pitcher-chip"><span class="lbl">${lbl}</span> ${nameStr}${eraStr}</div>`;
+  };
+
+  return `<div class="game-card">
+    <div class="card-header">
+      <div class="matchup">
+        <span class="${awayCls.trim()}">${g.away}</span>
+        <span class="at">@</span>
+        <span class="${homeCls.trim()}">${g.home}</span>
+      </div>
+      <div class="card-meta">
+        ${ratingBadge(g.rating)}
+        ${g.time ? `<span class="game-time">${g.time}</span>` : ''}
+      </div>
+    </div>
+
+    <div class="pitchers-row">
+      ${spChip('Away', g.awaySP, g.awaySPERA)}
+      <span class="pitcher-vs">vs</span>
+      ${spChip('Home', g.homeSP, g.homeSPERA)}
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-panel">
+        <div class="stat-label">⚡ First 5 Innings</div>
+        ${g.f5Pick ? `<div class="stat-pick">${g.f5Pick}</div>` : ''}
+        <div class="stat-nums">
+          ${g.f5Total ? `<div class="stat-num"><span class="val">${g.f5Total}</span><span class="lbl">F5 Total</span></div>` : ''}
+          ${g.f5OU    ? `<div class="stat-num"><span class="val">${g.f5OU}</span><span class="lbl">O/U</span></div>` : ''}
+          ${g.f5Conf  ? `<div class="stat-num"><span class="conf-badge ${confCls(g.f5Conf)}">${confLabel(g.f5Conf)}</span><span class="lbl">Conf</span></div>` : ''}
+        </div>
+        ${winBar(g.awayF5, g.away)}
+        ${winBar(g.homeF5, g.home)}
+      </div>
+      <div class="stat-panel">
+        <div class="stat-label">🏆 Full Game</div>
+        ${g.fgPick ? `<div class="stat-pick">${g.fgPick}</div>` : ''}
+        <div class="stat-nums">
+          ${g.fgTotal ? `<div class="stat-num"><span class="val">${g.fgTotal}</span><span class="lbl">FG Total</span></div>` : ''}
+          ${g.fgOU    ? `<div class="stat-num"><span class="val">${g.fgOU}</span><span class="lbl">O/U</span></div>` : ''}
+          ${g.fgConf  ? `<div class="stat-num"><span class="conf-badge ${confCls(g.fgConf)}">${confLabel(g.fgConf)}</span><span class="lbl">Conf</span></div>` : ''}
+        </div>
+        ${winBar(g.awayFG, g.away)}
+        ${winBar(g.homeFG, g.home)}
+      </div>
+    </div>
+
+    ${(g.park || g.wx) ? `<div class="venue-row">
+      ${g.park ? `<span class="park-badge ${parkCls(g.park)}">${parkLbl(g.park)}</span>` : ''}
+      ${g.wx && g.wx !== '0%' && g.wx !== '+0%' ? `<span style="font-size:10px;color:var(--text3)">Wx Adj: ${g.wx}</span>` : ''}
+    </div>` : ''}
+  </div>`;
+}
+
+function render() {
+  let games = ALL_GAMES.filter(g => g.day === currentDay);
+  if (currentFilter !== 'all') games = games.filter(g => ratingKey(g.rating) === currentFilter);
+  if (currentSort === 'conf') {
+    const rank = {elite:0,strong:1,moderate:2,lean:3};
+    games.sort((a,b) => (rank[ratingKey(a.rating)]||3) - (rank[ratingKey(b.rating)]||3));
+  } else if (currentSort === 'total') {
+    games.sort((a,b) => (parseFloat(b.fgTotal)||0) - (parseFloat(a.fgTotal)||0));
+  }
+
+  const grid  = document.getElementById('games-grid');
+  const empty = document.getElementById('empty-state');
+  const count = document.getElementById('game-count');
+
+  if (games.length === 0) {
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    count.textContent = '';
+  } else {
+    empty.style.display = 'none';
+    grid.innerHTML = games.map(gameCard).join('');
+    count.textContent = `${games.length} game${games.length !== 1 ? 's' : ''}`;
+  }
+}
+
 loadData();
 </script>
 </body>
