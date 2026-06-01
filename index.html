@@ -55,7 +55,6 @@
   .game-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;
     overflow:hidden;transition:transform .15s,border-color .15s}
   .game-card:hover{transform:translateY(-2px);border-color:#2e4a6e}
-
   .card-header{padding:12px 14px 10px;display:flex;align-items:center;
     justify-content:space-between;border-bottom:1px solid var(--border)}
   .matchup{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;line-height:1.2}
@@ -84,7 +83,7 @@
     color:var(--text3);margin-bottom:5px}
   .stat-pick{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;
     color:#60a5fa;margin-bottom:4px;line-height:1.1}
-  .stat-nums{display:flex;gap:10px;margin-bottom:4px}
+  .stat-nums{display:flex;gap:10px;margin-bottom:4px;flex-wrap:wrap}
   .stat-num{display:flex;flex-direction:column;align-items:center}
   .stat-num .val{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--text)}
   .stat-num .lbl{font-size:9px;font-weight:600;letter-spacing:.5px;color:var(--text3);text-transform:uppercase}
@@ -97,9 +96,7 @@
   .win-lbl{font-size:10px;color:var(--text3);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .win-bar{width:80px;height:3px;background:var(--surface2);border-radius:2px;overflow:hidden;flex-shrink:0}
   .win-fill{height:100%;border-radius:2px}
-  .fill-high{background:#16a34a}
-  .fill-mid{background:var(--accent)}
-  .fill-low{background:var(--red)}
+  .fill-high{background:#16a34a}.fill-mid{background:var(--accent)}.fill-low{background:var(--red)}
   .win-pct{font-size:10px;color:var(--text2);width:36px;text-align:right;flex-shrink:0}
 
   .venue-row{padding:7px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
@@ -114,15 +111,15 @@
   #empty-state .emoji{font-size:48px;margin-bottom:16px}
   #empty-state h3{font-size:18px;color:var(--text2);margin-bottom:8px}
 
-  #loading{display:none;text-align:center;padding:60px 20px;color:var(--text3)}
-  #loading.visible{display:block}
+  #loading{text-align:center;padding:60px 20px;color:var(--text3)}
   .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);
     border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
   @keyframes spin{to{transform:rotate(360deg)}}
 
-  #debug-panel{background:#111827;border:1px solid #1e2d45;border-radius:8px;
+  /* DEBUG PANEL */
+  #debug-panel{background:#0d1117;border:1px solid #1e2d45;border-radius:8px;
     margin:12px 16px;padding:12px;font-size:11px;font-family:monospace;color:#94a3b8;
-    display:none;max-height:200px;overflow-y:auto}
+    max-height:300px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
 
   @media(max-width:600px){
     #games-grid{grid-template-columns:1fr;padding:8px 10px 40px}
@@ -158,9 +155,9 @@
 </div>
 
 <div id="status-bar"></div>
-<div id="debug-panel"></div>
+<div id="debug-panel">⏳ Waiting to load...</div>
 <div class="game-count" id="game-count"></div>
-<div id="loading" class="visible"><div class="spinner"></div>Loading from Google Sheets...</div>
+<div id="loading"><div class="spinner"></div>Loading from Google Sheets...</div>
 <div id="games-grid"></div>
 <div id="empty-state"><div class="emoji">🔍</div><h3>No games match this filter</h3><p>Try a different rating or day</p></div>
 
@@ -172,116 +169,140 @@ let ALL_GAMES = [];
 let currentDay    = 'today';
 let currentFilter = 'all';
 let currentSort   = 'time';
-let debugLog      = [];
 
-function log(msg) {
-  debugLog.push(msg);
+function dbg(msg) {
   console.log(msg);
+  const el = document.getElementById('debug-panel');
+  el.textContent += '\n' + msg;
 }
 
-// ── Google Visualization Query API (no CORS issues) ──────────────────────
-// Returns JSON with a DataTable — works from any domain on published sheets
-function loadVizData() {
+// ── Fetch sheet as JSON using gviz endpoint ───────────────────────────────
+// The gviz/tq endpoint returns:  google.visualization.Query.setResponse({...})
+// We intercept it by overriding that function before loading the script.
+function fetchSheetJSON() {
   return new Promise((resolve, reject) => {
-    const cb = 'mlbCB_' + Date.now();
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&tq=select%20*&gid=${GID}&cb=${cb}`;
+    const cbName = '__mlbGviz';
 
-    window[cb] = function(data) {
-      delete window[cb];
-      document.getElementById('vizScript')?.remove();
-      resolve(data);
+    // The response calls google.visualization.Query.setResponse(data)
+    // So we mock that namespace
+    window.google = window.google || {};
+    window.google.visualization = window.google.visualization || {};
+    window.google.visualization.Query = window.google.visualization.Query || {};
+    window.google.visualization.Query.setResponse = function(data) {
+      cleanup();
+      if (data && data.table) {
+        resolve(data);
+      } else {
+        reject(new Error('No table in response: ' + JSON.stringify(data).slice(0,200)));
+      }
     };
 
+    const timer = setTimeout(() => { cleanup(); reject(new Error('Timeout')); }, 10000);
+
+    function cleanup() {
+      clearTimeout(timer);
+      const s = document.getElementById('gviz-script');
+      if (s) s.remove();
+    }
+
     const script = document.createElement('script');
-    script.id = 'vizScript';
-    script.src = url;
-    script.onerror = () => { delete window[cb]; reject(new Error('Script load failed')); };
+    script.id = 'gviz-script';
+    // tqx=out:json tells it to use setResponse callback
+    script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${GID}&t=${Date.now()}`;
+    script.onerror = () => { cleanup(); reject(new Error('Script failed to load')); };
     document.head.appendChild(script);
   });
 }
 
-// ── Parse Google Visualization DataTable into rows of strings ────────────
-function vizToRows(data) {
+// ── Extract rows from gviz DataTable ─────────────────────────────────────
+function extractFromGviz(data) {
   const table = data.table;
-  if (!table || !table.rows) return [];
+  const cols = table.cols.map((c, i) => ({
+    idx: i,
+    label: (c.label || '').trim(),
+    type: c.type
+  }));
 
-  // Column labels
-  const cols = table.cols.map(c => (c.label || '').trim());
-  log('Columns (' + cols.length + '): ' + cols.map((c,i) => i+':'+JSON.stringify(c)).join(' | '));
+  dbg('=== COLUMNS (' + cols.length + ') ===');
+  cols.forEach(c => dbg(`  [${c.idx}] "${c.label}" (${c.type})`));
 
-  const rows = [];
-  for (const row of table.rows) {
-    if (!row.c) continue;
-    const cells = row.c.map(cell => {
-      if (!cell) return '';
-      // Use formatted value if available, else raw value
-      const v = cell.f !== undefined && cell.f !== null ? String(cell.f)
-              : cell.v !== undefined && cell.v !== null ? String(cell.v)
-              : '';
-      return v.trim();
-    });
-    rows.push(cells);
-  }
-  return { cols, rows };
+  const rows = (table.rows || []).map(row =>
+    (row.c || []).map(cell => {
+      if (!cell || cell.v === null || cell.v === undefined) return '';
+      // Prefer formatted value (f) for display; fall back to raw (v)
+      return (cell.f !== undefined && cell.f !== null) ? String(cell.f).trim()
+           : String(cell.v).trim();
+    })
+  );
+
+  dbg('\n=== ROWS (' + rows.length + ') ===');
+  rows.forEach((r, i) => {
+    const flat = r.join(' | ');
+    if (flat.trim()) dbg(`  [${i}] ${flat.slice(0,120)}`);
+  });
+
+  return { cols: cols.map(c => c.label), rows };
 }
 
-// ── Find the predictions table and map columns ───────────────────────────
-function findColMap(cols) {
+// ── Map column labels to indices ──────────────────────────────────────────
+function buildColMap(cols) {
   const map = {};
-  cols.forEach((c, i) => {
-    const s = c.toLowerCase().replace(/[^a-z0-9%\/@]/g,' ').replace(/\s+/g,' ').trim();
-    log(`  col[${i}] = "${c}" → normalized: "${s}"`);
+  cols.forEach((raw, i) => {
+    const c = raw.toLowerCase().replace(/[^a-z0-9%\/@ ]/g,' ').replace(/\s+/g,' ').trim();
 
-    if (s === 'matchup' || s.includes('matchup'))           map.matchup  = i;
-    else if (s === 'time' || s === 'time et' || s.includes('time')) map.time = i;
-    else if (s.includes('away sp'))                          map.awaySP   = i;
-    else if (s.includes('home sp'))                          map.homeSP   = i;
-    else if (s.includes('park factor') || s === 'park')     map.park     = i;
-    else if (s.includes('wx') || s.includes('weather'))     map.wx       = i;
-    // Win% columns — order matters: first away/home pair = F5, second = FG
-    else if (/away.*win|away.*%/.test(s) && map.awayF5 === undefined) map.awayF5 = i;
-    else if (/home.*win|home.*%/.test(s) && map.homeF5 === undefined) map.homeF5 = i;
-    else if (/away.*win|away.*%/.test(s) && map.awayFG === undefined) map.awayFG = i;
-    else if (/home.*win|home.*%/.test(s) && map.homeFG === undefined) map.homeFG = i;
-    // Pick columns
-    else if (/f5.*pick|f5pick/.test(s))                     map.f5Pick   = i;
-    else if (/fg.*pick|fgpick/.test(s))                     map.fgPick   = i;
-    // Conf columns
-    else if (/f5.*conf/.test(s))                            map.f5Conf   = i;
-    else if (/fg.*conf/.test(s))                            map.fgConf   = i;
-    // Total columns
-    else if (/f5.*total/.test(s))                           map.f5Total  = i;
-    else if (/fg.*total|proj.*total|total/.test(s) && map.fgTotal === undefined) map.fgTotal = i;
-    // O/U
-    else if (/f5.*o.u/.test(s))                             map.f5OU     = i;
-    else if (/fg.*o.u|o.u/.test(s) && map.fgOU === undefined) map.fgOU  = i;
-    // Rating
-    else if (s === 'rating' || s.includes('rating') || s.includes('⭐')) map.rating = i;
+    if      (c === 'matchup' || c.includes('matchup'))                     map.matchup  = i;
+    else if (c.includes('time'))                                            map.time     = i;
+    else if (c.includes('away sp'))                                         map.awaySP   = i;
+    else if (c.includes('home sp'))                                         map.homeSP   = i;
+    else if (c.includes('park factor') || c === 'park')                    map.park     = i;
+    else if (c.includes('wx') || c.includes('weather adj'))               map.wx       = i;
+    else if (/away.*f5|f5.*away/.test(c))                                   map.awayF5   = i;
+    else if (/home.*f5|f5.*home/.test(c))                                   map.homeF5   = i;
+    else if (/f5.*pick/.test(c))                                             map.f5Pick   = i;
+    else if (/f5.*conf/.test(c))                                             map.f5Conf   = i;
+    else if (/f5.*total/.test(c))                                            map.f5Total  = i;
+    else if (/f5.*o.u/.test(c))                                              map.f5OU     = i;
+    else if (/away.*fg|fg.*away/.test(c))                                   map.awayFG   = i;
+    else if (/home.*fg|fg.*home/.test(c))                                   map.homeFG   = i;
+    else if (/fg.*pick/.test(c))                                             map.fgPick   = i;
+    else if (/fg.*conf/.test(c))                                             map.fgConf   = i;
+    else if (/fg.*total|proj.*total/.test(c))                               map.fgTotal  = i;
+    else if (/fg.*o.u/.test(c))                                             map.fgOU     = i;
+    else if (c === 'rating' || c.includes('rating'))                       map.rating   = i;
+    else if (/day|today|tmrw|tomorrow/.test(c))                             map.day      = i;
   });
-  log('colMap: ' + JSON.stringify(map));
+
+  dbg('\n=== COL MAP ===');
+  dbg(JSON.stringify(map, null, 2));
   return map;
 }
 
-// ── Parse rows into game objects ─────────────────────────────────────────
+// ── Parse rows into game objects ──────────────────────────────────────────
 function parseGames(cols, rows) {
-  const map = findColMap(cols);
+  const map = buildColMap(cols);
   const games = [];
-  let currentDay = 'today';
+  let dayCtx = 'today';
 
-  const get = (row, key) => (map[key] !== undefined && row[map[key]] !== undefined)
-                           ? row[map[key]] : '';
+  const get = (row, key) =>
+    (map[key] !== undefined && row[map[key]] !== undefined) ? row[map[key]] : '';
+
+  dbg('\n=== GAME ROWS ===');
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
     const flat = row.join(' ');
 
-    // Day markers
-    if (/today/i.test(flat) && !/@/.test(flat))     { currentDay = 'today';    continue; }
-    if (/tmrw|tomorrow/i.test(flat) && !/@/.test(flat)) { currentDay = 'tomorrow'; continue; }
+    // Skip fully empty rows
+    if (!flat.trim()) continue;
 
-    // Must have @ for game rows
-    const matchupRaw = map.matchup !== undefined ? row[map.matchup]
+    // Day context markers
+    if (/\btoday\b/i.test(flat) && !/@/.test(flat)) { dayCtx = 'today';    dbg(`[${i}] DAY→today`);    continue; }
+    if (/\b(tmrw|tomorrow)\b/i.test(flat) && !/@/.test(flat)) { dayCtx = 'tomorrow'; dbg(`[${i}] DAY→tomorrow`); continue; }
+
+    // Game rows must have @ in matchup col or anywhere
+    const matchupRaw = map.matchup !== undefined ? row[map.matchup] || ''
                      : row.find(c => / @ /i.test(c)) || '';
+
     if (!/ @ /i.test(matchupRaw)) continue;
 
     const parts = matchupRaw.split('@').map(s => s.trim());
@@ -290,102 +311,92 @@ function parseGames(cols, rows) {
     const away = parts[0];
     const home = parts[1];
 
-    // Parse SP: "Name (ERA)" format
+    // Parse "Name (ERA)" SP format
     const spParse = raw => {
       const m = raw.match(/^(.+?)\s*\(([\d.]+|—|--)\)\s*$/);
-      return m ? { name: m[1].trim(), era: m[2] }
-               : { name: raw.replace(/\(.*\)/g,'').trim(), era: '' };
+      return m ? {name: m[1].trim(), era: m[2]}
+               : {name: raw.replace(/\(.*?\)/g,'').trim(), era: ''};
     };
 
-    const awaySPInfo = spParse(get(row, 'awaySP'));
-    const homeSPInfo = spParse(get(row, 'homeSP'));
+    const asp = spParse(get(row, 'awaySP'));
+    const hsp = spParse(get(row, 'homeSP'));
+
+    // If day col exists in the data, use it
+    if (map.day !== undefined && row[map.day]) {
+      const dv = row[map.day].toLowerCase();
+      if (/today/.test(dv)) dayCtx = 'today';
+      else if (/tmrw|tomorrow/.test(dv)) dayCtx = 'tomorrow';
+    }
 
     const g = {
-      day:      currentDay,
-      time:     get(row, 'time'),
+      day: dayCtx,
+      time:      get(row, 'time'),
       away, home,
-      awaySP:   awaySPInfo.name,
-      awaySPERA: awaySPInfo.era,
-      homeSP:   homeSPInfo.name,
-      homeSPERA: homeSPInfo.era,
-      park:     get(row, 'park'),
-      wx:       get(row, 'wx'),
-      awayF5:   get(row, 'awayF5'),
-      homeF5:   get(row, 'homeF5'),
-      f5Pick:   get(row, 'f5Pick'),
-      f5Conf:   get(row, 'f5Conf'),
-      f5Total:  get(row, 'f5Total'),
-      f5OU:     get(row, 'f5OU'),
-      awayFG:   get(row, 'awayFG'),
-      homeFG:   get(row, 'homeFG'),
-      fgPick:   get(row, 'fgPick'),
-      fgConf:   get(row, 'fgConf'),
-      fgTotal:  get(row, 'fgTotal'),
-      fgOU:     get(row, 'fgOU'),
-      rating:   get(row, 'rating'),
+      awaySP:    asp.name, awaySPERA: asp.era,
+      homeSP:    hsp.name, homeSPERA: hsp.era,
+      park:      get(row, 'park'),
+      wx:        get(row, 'wx'),
+      awayF5:    get(row, 'awayF5'),
+      homeF5:    get(row, 'homeF5'),
+      f5Pick:    get(row, 'f5Pick'),
+      f5Conf:    get(row, 'f5Conf'),
+      f5Total:   get(row, 'f5Total'),
+      f5OU:      get(row, 'f5OU'),
+      awayFG:    get(row, 'awayFG'),
+      homeFG:    get(row, 'homeFG'),
+      fgPick:    get(row, 'fgPick'),
+      fgConf:    get(row, 'fgConf'),
+      fgTotal:   get(row, 'fgTotal'),
+      fgOU:      get(row, 'fgOU'),
+      rating:    get(row, 'rating'),
+      _raw:      row   // keep raw for debugging
     };
 
-    // Fallback: derive pick from win%
-    if (!g.fgPick && g.awayFG && g.homeFG) {
-      g.fgPick = parseFloat(g.awayFG) > parseFloat(g.homeFG) ? away : home;
-    }
-    if (!g.f5Pick && g.awayF5 && g.homeF5) {
-      g.f5Pick = parseFloat(g.awayF5) > parseFloat(g.homeF5) ? away : home;
-    }
-
-    log(`Game: ${away} @ ${home} | day=${currentDay} | fgPick=${g.fgPick} | rating=${g.rating}`);
+    dbg(`[${i}] ${away} @ ${home} | day=${g.day} | SP: ${asp.name||'?'} vs ${hsp.name||'?'} | fgPick=${g.fgPick} | rating=${g.rating}`);
     games.push(g);
   }
   return games;
 }
 
-// ── Main load ─────────────────────────────────────────────────────────────
+// ── Load ──────────────────────────────────────────────────────────────────
 async function loadData() {
-  debugLog = [];
-  setStatus('Loading from Google Sheets...', false);
+  document.getElementById('debug-panel').textContent = '⏳ Loading...';
   document.getElementById('loading').style.display = 'block';
   document.getElementById('games-grid').innerHTML = '';
   document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('game-count').textContent = '';
+  setStatus('', false);
   ALL_GAMES = [];
 
   try {
-    log('Fetching via Google Visualization API...');
-    const data = await loadVizData();
-    const { cols, rows } = vizToRows(data);
-    log(`Got ${rows.length} data rows, ${cols.length} columns`);
-
+    dbg('Fetching sheet via gviz API...');
+    const data = await fetchSheetJSON();
+    const {cols, rows} = extractFromGviz(data);
     ALL_GAMES = parseGames(cols, rows);
-    log(`Parsed ${ALL_GAMES.length} games`);
 
     document.getElementById('loading').style.display = 'none';
 
-    // Show debug panel (can be hidden after confirming it works)
-    const dp = document.getElementById('debug-panel');
-    dp.style.display = 'block';
-    dp.textContent = debugLog.join('\n');
+    const td = ALL_GAMES.filter(g => g.day === 'today').length;
+    const tm = ALL_GAMES.filter(g => g.day === 'tomorrow').length;
+    dbg(`\n✅ Total games: ${ALL_GAMES.length} (today: ${td}, tomorrow: ${tm})`);
 
     if (ALL_GAMES.length === 0) {
-      setStatus('⚠️ Sheet loaded but no games found — check debug panel below', true);
+      setStatus('⚠️ Sheet loaded but 0 games parsed — see debug panel', true);
     } else {
-      const td = ALL_GAMES.filter(g => g.day === 'today').length;
-      const tm = ALL_GAMES.filter(g => g.day === 'tomorrow').length;
-      setStatus(`✅ Loaded ${ALL_GAMES.length} games (Today: ${td}, Tomorrow: ${tm})`, false);
+      setStatus(`✅ Loaded ${ALL_GAMES.length} games`, false);
       document.getElementById('tab-today').textContent    = `Today (${td})`;
       document.getElementById('tab-tomorrow').textContent = `Tomorrow (${tm})`;
     }
   } catch(e) {
     document.getElementById('loading').style.display = 'none';
-    log('ERROR: ' + e.message);
-    const dp = document.getElementById('debug-panel');
-    dp.style.display = 'block';
-    dp.textContent = debugLog.join('\n');
-    setStatus('❌ Failed to load: ' + e.message, true);
+    dbg('❌ ERROR: ' + e.message);
+    setStatus('❌ ' + e.message, true);
   }
 
   render();
 }
 
-// ── UI Helpers ────────────────────────────────────────────────────────────
+// ── UI ────────────────────────────────────────────────────────────────────
 function setStatus(msg, isErr) {
   const el = document.getElementById('status-bar');
   el.textContent = msg;
@@ -411,122 +422,92 @@ function setSort(s, btn) {
   render();
 }
 
-// ── Card rendering ────────────────────────────────────────────────────────
+// ── Cards ─────────────────────────────────────────────────────────────────
 function ratingKey(r) {
-  if (/elite|⭐⭐⭐/.test(r))    return 'elite';
-  if (/strong|⭐⭐/.test(r))     return 'strong';
-  if (/moderate|⭐/.test(r))    return 'moderate';
+  if (/elite|⭐⭐⭐/.test(r))  return 'elite';
+  if (/strong|⭐⭐/.test(r))   return 'strong';
+  if (/moderate|⭐/.test(r))  return 'moderate';
   return 'lean';
 }
-function confCls(c) {
-  if (/high/i.test(c)) return 'conf-high';
-  if (/med/i.test(c))  return 'conf-med';
-  return 'conf-low';
-}
-function confLabel(c) {
-  if (!c) return '';
-  if (/high/i.test(c)) return '🟢 High';
-  if (/med/i.test(c))  return '🟡 Med';
-  if (/low/i.test(c))  return '🔴 Low';
-  return c;
-}
-function fillCls(pct) {
-  const v = parseFloat(pct);
-  if (v >= 58) return 'fill-high';
-  if (v <= 42) return 'fill-low';
-  return 'fill-mid';
-}
-function parkCls(pf) {
-  const v = parseFloat(pf);
-  if (v > 1.03) return 'park-hitter';
-  if (v < 0.97) return 'park-pitcher';
-  return 'park-neutral';
-}
-function parkLbl(pf) {
-  const v = parseFloat(pf);
-  if (!v) return `Park Factor: ${pf}`;
-  if (v >= 1.30) return `🔴 Extreme Hitter (${pf})`;
-  if (v >= 1.05) return `🟠 Hitter Friendly (${pf})`;
-  if (v <= 0.94) return `🟢 Pitcher Friendly (${pf})`;
-  return `⚪ Neutral Park (${pf})`;
+function confCls(c)   { return /high/i.test(c) ? 'conf-high' : /med/i.test(c) ? 'conf-med' : 'conf-low'; }
+function confLabel(c) { return /high/i.test(c) ? '🟢 High' : /med/i.test(c) ? '🟡 Med' : /low/i.test(c) ? '🔴 Low' : c; }
+function fillCls(v)   { return v >= 58 ? 'fill-high' : v <= 42 ? 'fill-low' : 'fill-mid'; }
+function parkCls(pf)  { const v=parseFloat(pf); return v>1.03?'park-hitter':v<0.97?'park-pitcher':'park-neutral'; }
+function parkLbl(pf)  {
+  const v=parseFloat(pf);
+  if(!v) return pf;
+  if(v>=1.30) return `🔴 Extreme Hitter (${pf})`;
+  if(v>=1.05) return `🟠 Hitter Friendly (${pf})`;
+  if(v<=0.94) return `🟢 Pitcher Friendly (${pf})`;
+  return `⚪ Neutral (${pf})`;
 }
 function ratingBadge(r) {
   const k = ratingKey(r);
-  const lbl = {elite:'⭐⭐⭐ Elite', strong:'⭐⭐ Strong', moderate:'⭐ Moderate', lean:'📊 Lean'}[k];
+  const lbl = {elite:'⭐⭐⭐ Elite',strong:'⭐⭐ Strong',moderate:'⭐ Moderate',lean:'📊 Lean'}[k];
   return `<span class="rating-badge rating-${k}">${lbl}</span>`;
 }
 function winBar(pct, label) {
   if (!pct) return '';
   const v = Math.min(Math.max(parseFloat(pct)||50, 0), 100);
-  const display = pct.includes('%') ? pct : v.toFixed(1) + '%';
+  const disp = String(pct).includes('%') ? pct : v.toFixed(1)+'%';
   return `<div class="win-row">
     <span class="win-lbl">${label}</span>
     <div class="win-bar"><div class="win-fill ${fillCls(v)}" style="width:${v}%"></div></div>
-    <span class="win-pct">${display}</span>
+    <span class="win-pct">${disp}</span>
   </div>`;
 }
 
 function gameCard(g) {
-  const awayFGv = parseFloat(g.awayFG) || 0;
-  const homeFGv = parseFloat(g.homeFG) || 0;
-  const awayWinner = awayFGv > homeFGv;
-  const awayCls = awayWinner ? ' winner' : '';
-  const homeCls = awayWinner ? '' : ' winner';
-
-  const spChip = (lbl, name, era) => {
-    const nameStr = name || 'TBD';
-    const eraStr  = era  ? ` <span class="era">(${era})</span>` : '';
-    return `<div class="pitcher-chip"><span class="lbl">${lbl}</span> ${nameStr}${eraStr}</div>`;
-  };
+  const awayV = parseFloat(g.awayFG)||0, homeV = parseFloat(g.homeFG)||0;
+  const awayWin = awayV > homeV;
+  const spChip = (lbl, name, era) =>
+    `<div class="pitcher-chip"><span class="lbl">${lbl}</span>&nbsp;${name||'TBD'}${era?` <span class="era">(${era})</span>`:''}</div>`;
 
   return `<div class="game-card">
     <div class="card-header">
       <div class="matchup">
-        <span class="${awayCls.trim()}">${g.away}</span>
+        <span class="${awayWin?'winner':''}">${g.away}</span>
         <span class="at">@</span>
-        <span class="${homeCls.trim()}">${g.home}</span>
+        <span class="${awayWin?'':' winner'}">${g.home}</span>
       </div>
       <div class="card-meta">
         ${ratingBadge(g.rating)}
-        ${g.time ? `<span class="game-time">${g.time}</span>` : ''}
+        ${g.time?`<span class="game-time">${g.time}</span>`:''}
       </div>
     </div>
-
     <div class="pitchers-row">
-      ${spChip('Away', g.awaySP, g.awaySPERA)}
+      ${spChip('Away',g.awaySP,g.awaySPERA)}
       <span class="pitcher-vs">vs</span>
-      ${spChip('Home', g.homeSP, g.homeSPERA)}
+      ${spChip('Home',g.homeSP,g.homeSPERA)}
     </div>
-
     <div class="stats-grid">
       <div class="stat-panel">
         <div class="stat-label">⚡ First 5 Innings</div>
-        ${g.f5Pick ? `<div class="stat-pick">${g.f5Pick}</div>` : ''}
+        ${g.f5Pick?`<div class="stat-pick">${g.f5Pick}</div>`:''}
         <div class="stat-nums">
-          ${g.f5Total ? `<div class="stat-num"><span class="val">${g.f5Total}</span><span class="lbl">F5 Total</span></div>` : ''}
-          ${g.f5OU    ? `<div class="stat-num"><span class="val">${g.f5OU}</span><span class="lbl">O/U</span></div>` : ''}
-          ${g.f5Conf  ? `<div class="stat-num"><span class="conf-badge ${confCls(g.f5Conf)}">${confLabel(g.f5Conf)}</span><span class="lbl">Conf</span></div>` : ''}
+          ${g.f5Total?`<div class="stat-num"><span class="val">${g.f5Total}</span><span class="lbl">Total</span></div>`:''}
+          ${g.f5OU?`<div class="stat-num"><span class="val">${g.f5OU}</span><span class="lbl">O/U</span></div>`:''}
+          ${g.f5Conf?`<div class="stat-num"><span class="conf-badge ${confCls(g.f5Conf)}">${confLabel(g.f5Conf)}</span><span class="lbl">Conf</span></div>`:''}
         </div>
-        ${winBar(g.awayF5, g.away)}
-        ${winBar(g.homeF5, g.home)}
+        ${winBar(g.awayF5,g.away)}
+        ${winBar(g.homeF5,g.home)}
       </div>
       <div class="stat-panel">
         <div class="stat-label">🏆 Full Game</div>
-        ${g.fgPick ? `<div class="stat-pick">${g.fgPick}</div>` : ''}
+        ${g.fgPick?`<div class="stat-pick">${g.fgPick}</div>`:''}
         <div class="stat-nums">
-          ${g.fgTotal ? `<div class="stat-num"><span class="val">${g.fgTotal}</span><span class="lbl">FG Total</span></div>` : ''}
-          ${g.fgOU    ? `<div class="stat-num"><span class="val">${g.fgOU}</span><span class="lbl">O/U</span></div>` : ''}
-          ${g.fgConf  ? `<div class="stat-num"><span class="conf-badge ${confCls(g.fgConf)}">${confLabel(g.fgConf)}</span><span class="lbl">Conf</span></div>` : ''}
+          ${g.fgTotal?`<div class="stat-num"><span class="val">${g.fgTotal}</span><span class="lbl">Total</span></div>`:''}
+          ${g.fgOU?`<div class="stat-num"><span class="val">${g.fgOU}</span><span class="lbl">O/U</span></div>`:''}
+          ${g.fgConf?`<div class="stat-num"><span class="conf-badge ${confCls(g.fgConf)}">${confLabel(g.fgConf)}</span><span class="lbl">Conf</span></div>`:''}
         </div>
-        ${winBar(g.awayFG, g.away)}
-        ${winBar(g.homeFG, g.home)}
+        ${winBar(g.awayFG,g.away)}
+        ${winBar(g.homeFG,g.home)}
       </div>
     </div>
-
-    ${(g.park || g.wx) ? `<div class="venue-row">
-      ${g.park ? `<span class="park-badge ${parkCls(g.park)}">${parkLbl(g.park)}</span>` : ''}
-      ${g.wx && g.wx !== '0%' && g.wx !== '+0%' ? `<span style="font-size:10px;color:var(--text3)">Wx Adj: ${g.wx}</span>` : ''}
-    </div>` : ''}
+    ${(g.park||g.wx)?`<div class="venue-row">
+      ${g.park?`<span class="park-badge ${parkCls(g.park)}">${parkLbl(g.park)}</span>`:''}
+      ${g.wx&&g.wx!=='0%'&&g.wx!=='+0%'?`<span style="font-size:10px;color:var(--text3)">Wx: ${g.wx}</span>`:''}
+    </div>`:''}
   </div>`;
 }
 
@@ -535,23 +516,19 @@ function render() {
   if (currentFilter !== 'all') games = games.filter(g => ratingKey(g.rating) === currentFilter);
   if (currentSort === 'conf') {
     const rank = {elite:0,strong:1,moderate:2,lean:3};
-    games.sort((a,b) => (rank[ratingKey(a.rating)]||3) - (rank[ratingKey(b.rating)]||3));
+    games.sort((a,b)=>(rank[ratingKey(a.rating)]||3)-(rank[ratingKey(b.rating)]||3));
   } else if (currentSort === 'total') {
-    games.sort((a,b) => (parseFloat(b.fgTotal)||0) - (parseFloat(a.fgTotal)||0));
+    games.sort((a,b)=>(parseFloat(b.fgTotal)||0)-(parseFloat(a.fgTotal)||0));
   }
-
-  const grid  = document.getElementById('games-grid');
-  const empty = document.getElementById('empty-state');
-  const count = document.getElementById('game-count');
-
-  if (games.length === 0) {
-    grid.innerHTML = '';
-    empty.style.display = 'block';
-    count.textContent = '';
+  const grid=document.getElementById('games-grid');
+  const empty=document.getElementById('empty-state');
+  const count=document.getElementById('game-count');
+  if (games.length===0) {
+    grid.innerHTML=''; empty.style.display='block'; count.textContent='';
   } else {
-    empty.style.display = 'none';
-    grid.innerHTML = games.map(gameCard).join('');
-    count.textContent = `${games.length} game${games.length !== 1 ? 's' : ''}`;
+    empty.style.display='none';
+    grid.innerHTML=games.map(gameCard).join('');
+    count.textContent=`${games.length} game${games.length!==1?'s':''}`;
   }
 }
 
