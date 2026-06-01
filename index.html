@@ -287,12 +287,11 @@ function buildTotalsLookup(rows) {
     if(/TODAY/i.test(flat)&&!/@/.test(flat)){dayCtx='today';continue;}
     if(/TOMORROW/i.test(flat)&&!/@/.test(flat)){dayCtx='tomorrow';continue;}
     const m=r[T.matchup]||'';
-    // Must have @ AND have actual run data in col 6 to be a real game row
     if(!m.includes('@')) continue;
     if(!r[T.awayF5runs]||!/\d/.test(r[T.awayF5runs])) continue;
     const p=m.split('@').map(s=>s.trim());
     if(p.length<2||!p[0]||!p[1]) continue;
-    lu[p[0]+'|'+p[1]]={
+    lu[dayCtx+'|'+p[0]+'|'+p[1]]={
       awayF5runs:parseRuns(r[T.awayF5runs]),homeF5runs:parseRuns(r[T.homeF5runs]),
       awayFGruns:parseRuns(r[T.awayFGruns]),homeFGruns:parseRuns(r[T.homeFGruns])
     };
@@ -334,7 +333,7 @@ function parsePredictions(rows, whipLu, totalsLu, wxLu) {
     const away=p[0], home=p[1];
     const asp=parseSP(r[C.awaySP]), hsp=parseSP(r[C.homeSP]);
     const wh=whipLu[away+'|'+home]||{};
-    const tt=totalsLu[away+'|'+home]||{};
+    const tt=totalsLu[dayCtx+'|'+away+'|'+home]||{};
     const wx=wxLu[away+'|'+home]||null;
     games.push({
       day:dayCtx,time:r[C.time]||'',away,home,
