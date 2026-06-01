@@ -509,7 +509,7 @@ function gameCard(g) {
           ${g.f5Total?`<div class="stat-num"><span class="val">${g.f5Total}</span><span class="lbl">F5 Total</span></div>`:''}
           ${g.f5Conf?`<div class="stat-num"><span class="conf-badge ${confCls(g.f5Conf)}">${confLbl(g.f5Conf)}</span><span class="lbl">Conf</span></div>`:''}
         </div>
-        ${wb(g.awayF5,g.away)}${wb(g.homeF5,g.home)}
+        ${wb(g.awayF5,g.away.split(' ').slice(-1)[0])}${wb(g.homeF5,g.home.split(' ').slice(-1)[0])}
         ${runSplit(g.away,g.awayF5runs,g.homeF5runs,g.home)}
       </div>
       <div class="stat-panel">
@@ -519,7 +519,7 @@ function gameCard(g) {
           ${g.fgTotal?`<div class="stat-num"><span class="val">${g.fgTotal}</span><span class="lbl">FG Total</span></div>`:''}
           ${g.fgConf?`<div class="stat-num"><span class="conf-badge ${confCls(g.fgConf)}">${confLbl(g.fgConf)}</span><span class="lbl">Conf</span></div>`:''}
         </div>
-        ${wb(g.awayFG,g.away)}${wb(g.homeFG,g.home)}
+        ${wb(g.awayFG,g.away.split(' ').slice(-1)[0])}${wb(g.homeFG,g.home.split(' ').slice(-1)[0])}
         ${runSplit(g.away,g.awayFGruns,g.homeFGruns,g.home)}
       </div>
     </div>
