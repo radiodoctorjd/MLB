@@ -52,7 +52,7 @@
     letter-spacing:.5px;text-transform:uppercase}
 
   #games-grid{padding:8px 16px 40px;display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:12px}
+    grid-template-columns:repeat(3,1fr);gap:12px;max-width:1400px;margin:0 auto}
 
   /* CARD — overflow hidden + min-width:0 on flex children prevents blowout */
   .game-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;
@@ -158,6 +158,8 @@
     border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
   @keyframes spin{to{transform:rotate(360deg)}}
 
+  @media(max-width:900px){
+    #games-grid{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:600px){
     #games-grid{grid-template-columns:1fr;padding:8px 8px 40px}
     .controls{padding:10px 12px}
