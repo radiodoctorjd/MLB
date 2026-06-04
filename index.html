@@ -190,7 +190,9 @@ function conf(s){const u=(s||'').toUpperCase();return u.includes('HIGH')?'High':
 function rating(s){const u=(s||'').toUpperCase();return u.includes('ELITE')?'Elite':u.includes('STRONG')?'Strong':u.includes('MODERATE')?'Moderate':'Lean';}
 function tmin(t){const m=(t||'').match(/(\d+):(\d+)\s*(AM|PM)/i);if(!m)return 0;let h=+m[1];if(m[3].toUpperCase()==='PM'&&h!==12)h+=12;if(m[3].toUpperCase()==='AM'&&h===12)h=0;return h*60+(+m[2]);}
 function num1(s){const m=(s||'').match(/[\d.]+/);return m?m[0]:null;}
-function key(a,h){return a+'|'+h;}
+// Normalize team names by collapsing multiple spaces (sheet uses "Team  @  Team")
+function norm(s){return (s||'').replace(/\s+/g,' ').trim();}
+function key(a,h){return norm(a)+'|'+norm(h);}
 
 function parsePreds(rows){
   // Pass 1: collect whip map from schedule rows and weather-free section labels
@@ -278,7 +280,7 @@ function parseStats(rows){
     }
 
     // Weather row: col9="Away @ Home  (time ET)", col10=temp number
-    if(c9.includes('@') && c9.includes('(') && /^\d+$/.test(c10)){
+    if(c9.includes('@') && c9.includes('(') && c10!=='' && !dash(c10) && parseFloat(c10)>0){
       const at=c9.indexOf('@');
       const away=c9.substring(0,at).trim();
       const rest=c9.substring(at+1).replace(/\s*\(.*\).*$/,'').trim();
@@ -326,6 +328,14 @@ async function loadData(){
     if(dm)document.getElementById('sheet-date').textContent=dm[0].trim().substring(0,55);
     parsePreds(predRows);
     parseStats(statRows);
+    // Debug: count how many games got WHIP/totals/weather
+    let whipCount=0,totCount=0,wxCount=0;
+    for(const g of [...GAMES.today,...GAMES.tomorrow]){
+      if(g.awayWHIP)whipCount++;
+      if(g.f5AwayRuns)totCount++;
+      if(g.wx)wxCount++;
+    }
+    console.log('WHIP:'+whipCount+' Totals:'+totCount+' Weather:'+wxCount+' Today:'+GAMES.today.length+' Tmrw:'+GAMES.tomorrow.length);
     document.getElementById('tab-today').textContent='Today'+(GAMES.today.length?' ('+GAMES.today.length+')':'');
     document.getElementById('tab-tomorrow').textContent='Tomorrow'+(GAMES.tomorrow.length?' ('+GAMES.tomorrow.length+')':'');
   }catch(e){
