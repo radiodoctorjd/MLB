@@ -215,6 +215,8 @@ function parsePreds(rows){
   // Pass 2: build games from prediction rows, track section
   GAMES={today:[],tomorrow:[]};
   let section='today';
+  // DEBUG
+  console.log('whipMap keys:', Object.keys(whipMap));
   for(const r of rows){
     const c0=(r[0]||'').trim(), c1=(r[1]||'').trim();
     // Section label: col0 has TODAY/TOMORROW text, no @, col1 is empty
@@ -301,6 +303,10 @@ function parseStats(rows){
   }
 
   // Inject into games
+  // DEBUG
+  console.log('totMap keys:', Object.keys(totMap).slice(0,3));
+  console.log('wxMap keys:', Object.keys(wxMap).slice(0,3));
+  console.log('game keys:', GAMES.today.slice(0,3).map(g=>key(g.away,g.home)));
   for(const sec of['today','tomorrow']){
     for(const g of GAMES[sec]){
       const k=key(g.away,g.home);
