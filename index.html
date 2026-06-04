@@ -132,6 +132,7 @@ body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-ser
 <div class="summary-bar" id="summary-bar">
   <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber)">Loading from Google Sheets...</span>
 </div>
+<div id="debug-out" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#ffb300;background:#111417;padding:8px 20px;border-bottom:1px solid #252b34"></div>
 <div class="col-headers">
   <div class="col-head">Matchup</div>
   <div class="col-head">Starting pitchers</div>
@@ -377,6 +378,12 @@ async function loadData() {
     btn.disabled=false; btn.textContent='↻ REFRESH';
     return;
   }
+  // Show debug info on page
+  const dbg = document.getElementById('debug-out');
+  if (dbg) dbg.innerHTML =
+    'Today: '+GAMES.today.length+' games | Tomorrow: '+GAMES.tomorrow.length+' games<br>'
+    +'First today row: '+(GAMES.today[0]?JSON.stringify({away:GAMES.today[0].away,home:GAMES.today[0].home,rating:GAMES.today[0].rating,f5t:GAMES.today[0].f5t,fgt:GAMES.today[0].fgt}):'none');
+
   btn.disabled=false; btn.textContent='↻ REFRESH';
   render();
 }
