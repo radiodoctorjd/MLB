@@ -373,7 +373,9 @@ async function loadData() {
     document.getElementById('tab-today').textContent = 'Today' + (GAMES.today.length ? ' ('+GAMES.today.length+')' : '');
     document.getElementById('tab-tomorrow').textContent = 'Tomorrow' + (GAMES.tomorrow.length ? ' ('+GAMES.tomorrow.length+')' : '');
   } catch(e) {
-    document.getElementById('game-list').innerHTML = '<div class="no-games">⚠ Could not load sheet data<br><br><span style="font-size:10px;color:var(--muted2)">'+e.message+'</span></div>';
+    const dbg = document.getElementById('debug-out');
+    if (dbg) dbg.innerHTML = 'FETCH ERROR: '+e.message;
+    document.getElementById('game-list').innerHTML = '<div class="no-games">⚠ '+e.message+'</div>';
     document.getElementById('summary-bar').innerHTML = '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:var(--red)">⚠ Load failed</span>';
     btn.disabled=false; btn.textContent='↻ REFRESH';
     return;
