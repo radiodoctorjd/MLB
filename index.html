@@ -6,130 +6,114 @@
 <title>MLB Prediction Model</title>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:#0a0c0f;--surface:#111417;--surface2:#181c21;--surface3:#1e232a;
-    --border:#252b34;--border2:#2e3640;--text:#e8eaed;--muted:#6b7480;--muted2:#8a939f;
-    --green:#00e676;--green-bg:rgba(0,230,118,0.08);
-    --purple:#9c6fff;--purple-bg:rgba(156,111,255,0.08);
-    --amber:#ffb300;--amber-bg:rgba(255,179,0,0.08);
-    --red:#ff4c4c;--red-bg:rgba(255,76,76,0.08);
-    --blue:#4fc3f7;--blue-bg:rgba(79,195,247,0.08);
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;min-height:100vh}
-
-  .header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;gap:16px;height:52px}
-  .logo{font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;letter-spacing:.08em;display:flex;align-items:center;gap:8px}
-  .logo-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
-  .header-meta{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.06em}
-
-  .controls{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;height:44px}
-  .day-tabs{display:flex;border-right:1px solid var(--border);margin-right:16px;padding-right:16px;height:100%;align-items:center}
-  .day-tab{font-family:'Oswald',sans-serif;font-size:13px;font-weight:500;letter-spacing:.06em;color:var(--muted);background:none;border:none;padding:6px 14px;cursor:pointer;border-radius:3px;transition:all .15s;text-transform:uppercase}
-  .day-tab:hover{color:var(--text);background:var(--surface2)}
-  .day-tab.active{color:var(--bg);background:var(--green)}
-  .filter-group{display:flex;align-items:center;gap:6px}
-  .filter-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-right:2px}
-  .filter-chip{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;color:var(--muted2);background:var(--surface2);border:1px solid var(--border);padding:4px 10px;border-radius:3px;cursor:pointer;transition:all .15s}
-  .filter-chip:hover{border-color:var(--border2);color:var(--text)}
-  .filter-chip.active{background:var(--surface3);border-color:var(--green);color:var(--green)}
-  .sort-sel{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted2);background:var(--surface2);border:1px solid var(--border);padding:5px 22px 5px 10px;border-radius:3px;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b7480' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
-  .count-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-left:12px}
-
-  .summary-bar{background:var(--surface2);border-bottom:1px solid var(--border);padding:6px 20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;min-height:34px}
-  .sum-item{display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:10px}
-  .sdot{width:6px;height:6px;border-radius:50%}
-  .sum-label{color:var(--muted)}.sum-val{color:var(--text);font-weight:500}
-  .sum-meta{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.06em}
-
-  .col-headers{display:grid;grid-template-columns:210px 1fr 1fr 1fr 110px;padding:0 20px;height:30px;align-items:center;background:var(--surface);border-bottom:1px solid var(--border2);position:sticky;top:0;z-index:10}
-  .col-head{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:0 12px}
-  .col-head:first-child{padding-left:0}
-
-  .game-list{padding:8px 20px 40px;display:flex;flex-direction:column;gap:6px}
-
-  .game-row{background:var(--surface);border:1px solid var(--border);border-radius:4px;display:grid;grid-template-columns:210px 1fr 1fr 1fr 110px;cursor:pointer;transition:border-color .15s,background .15s;overflow:hidden;position:relative}
-  .game-row:hover{border-color:var(--border2);background:var(--surface2)}
-  .game-row.expanded{border-color:rgba(0,230,118,0.4)}
-  .game-row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
-  .game-row[data-rating="Elite"]::before{background:var(--green)}
-  .game-row[data-rating="Strong"]::before{background:var(--blue)}
-  .game-row[data-rating="Moderate"]::before{background:var(--amber)}
-  .game-row[data-rating="Lean"]::before{background:var(--border2)}
-
-  .cell{padding:10px 12px;border-right:1px solid var(--border);display:flex;flex-direction:column;justify-content:center;gap:3px}
-  .cell:last-child{border-right:none}
-  .cell:first-child{padding-left:16px}
-
-  
-.matchup-logos{display:flex;align-items:center;gap:8px;margin-bottom:4px}
-.team-logo{width:24px;height:24px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4))}
-.team-logo-lg{width:32px;height:32px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4))}
-.vs-sep{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.06em}
-.expand-logo-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.matchup-time{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)}
-  .matchup-teams{font-family:'Oswald',sans-serif;font-size:14px;font-weight:500;letter-spacing:.04em;line-height:1.2}
-  .matchup-venue{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-  .pitcher-line{display:flex;align-items:baseline;gap:6px;font-size:11px}
-  .pitcher-side{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.08em;min-width:18px;flex-shrink:0}
-  .pitcher-name{color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .pitcher-stats{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted2);white-space:nowrap;flex-shrink:0}
-  .pitcher-stats .sv{color:var(--text)}
-
-  .pred-header{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
-  .pred-pick{font-family:'Oswald',sans-serif;font-size:13px;font-weight:500;letter-spacing:.04em}
-  .pred-pick.away{color:var(--green)}.pred-pick.home{color:var(--purple)}
-  .pred-totals{display:flex;gap:6px;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted2);margin-top:2px}
-  .tv{color:var(--text);font-weight:500}
-  .win-mini{height:3px;border-radius:2px;overflow:hidden;display:flex;margin-top:3px;background:var(--surface3)}
-  .wma{background:var(--green)}.wmh{background:var(--purple)}
-  .win-pcts{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-top:2px}
-
-  .rating-cell{align-items:center;justify-content:center;text-align:center}
-  .rating-stars{font-size:13px;line-height:1;margin-bottom:2px}
-  .rating-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase}
-  .rating-label.elite{color:var(--green)}.rating-label.strong{color:var(--blue)}.rating-label.moderate{color:var(--amber)}.rating-label.lean{color:var(--muted)}
-  .conf-indicator{display:flex;align-items:center;justify-content:center;gap:3px;margin-top:4px}
-  .conf-pip{width:5px;height:5px;border-radius:1px}
-  .pip-high{background:var(--green)}.pip-med{background:var(--amber)}.pip-low{background:var(--blue)}.pip-empty{background:var(--border2)}
-
-  .chevron{position:absolute;right:8px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:10px;transition:transform .2s;pointer-events:none}
-  .game-row.expanded .chevron{transform:translateY(-50%) rotate(180deg)}
-
-  .expand-panel{display:none;grid-column:1/-1;background:var(--surface2);border-top:1px solid var(--border);padding:14px 16px;gap:16px;grid-template-columns:repeat(4,1fr)}
-  .game-row.expanded .expand-panel{display:grid}
-  .expand-head{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)}
-  .expand-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:11px}
-  .expand-key{color:var(--muted2)}
-  .expand-val{font-family:'IBM Plex Mono',monospace;color:var(--text);font-size:11px}
-  .grade-pill{display:inline-block;padding:1px 7px;border-radius:2px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500}
-  .grade-a{background:var(--green-bg);color:var(--green);border:1px solid rgba(0,230,118,0.2)}
-  .grade-b{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(79,195,247,0.2)}
-  .grade-c{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(255,179,0,0.2)}
-  .grade-d{background:var(--red-bg);color:var(--red);border:1px solid rgba(255,76,76,0.2)}
-  .expand-bar-wrap{margin-top:6px;display:flex;flex-direction:column;gap:5px}
-  .expand-bar-row{display:flex;align-items:center;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:10px}
-  .expand-bar-label{color:var(--muted);width:28px}
-  .expand-bar-track{flex:1;height:5px;background:var(--surface3);border-radius:2px;overflow:hidden}
-  .expand-bar-fill-a{height:100%;background:var(--green)}
-  .expand-bar-fill-h{height:100%;background:var(--purple)}
-  .expand-bar-pct{color:var(--muted2);width:34px;text-align:right}
-
-  .no-games{text-align:center;padding:60px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:.08em}
+:root{--bg:#0a0c0f;--surface:#111417;--surface2:#181c21;--surface3:#1e232a;--border:#252b34;--border2:#2e3640;--text:#e8eaed;--muted:#6b7480;--muted2:#8a939f;--green:#00e676;--green-bg:rgba(0,230,118,0.08);--purple:#9c6fff;--purple-bg:rgba(156,111,255,0.08);--amber:#ffb300;--amber-bg:rgba(255,179,0,0.08);--red:#ff4c4c;--red-bg:rgba(255,76,76,0.08);--blue:#4fc3f7;--blue-bg:rgba(79,195,247,0.08)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;min-height:100vh}
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;gap:16px;height:52px}
+.logo{font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;letter-spacing:.08em;display:flex;align-items:center;gap:8px}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+.live-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.25);color:var(--green);font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.1em;padding:3px 8px;border-radius:3px}
+.live-badge::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 1.5s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.sheet-date{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)}
+.refresh-btn{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;color:var(--muted2);background:var(--surface2);border:1px solid var(--border2);padding:5px 12px;border-radius:3px;cursor:pointer;transition:all .15s}
+.refresh-btn:hover{color:var(--green);border-color:rgba(0,230,118,0.4)}
+.refresh-btn:disabled{opacity:.5;cursor:not-allowed}
+.controls{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;height:44px}
+.day-tabs{display:flex;border-right:1px solid var(--border);margin-right:16px;padding-right:16px;height:100%;align-items:center}
+.day-tab{font-family:'Oswald',sans-serif;font-size:13px;font-weight:500;letter-spacing:.06em;color:var(--muted);background:none;border:none;padding:6px 14px;cursor:pointer;border-radius:3px;transition:all .15s;text-transform:uppercase}
+.day-tab:hover{color:var(--text);background:var(--surface2)}
+.day-tab.active{color:var(--bg);background:var(--green)}
+.filter-group{display:flex;align-items:center;gap:6px}
+.filter-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-right:2px}
+.filter-chip{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;color:var(--muted2);background:var(--surface2);border:1px solid var(--border);padding:4px 10px;border-radius:3px;cursor:pointer;transition:all .15s}
+.filter-chip:hover{border-color:var(--border2);color:var(--text)}
+.filter-chip.active{background:var(--surface3);border-color:var(--green);color:var(--green)}
+.sort-sel{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted2);background:var(--surface2);border:1px solid var(--border);padding:5px 22px 5px 10px;border-radius:3px;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b7480' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
+.count-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-left:12px}
+.summary-bar{background:var(--surface2);border-bottom:1px solid var(--border);padding:6px 20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;min-height:34px}
+.sum-item{display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:10px}
+.sdot{width:6px;height:6px;border-radius:50%}
+.sum-label{color:var(--muted)}.sum-val{color:var(--text);font-weight:500}
+.sum-meta{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted)}
+.col-headers{display:grid;grid-template-columns:220px 1fr 1fr 1fr 110px;padding:0 20px;height:30px;align-items:center;background:var(--surface);border-bottom:1px solid var(--border2);position:sticky;top:0;z-index:10}
+.col-head{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:0 12px}
+.col-head:first-child{padding-left:0}
+.game-list{padding:8px 20px 40px;display:flex;flex-direction:column;gap:6px}
+.game-row{background:var(--surface);border:1px solid var(--border);border-radius:4px;display:grid;grid-template-columns:220px 1fr 1fr 1fr 110px;cursor:pointer;transition:border-color .15s,background .15s;overflow:hidden;position:relative}
+.game-row:hover{border-color:var(--border2);background:var(--surface2)}
+.game-row.expanded{border-color:rgba(0,230,118,0.4)}
+.game-row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
+.game-row[data-rating="Elite"]::before{background:var(--green)}
+.game-row[data-rating="Strong"]::before{background:var(--blue)}
+.game-row[data-rating="Moderate"]::before{background:var(--amber)}
+.game-row[data-rating="Lean"]::before{background:var(--border2)}
+.cell{padding:10px 12px;border-right:1px solid var(--border);display:flex;flex-direction:column;justify-content:center;gap:3px}
+.cell:last-child{border-right:none}.cell:first-child{padding-left:16px}
+.matchup-time{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:3px}
+.matchup-logos{display:flex;align-items:center;gap:6px}
+.team-logo{width:22px;height:22px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5))}
+.team-name{font-family:'Oswald',sans-serif;font-size:13px;font-weight:500;letter-spacing:.04em;color:var(--text)}
+.vs-sep{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin:0 1px}
+.matchup-sub{font-size:10px;color:var(--muted);margin-top:3px}
+.pitcher-line{display:flex;align-items:baseline;gap:6px;font-size:11px}
+.pitcher-side{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.08em;min-width:18px;flex-shrink:0}
+.pitcher-name{color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pitcher-stats{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted2);white-space:nowrap;flex-shrink:0}
+.sv{color:var(--text)}
+.pred-header{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.pred-pick{font-family:'Oswald',sans-serif;font-size:13px;font-weight:500;letter-spacing:.04em}
+.pred-pick.away{color:var(--green)}.pred-pick.home{color:var(--purple)}
+.pred-totals{display:flex;gap:6px;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted2);margin-top:2px}
+.tv{color:var(--text);font-weight:500}
+.win-mini{height:3px;border-radius:2px;overflow:hidden;display:flex;margin-top:3px;background:var(--surface3)}
+.wma{background:var(--green)}.wmh{background:var(--purple)}
+.win-pcts{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-top:2px}
+.rating-cell{align-items:center;justify-content:center;text-align:center}
+.rating-stars{font-size:13px;line-height:1;margin-bottom:2px}
+.rating-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase}
+.rating-label.elite{color:var(--green)}.rating-label.strong{color:var(--blue)}.rating-label.moderate{color:var(--amber)}.rating-label.lean{color:var(--muted)}
+.conf-indicator{display:flex;align-items:center;justify-content:center;gap:3px;margin-top:4px}
+.conf-pip{width:5px;height:5px;border-radius:1px}
+.pip-high{background:var(--green)}.pip-med{background:var(--amber)}.pip-low{background:var(--blue)}.pip-empty{background:var(--border2)}
+.chevron{position:absolute;right:8px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:10px;transition:transform .2s;pointer-events:none}
+.game-row.expanded .chevron{transform:translateY(-50%) rotate(180deg)}
+.expand-panel{display:none;grid-column:1/-1;background:var(--surface2);border-top:1px solid var(--border);padding:14px 16px;gap:16px;grid-template-columns:repeat(4,1fr)}
+.game-row.expanded .expand-panel{display:grid}
+.expand-head{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+.expand-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:11px}
+.expand-key{color:var(--muted2)}.expand-val{font-family:'IBM Plex Mono',monospace;color:var(--text);font-size:11px}
+.grade-pill{display:inline-block;padding:1px 7px;border-radius:2px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500}
+.grade-a{background:var(--green-bg);color:var(--green);border:1px solid rgba(0,230,118,0.2)}
+.grade-b{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(79,195,247,0.2)}
+.grade-c{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(255,179,0,0.2)}
+.grade-d{background:var(--red-bg);color:var(--red);border:1px solid rgba(255,76,76,0.2)}
+.expand-bar-wrap{margin-top:6px;display:flex;flex-direction:column;gap:5px}
+.expand-bar-row{display:flex;align-items:center;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:10px}
+.expand-bar-label{color:var(--muted);width:28px}
+.expand-bar-track{flex:1;height:5px;background:var(--surface3);border-radius:2px;overflow:hidden}
+.expand-bar-fill-a{height:100%;background:var(--green)}.expand-bar-fill-h{height:100%;background:var(--purple)}
+.expand-bar-pct{color:var(--muted2);width:34px;text-align:right}
+.no-games{text-align:center;padding:60px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:.08em}
+.skeleton{height:52px;background:linear-gradient(90deg,var(--surface) 0%,var(--surface2) 50%,var(--surface) 100%);background-size:200% 100%;animation:shimmer 1.4s ease infinite;border-radius:4px;border:1px solid var(--border);margin-bottom:6px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 </style>
 </head>
 <body>
 
 <div class="header">
   <div class="logo"><div class="logo-dot"></div>MLB PREDICTION MODEL</div>
-  <div class="header-meta">2026 SEASON · BETTING MODELS / GOOGLE DRIVE</div>
+  <span class="live-badge">LIVE</span>
+  <div class="header-right">
+    <span class="sheet-date" id="sheet-date">Loading...</span>
+    <button class="refresh-btn" id="refresh-btn" onclick="loadData()">↻ REFRESH</button>
+  </div>
 </div>
-
 <div class="controls">
   <div class="day-tabs">
-    <button class="day-tab active" onclick="switchDay('today',this)">Today May 30</button>
-    <button class="day-tab" onclick="switchDay('tomorrow',this)">Tomorrow May 31</button>
+    <button class="day-tab active" id="tab-today" onclick="switchDay('today',this)">Today</button>
+    <button class="day-tab" id="tab-tomorrow" onclick="switchDay('tomorrow',this)">Tomorrow</button>
   </div>
   <div class="filter-group">
     <span class="filter-label">Rating</span>
@@ -145,75 +129,28 @@
   </select>
   <span class="count-label" id="count-label"></span>
 </div>
-
-<div class="summary-bar" id="summary-bar"></div>
-
+<div class="summary-bar" id="summary-bar">
+  <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber)">Loading from Google Sheets...</span>
+</div>
 <div class="col-headers">
   <div class="col-head">Matchup</div>
-  <div class="col-head">Starting pitchers / weather</div>
+  <div class="col-head">Starting pitchers</div>
   <div class="col-head">First 5 (SP only)</div>
   <div class="col-head">Full game</div>
   <div class="col-head" style="text-align:center">Rating</div>
 </div>
-
-<div class="game-list" id="game-list"></div>
+<div class="game-list" id="game-list">
+  <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+</div>
 
 <script>
-const BULLPEN={
-  "Tampa Bay Rays":{grade:"C",era:"4.21",closer:"Bryan Baker"},
-  "New York Yankees":{grade:"B",era:"3.36",closer:"David Bednar"},
-  "Toronto Blue Jays":{grade:"B",era:"3.40",closer:"Louis Varland"},
-  "Baltimore Orioles":{grade:"D",era:"4.59",closer:"Rico Garcia"},
-  "Boston Red Sox":{grade:"C",era:"3.89",closer:"Aroldis Chapman"},
-  "Cleveland Guardians":{grade:"B",era:"3.51",closer:"Cade Smith"},
-  "Chicago White Sox":{grade:"C",era:"4.48",closer:"Seranthony Dominguez"},
-  "Minnesota Twins":{grade:"D",era:"4.81",closer:"Yoendrys Gomez"},
-  "Kansas City Royals":{grade:"D",era:"5.25",closer:"Lucas Erceg"},
-  "Detroit Tigers":{grade:"C",era:"4.18",closer:"Kenley Jansen"},
-  "Seattle Mariners":{grade:"A",era:"2.99",closer:"Jose A. Ferrer"},
-  "Athletics":{grade:"C",era:"4.30",closer:"Hogan Harris"},
-  "Texas Rangers":{grade:"B",era:"3.15",closer:"Jakob Junis"},
-  "Houston Astros":{grade:"D",era:"5.27",closer:"Bryan King"},
-  "Los Angeles Angels":{grade:"D",era:"5.51",closer:"Jordan Romano"},
-  "Atlanta Braves":{grade:"A",era:"2.96",closer:"Robert Suarez"},
-  "Philadelphia Phillies":{grade:"C",era:"3.80",closer:"Jhoan Duran"},
-  "Washington Nationals":{grade:"D",era:"4.79",closer:"Richard Lovelady"},
-  "Miami Marlins":{grade:"B",era:"3.46",closer:"Pete Fairbanks"},
-  "New York Mets":{grade:"B",era:"3.12",closer:"Devin Williams"},
-  "Milwaukee Brewers":{grade:"B",era:"3.14",closer:"Abner Uribe"},
-  "St. Louis Cardinals":{grade:"C",era:"4.26",closer:"Riley O'Brien"},
-  "Chicago Cubs":{grade:"B",era:"3.39",closer:"Daniel Palencia"},
-  "Cincinnati Reds":{grade:"D",era:"4.81",closer:"Emilio Pagan"},
-  "Pittsburgh Pirates":{grade:"C",era:"4.16",closer:"Gregory Soto"},
-  "Los Angeles Dodgers":{grade:"B",era:"3.03",closer:"Tanner Scott"},
-  "San Diego Padres":{grade:"B",era:"3.37",closer:"Mason Miller"},
-  "Arizona Diamondbacks":{grade:"C",era:"4.24",closer:"Paul Sewald"},
-  "San Francisco Giants":{grade:"B",era:"3.61",closer:"Caleb Kilian"},
-  "Colorado Rockies":{grade:"C",era:"4.47",closer:"Antonio Senzatela"},
-};
-
-const RO={Elite:0,Strong:1,Moderate:2,Lean:3};
-
 // ── Google Sheets CSV URLs ─────────────────────────────────────────────────
-// Confirmed by browser debug:
-//   gid=141272668 = Predictions tab: col0="Away @ Home", col1=Time,
-//     col2=Away SP(ERA), col3=Home SP(ERA), col4=Park, col5=WxAdj,
-//     col6=F5 Away Win%, col7=F5 Home Win%, col8=F5 Pick, col9=F5 Conf,
-//     col10=F5 Total, col12=FG Away Win%, col13=FG Home Win%, col14=FG Pick,
-//     col15=FG Conf, col16=FG Total, col18=Rating
-//     Section labels: "📅  TODAY..." and "📅  TOMORROW..." in col0
-//   gid=596859801 = Schedule tab: col0=Time, col1=Day(Today/Tmrw),
-//     col2=Away, col4=Home, col5=Venue, col6=Away SP, col7=Away ERA,
-//     col8=Away WHIP, col9=Home SP, col10=Home ERA, col11=Home WHIP
-
+// gid=141272668 = Predictions tab (confirmed): col0="Away @ Home", col1=Time
+// gid=596859801 = Schedule tab (confirmed): col0=Time, col1=Today/Tmrw, ERA/WHIP cols
 const PREDS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=141272668&single=true&output=csv';
 const SCHED_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=596859801&single=true&output=csv';
 
-// GAMES object — populated live from Google Sheets on load
-const GAMES={today:[],tomorrow:[]};
-
-
-// ── ESPN team logo CDN ─────────────────────────────────────────────────────
+// ── ESPN team logos ────────────────────────────────────────────────────────
 const LOGOS = {
   "Arizona Diamondbacks":"https://a.espncdn.com/i/teamlogos/mlb/500/ari.png",
   "Atlanta Braves":"https://a.espncdn.com/i/teamlogos/mlb/500/atl.png",
@@ -246,287 +183,349 @@ const LOGOS = {
   "Toronto Blue Jays":"https://a.espncdn.com/i/teamlogos/mlb/500/tor.png",
   "Washington Nationals":"https://a.espncdn.com/i/teamlogos/mlb/500/wsh.png",
 };
-function logo(team){return LOGOS[team]||'';}
 
-// ── RFC 4180 CSV parser ─────────────────────────────────────────────────────
-function parseCSV(text){
+// ── Bullpen data ───────────────────────────────────────────────────────────
+const BULLPEN = {
+  "Atlanta Braves":{grade:"A",era:"2.90",closer:"Robert Suarez"},
+  "Seattle Mariners":{grade:"A",era:"2.95",closer:"Jose A. Ferrer"},
+  "Los Angeles Dodgers":{grade:"B",era:"3.10",closer:"Tanner Scott"},
+  "Milwaukee Brewers":{grade:"B",era:"3.24",closer:"Abner Uribe"},
+  "New York Mets":{grade:"B",era:"3.29",closer:"Devin Williams"},
+  "Chicago Cubs":{grade:"B",era:"3.30",closer:"Daniel Palencia"},
+  "Texas Rangers":{grade:"B",era:"3.37",closer:"Jakob Junis"},
+  "New York Yankees":{grade:"B",era:"3.41",closer:"David Bednar"},
+  "San Diego Padres":{grade:"B",era:"3.45",closer:"Mason Miller"},
+  "Toronto Blue Jays":{grade:"B",era:"3.53",closer:"Louis Varland"},
+  "Miami Marlins":{grade:"B",era:"3.58",closer:"Pete Fairbanks"},
+  "Cleveland Guardians":{grade:"B",era:"3.61",closer:"Cade Smith"},
+  "San Francisco Giants":{grade:"B",era:"3.71",closer:"Caleb Kilian"},
+  "Philadelphia Phillies":{grade:"C",era:"3.78",closer:"Jhoan Duran"},
+  "Boston Red Sox":{grade:"C",era:"3.82",closer:"Aroldis Chapman"},
+  "Arizona Diamondbacks":{grade:"C",era:"4.11",closer:"Paul Sewald"},
+  "Pittsburgh Pirates":{grade:"C",era:"4.15",closer:"Gregory Soto"},
+  "St. Louis Cardinals":{grade:"C",era:"4.25",closer:"Riley O'Brien"},
+  "Detroit Tigers":{grade:"C",era:"4.26",closer:"Kenley Jansen"},
+  "Athletics":{grade:"C",era:"4.34",closer:"Hogan Harris"},
+  "Tampa Bay Rays":{grade:"C",era:"4.39",closer:"Bryan Baker"},
+  "Chicago White Sox":{grade:"C",era:"4.40",closer:"Seranthony Dominguez"},
+  "Colorado Rockies":{grade:"D",era:"4.51",closer:"Antonio Senzatela"},
+  "Baltimore Orioles":{grade:"D",era:"4.63",closer:"Rico Garcia"},
+  "Washington Nationals":{grade:"D",era:"4.68",closer:"Clayton Beeter"},
+  "Cincinnati Reds":{grade:"D",era:"4.78",closer:"Emilio Pagan"},
+  "Minnesota Twins":{grade:"D",era:"4.83",closer:"Yoendrys Gomez"},
+  "Houston Astros":{grade:"D",era:"5.20",closer:"Bryan King"},
+  "Kansas City Royals":{grade:"D",era:"5.37",closer:"Lucas Erceg"},
+  "Los Angeles Angels":{grade:"D",era:"5.41",closer:"Jordan Romano"},
+};
+
+const RO = {Elite:0,Strong:1,Moderate:2,Lean:3};
+let GAMES = {today:[], tomorrow:[]};
+let currentDay='today', currentFilter='all', currentSort='time';
+
+// ── RFC 4180 CSV parser ────────────────────────────────────────────────────
+function parseCSV(text) {
   const rows=[];
-  let row=[],field='',inQ=false;
-  for(let i=0;i<text.length;i++){
-    const ch=text[i],nx=text[i+1];
-    if(inQ){
-      if(ch==='"'&&nx==='"'){field+='"';i++;}
-      else if(ch==='"'){inQ=false;}
-      else{field+=ch;}
+  let row=[], field='', inQ=false;
+  for (let i=0; i<text.length; i++) {
+    const ch=text[i], nx=text[i+1];
+    if (inQ) {
+      if (ch==='"' && nx==='"') { field+='"'; i++; }
+      else if (ch==='"') { inQ=false; }
+      else { field+=ch; }
     } else {
-      if(ch==='"'){inQ=true;}
-      else if(ch===','){row.push(field.trim());field='';}
-      else if((ch==='\r'&&nx==='\n')||(ch==='\r'||ch==='\n')){
-        if(ch==='\r'&&nx==='\n')i++;
-        row.push(field.trim());rows.push(row);row=[];field='';
-      } else {field+=ch;}
+      if (ch==='"') { inQ=true; }
+      else if (ch===',') { row.push(field.trim()); field=''; }
+      else if (ch==='\r' && nx==='\n') { row.push(field.trim()); rows.push(row); row=[]; field=''; i++; }
+      else if (ch==='\r' || ch==='\n') { row.push(field.trim()); rows.push(row); row=[]; field=''; }
+      else { field+=ch; }
     }
   }
-  if(field.length||row.length){row.push(field.trim());rows.push(row);}
+  if (field.length || row.length) { row.push(field.trim()); rows.push(row); }
   return rows;
 }
 
-// ── Parse predictions tab into GAMES.today / GAMES.tomorrow ───────────────
-function parsePreds(rows){
-  GAMES.today=[];GAMES.tomorrow=[];
-  let section='today';
-  for(const r of rows){
-    const c0=(r[0]||'').trim();
-    // Section label rows contain TODAY or TOMORROW but NOT @
-    if(!c0.includes('@')){
-      const up=c0.replace(/[^A-Za-z]/g,'').toUpperCase();
-      if(up.includes('TOMORROW'))section='tomorrow';
-      else if(up.includes('TODAY'))section='today';
+// ── Helpers ────────────────────────────────────────────────────────────────
+function pct(s) { return parseFloat((s||'').replace(/[^0-9.\-]/g,''))||0; }
+function num(s) { return parseFloat((s||'').replace(/[^0-9.\-]/g,''))||0; }
+function spParse(s) {
+  if (!s || s.trim()==='' || s.trim()==='—') return {name:'TBD', era:null};
+  const m = s.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+  if (m) return {name:m[1].trim(), era:(m[2].trim()==='—'?null:m[2].trim())};
+  return {name:s.trim(), era:null};
+}
+function getConf(s) {
+  const u=(s||'').toUpperCase();
+  if (u.includes('HIGH')) return 'High';
+  if (u.includes('MED')) return 'Med';
+  return 'Low';
+}
+function getRating(s) {
+  const u=(s||'').toUpperCase();
+  if (u.includes('ELITE')) return 'Elite';
+  if (u.includes('STRONG')) return 'Strong';
+  if (u.includes('MODERATE')) return 'Moderate';
+  return 'Lean';
+}
+function timeMin(t) {
+  const m=(t||'').match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (!m) return 0;
+  let h=+m[1];
+  if (m[3].toUpperCase()==='PM' && h!==12) h+=12;
+  if (m[3].toUpperCase()==='AM' && h===12) h=0;
+  return h*60+(+m[2]);
+}
+function sn(t) { return (t||'').split(' ').pop(); }
+function gc(g) { return 'grade-'+g.toLowerCase(); }
+function logoImg(team, size) {
+  const url = LOGOS[team];
+  if (!url) return '';
+  return '<img src="'+url+'" alt="'+team+'" class="team-logo" style="width:'+size+'px;height:'+size+'px" onerror="this.style.display=\'none\'">';
+}
+
+// ── Parse predictions tab ──────────────────────────────────────────────────
+function parsePreds(rows) {
+  GAMES = {today:[], tomorrow:[]};
+  let section = 'today';
+  for (const r of rows) {
+    const c0 = (r[0]||'').trim();
+    if (!c0.includes('@')) {
+      const up = c0.replace(/[^A-Za-z]/g,'').toUpperCase();
+      if (up.includes('TOMORROW')) { section='tomorrow'; continue; }
+      if (up.includes('TODAY')) { section='today'; continue; }
       continue;
     }
-    // Game row must have time in col1
-    const t=(r[1]||'').trim();
-    if(!t.match(/\d+:\d+/))continue;
-    const parts=c0.split('@');
-    if(parts.length<2)continue;
-    const away=parts[0].trim(),home=parts[1].trim();
-    if(!away||!home)continue;
-
-    // Parse SP name and ERA from "Name  (ERA)" format
-    function spParse(s){
-      if(!s)return{name:'TBD',era:null,whip:null};
-      const m=s.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
-      if(m){const era=m[2].trim()==='—'?null:m[2].trim();return{name:m[1].trim(),era,whip:null};}
-      return{name:s.trim(),era:null,whip:null};
-    }
-    const asp=spParse(r[2]),hsp=spParse(r[3]);
-
-    function pct(s){return parseFloat((s||'').replace(/[^0-9.\-]/g,''))||0;}
-    function num(s){return parseFloat((s||'').replace(/[^0-9.\-]/g,''))||0;}
-    function conf(s){
-      const u=(s||'').toUpperCase();
-      if(u.includes('HIGH'))return'High';
-      if(u.includes('MED'))return'Med';
-      return'Low';
-    }
-    function rating(s){
-      const u=(s||'').toUpperCase();
-      if(u.includes('ELITE'))return'Elite';
-      if(u.includes('STRONG'))return'Strong';
-      if(u.includes('MODERATE'))return'Moderate';
-      return'Lean';
-    }
-
-    const f5aw=pct(r[6]),f5hw=pct(r[7]);
-    const fgaw=pct(r[12]),fghw=pct(r[13]);
-    const f5Pick=(r[8]||'').trim(),fgPick=(r[14]||'').trim();
-
-    const g={
-      time:t, away, home, venue:'',
+    const t = (r[1]||'').trim();
+    if (!t.match(/\d+:\d+/)) continue;
+    const parts = c0.split('@');
+    if (parts.length < 2) continue;
+    const away = parts[0].trim(), home = parts[1].trim();
+    if (!away || !home) continue;
+    const asp = spParse(r[2]), hsp = spParse(r[3]);
+    const f5aw=pct(r[6]), f5hw=pct(r[7]);
+    const fgaw=pct(r[12]), fghw=pct(r[13]);
+    const f5Pick=(r[8]||'').trim(), fgPick=(r[14]||'').trim();
+    const g = {
+      away, home, time:t, venue:'',
       awaySP:asp.name, awayERA:asp.era, awayWHIP:null,
       homeSP:hsp.name, homeERA:hsp.era, homeWHIP:null,
-      park:num(r[4]),
-      wxAdj:(r[5]||'+0%').trim(),
-      f5aw, f5hw,
-      f5p: f5Pick.toLowerCase().includes(away.toLowerCase().split(' ').pop())?'away':'home',
-      f5Pick, f5c:conf(r[9]), f5t:num(r[10]),
-      fgaw, fghw,
-      fgp: fgPick.toLowerCase().includes(away.toLowerCase().split(' ').pop())?'away':'home',
-      fgPick, fgc:conf(r[15]), fgt:num(r[16]),
-      rating:rating(r[18]),
-      h2h:'—',
+      park:num(r[4]), wxAdj:(r[5]||'+0%').trim(),
+      f5aw, f5hw, f5Pick,
+      f5p: f5Pick.toLowerCase().includes(away.toLowerCase().split(' ').pop()) ? 'away' : 'home',
+      f5c: getConf(r[9]), f5t: num(r[10]),
+      fgaw, fghw, fgPick,
+      fgp: fgPick.toLowerCase().includes(away.toLowerCase().split(' ').pop()) ? 'away' : 'home',
+      fgc: getConf(r[15]), fgt: num(r[16]),
+      rating: getRating(r[18]),
     };
     GAMES[section].push(g);
   }
 }
 
-// ── Parse schedule tab and inject WHIP + venue ─────────────────────────────
-function parseSchedWHIP(rows){
-  const map={};
-  for(const r of rows){
-    if(r.length<12)continue;
-    const d=(r[1]||'').toLowerCase();
-    if(!d.includes('today')&&!d.includes('tmrw')&&!d.includes('tomorrow'))continue;
-    if(!(r[0]||'').match(/\d+:\d+/))continue;
-    const away=(r[2]||'').trim(),home=(r[4]||'').trim();
-    if(!away||!home)continue;
-    const aw=(r[8]||'').trim(),hw=(r[11]||'').trim();
-    map[away+'|'+home]={
-      awayWHIP:aw===''||aw==='—'?null:aw,
-      homeWHIP:hw===''||hw==='—'?null:hw,
-      venue:(r[5]||'').trim(),
+// ── Parse schedule tab for WHIP + venue ────────────────────────────────────
+function parseSchedWHIP(rows) {
+  const map = {};
+  for (const r of rows) {
+    if (r.length < 12) continue;
+    const d = (r[1]||'').toLowerCase();
+    if (!d.includes('today') && !d.includes('tmrw') && !d.includes('tomorrow')) continue;
+    if (!(r[0]||'').match(/\d+:\d+/)) continue;
+    const away=(r[2]||'').trim(), home=(r[4]||'').trim();
+    if (!away || !home) continue;
+    const aw=(r[8]||'').trim(), hw=(r[11]||'').trim();
+    map[away+'|'+home] = {
+      awayWHIP: (aw===''||aw==='—') ? null : aw,
+      homeWHIP: (hw===''||hw==='—') ? null : hw,
+      venue: (r[5]||'').trim(),
     };
   }
-  // Inject into GAMES
-  for(const section of['today','tomorrow']){
-    for(const g of GAMES[section]){
-      const w=map[g.away+'|'+g.home];
-      if(w){
-        if(w.awayWHIP)g.awayWHIP=w.awayWHIP;
-        if(w.homeWHIP)g.homeWHIP=w.homeWHIP;
-        if(w.venue)g.venue=w.venue;
+  for (const section of ['today','tomorrow']) {
+    for (const g of GAMES[section]) {
+      const w = map[g.away+'|'+g.home];
+      if (w) {
+        if (w.awayWHIP) g.awayWHIP = w.awayWHIP;
+        if (w.homeWHIP) g.homeWHIP = w.homeWHIP;
+        if (w.venue) g.venue = w.venue;
       }
     }
   }
 }
 
-// ── Load data then render ──────────────────────────────────────────────────
-async function loadSheets(){
-  try{
-    const [pr,sr]=await Promise.all([fetch(PREDS_URL),fetch(SCHED_URL)]);
-    const [pt,st]=await Promise.all([pr.text(),sr.text()]);
-    parsePreds(parseCSV(pt));
-    parseSchedWHIP(parseCSV(st));
-    document.getElementById('tab-today').textContent=
-      'Today May 31'+(GAMES.today.length?' ('+GAMES.today.length+')':'');
-    document.getElementById('tab-tomorrow').textContent=
-      'Tomorrow Jun 1'+(GAMES.tomorrow.length?' ('+GAMES.tomorrow.length+')':'');
-  }catch(e){
-    console.error('Sheet load failed:',e);
+// ── Load data ──────────────────────────────────────────────────────────────
+async function loadData() {
+  const btn = document.getElementById('refresh-btn');
+  btn.disabled=true; btn.textContent='↻ LOADING...';
+  document.getElementById('game-list').innerHTML = Array(5).fill('<div class="skeleton"></div>').join('');
+  document.getElementById('summary-bar').innerHTML = '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:var(--amber)">⟳ Fetching live data from Google Sheets...</span>';
+  try {
+    const [pr, sr] = await Promise.all([fetch(PREDS_URL), fetch(SCHED_URL)]);
+    if (!pr.ok) throw new Error('Predictions tab HTTP '+pr.status);
+    if (!sr.ok) throw new Error('Schedule tab HTTP '+sr.status);
+    const [pt, st] = await Promise.all([pr.text(), sr.text()]);
+    const predRows = parseCSV(pt);
+    const schedRows = parseCSV(st);
+    // Extract date from header
+    const hdr = ((predRows[0]||[])[0]||'').replace(/[^\x20-\x7E]/g,'').trim();
+    const dm = hdr.match(/(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday).{0,30}\d{4}/i);
+    if (dm) document.getElementById('sheet-date').textContent = dm[0].trim().substring(0,55);
+    parsePreds(predRows);
+    parseSchedWHIP(schedRows);
+    document.getElementById('tab-today').textContent = 'Today' + (GAMES.today.length ? ' ('+GAMES.today.length+')' : '');
+    document.getElementById('tab-tomorrow').textContent = 'Tomorrow' + (GAMES.tomorrow.length ? ' ('+GAMES.tomorrow.length+')' : '');
+  } catch(e) {
+    document.getElementById('game-list').innerHTML = '<div class="no-games">⚠ Could not load sheet data<br><br><span style="font-size:10px;color:var(--muted2)">'+e.message+'</span></div>';
+    document.getElementById('summary-bar').innerHTML = '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:var(--red)">⚠ Load failed</span>';
+    btn.disabled=false; btn.textContent='↻ REFRESH';
+    return;
   }
+  btn.disabled=false; btn.textContent='↻ REFRESH';
   render();
 }
 
+// ── Build row ──────────────────────────────────────────────────────────────
+function pips(c) {
+  const n=c==='High'?3:c==='Med'?2:1, cls=c==='High'?'pip-high':c==='Med'?'pip-med':'pip-low';
+  let h=''; for(let i=0;i<3;i++) h+='<div class="conf-pip '+(i<n?cls:'pip-empty')+'"></div>'; return h;
+}
+function pstat(era, whip) {
+  if (!era) return '<span class="pitcher-stats">TBD</span>';
+  const w = whip ? ' <span style="color:var(--muted)">·</span> WHIP <span class="sv">'+whip+'</span>' : '';
+  return '<span class="pitcher-stats">ERA <span class="sv">'+era+'</span>'+w+'</span>';
+}
 
-let day='today', filt='all', sort='time';
+function buildRow(g) {
+  const rl = g.rating.toLowerCase();
+  const stars = g.rating==='Elite'?'★★★':g.rating==='Strong'?'★★':g.rating==='Moderate'?'★':'·';
+  const parkLabel = g.park>=1.1?' 🔥':g.park<=0.92?' ❄️':'';
+  const wxStr = (g.wxAdj && g.wxAdj!=='+0%' && g.wxAdj!=='0%') ? ' · <span style="color:var(--green)">'+g.wxAdj+'</span>' : '';
+  const abp = BULLPEN[g.away]||{grade:'?',era:'?',closer:'?'};
+  const hbp = BULLPEN[g.home]||{grade:'?',era:'?',closer:'?'};
+  const awayLogo = logoImg(g.away, 22);
+  const homeLogo = logoImg(g.home, 22);
+  const f5PickName = g.f5p==='away' ? g.away : g.home;
+  const fgPickName = g.fgp==='away' ? g.away : g.home;
 
-function buildRow(g){
-  const f5n=g.f5p==='away'?g.away:g.home, fgn=g.fgp==='away'?g.away:g.home;
-  const abp=BULLPEN[g.away]||{grade:'?',era:'?',closer:'?'}, hbp=BULLPEN[g.home]||{grade:'?',era:'?',closer:'?'};
-  const rl=g.rating.toLowerCase();
-  const row=document.createElement('div');
-  row.className='game-row'; row.setAttribute('data-rating',g.rating);
-  row.innerHTML=`
-    <div class="cell">
-      <div class="matchup-time">${g.time}</div>
-      <div class="matchup-teams">${g.away} <span style="color:var(--muted);font-size:11px;font-weight:400"> @ </span>${g.home}</div>
-      <div class="matchup-venue">${g.venue}</div>
-    </div>
-    <div class="cell">
-      <div class="pitcher-line">
-        <span class="pitcher-side">AWY</span>
-        <span class="pitcher-name">${g.awaySP}</span>
-        ${pstat(g.awayERA,g.awayWHIP)}
-      </div>
-      <div class="pitcher-line" style="margin-top:2px">
-        <span class="pitcher-side">HME</span>
-        <span class="pitcher-name">${g.homeSP}</span>
-        ${pstat(g.homeERA,g.homeWHIP)}
-      </div>
-      <div style="margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap">
-        <span>${g.wx}</span>${g.wind!=='—'?`<span>${g.wind}</span>`:''}${g.wxAdj!=='+0%'?`<span style="color:var(--green)">${g.wxAdj} run adj</span>`:''}
-      </div>
-    </div>
-    <div class="cell">
-      <div class="pred-header">F5 pick</div>
-      <div class="pred-pick ${g.f5p}">${sn(f5n)}</div>
-      <div class="pred-totals">
-        <span style="color:var(--green)">${g.f5a}</span><span style="color:var(--muted)">—</span><span style="color:var(--purple)">${g.f5h}</span>
-        <span style="color:var(--muted);margin-left:4px">tot</span><span class="tv">${g.f5t}</span>
-      </div>
-      <div class="win-mini"><div class="wma" style="width:${g.f5aw}%"></div><div class="wmh" style="width:${g.f5hw}%"></div></div>
-      <div class="win-pcts">${g.f5aw}% · ${g.f5hw}% · ${g.f5c} conf</div>
-    </div>
-    <div class="cell">
-      <div class="pred-header">Full game pick</div>
-      <div class="pred-pick ${g.fgp}">${sn(fgn)}</div>
-      <div class="pred-totals">
-        <span style="color:var(--green)">${g.fga}</span><span style="color:var(--muted)">—</span><span style="color:var(--purple)">${g.fgh}</span>
-        <span style="color:var(--muted);margin-left:4px">tot</span><span class="tv">${g.fgt}</span>
-      </div>
-      <div class="win-mini"><div class="wma" style="width:${g.fgaw}%"></div><div class="wmh" style="width:${g.fghw}%"></div></div>
-      <div class="win-pcts">${g.fgaw}% · ${g.fghw}% · ${g.fgc} conf</div>
-    </div>
-    <div class="cell rating-cell">
-      <div class="rating-stars">${g.rating==='Elite'?'★★★':g.rating==='Strong'?'★★':g.rating==='Moderate'?'★':'·'}</div>
-      <div class="rating-label ${rl}">${g.rating.toUpperCase()}</div>
-      <div class="conf-indicator">${pips(g.fgc)}</div>
-    </div>
-    <div class="expand-panel">
-      <div>
-        <div class="expand-head">F5 breakdown</div>
-        <div class="expand-row"><span class="expand-key">Away win%</span><span class="expand-val" style="color:var(--green)">${g.f5aw}%</span></div>
-        <div class="expand-row"><span class="expand-key">Home win%</span><span class="expand-val" style="color:var(--purple)">${g.f5hw}%</span></div>
-        <div class="expand-row"><span class="expand-key">F5 total</span><span class="expand-val">${g.f5t}</span></div>
-        <div class="expand-row"><span class="expand-key">Confidence</span><span class="expand-val">${g.f5c}</span></div>
-        <div class="expand-bar-wrap">
-          <div class="expand-bar-row"><span class="expand-bar-label">AWY</span><div class="expand-bar-track"><div class="expand-bar-fill-a" style="width:${g.f5aw}%"></div></div><span class="expand-bar-pct">${g.f5aw}%</span></div>
-          <div class="expand-bar-row"><span class="expand-bar-label">HME</span><div class="expand-bar-track"><div class="expand-bar-fill-h" style="width:${g.f5hw}%"></div></div><span class="expand-bar-pct">${g.f5hw}%</span></div>
-        </div>
-      </div>
-      <div>
-        <div class="expand-head">Full game breakdown</div>
-        <div class="expand-row"><span class="expand-key">Away win%</span><span class="expand-val" style="color:var(--green)">${g.fgaw}%</span></div>
-        <div class="expand-row"><span class="expand-key">Home win%</span><span class="expand-val" style="color:var(--purple)">${g.fghw}%</span></div>
-        <div class="expand-row"><span class="expand-key">FG total</span><span class="expand-val">${g.fgt}</span></div>
-        <div class="expand-row"><span class="expand-key">Confidence</span><span class="expand-val">${g.fgc}</span></div>
-        <div class="expand-row"><span class="expand-key">Park factor</span><span class="expand-val">${g.park}${g.park>=1.1?' 🔥':g.park<=0.92?' ❄️':''}</span></div>
-        <div class="expand-row"><span class="expand-key">Season H2H</span><span class="expand-val">${g.h2h}</span></div>
-        <div class="expand-bar-wrap" style="margin-top:8px">
-          <div class="expand-bar-row"><span class="expand-bar-label">AWY</span><div class="expand-bar-track"><div class="expand-bar-fill-a" style="width:${g.fgaw}%"></div></div><span class="expand-bar-pct">${g.fgaw}%</span></div>
-          <div class="expand-bar-row"><span class="expand-bar-label">HME</span><div class="expand-bar-track"><div class="expand-bar-fill-h" style="width:${g.fghw}%"></div></div><span class="expand-bar-pct">${g.fghw}%</span></div>
-        </div>
-      </div>
-      <div>
-        <div class="expand-head">Bullpens</div>
-        <div class="expand-row"><span class="expand-key">${sn(g.away)} bp</span><span class="grade-pill ${gc(abp.grade)}">${abp.grade}</span></div>
-        <div style="font-size:10px;color:var(--muted);margin-bottom:8px">${abp.closer} · ERA ${abp.era}</div>
-        <div class="expand-row"><span class="expand-key">${sn(g.home)} bp</span><span class="grade-pill ${gc(hbp.grade)}">${hbp.grade}</span></div>
-        <div style="font-size:10px;color:var(--muted)">${hbp.closer} · ERA ${hbp.era}</div>
-      </div>
-      <div>
-        <div class="expand-head">Pitcher detail</div>
-        <div class="expand-row"><span class="expand-key">Away ERA</span><span class="expand-val">${g.awayERA||'—'}</span></div>
-        <div class="expand-row"><span class="expand-key">Away WHIP</span><span class="expand-val">${g.awayWHIP||'—'}</span></div>
-        <div class="expand-row" style="margin-top:4px"><span class="expand-key">Home ERA</span><span class="expand-val">${g.homeERA||'—'}</span></div>
-        <div class="expand-row"><span class="expand-key">Home WHIP</span><span class="expand-val">${g.homeWHIP||'—'}</span></div>
-        <div class="expand-row" style="margin-top:8px"><span class="expand-key">Weather</span><span class="expand-val">${g.wx}</span></div>
-        <div class="expand-row"><span class="expand-key">Wind</span><span class="expand-val">${g.wind}</span></div>
-        <div class="expand-row"><span class="expand-key">Rain</span><span class="expand-val">${g.rain}</span></div>
-        <div class="expand-row"><span class="expand-key">Run adj</span><span class="expand-val" style="${g.wxAdj!=='+0%'?'color:var(--green)':''}">${g.wxAdj}</span></div>
-      </div>
-    </div>
-    <span class="chevron">▼</span>
-  `;
-  row.addEventListener('click',()=>{
-    const p=row.querySelector('.expand-panel'), open=row.classList.toggle('expanded');
-    p.style.display=open?'grid':'none';
+  const row = document.createElement('div');
+  row.className = 'game-row';
+  row.setAttribute('data-rating', g.rating);
+  row.innerHTML =
+    '<div class="cell">'
+      +'<div class="matchup-time">'+g.time+'</div>'
+      +'<div class="matchup-logos">'
+        +awayLogo
+        +'<span class="team-name">'+sn(g.away)+'</span>'
+        +'<span class="vs-sep">@</span>'
+        +homeLogo
+        +'<span class="team-name">'+sn(g.home)+'</span>'
+      +'</div>'
+      +'<div class="matchup-sub">'+(g.park?'Park '+g.park+parkLabel:'')+(g.venue?' · '+g.venue:'')+wxStr+'</div>'
+    +'</div>'
+    +'<div class="cell">'
+      +'<div class="pitcher-line"><span class="pitcher-side">AWY</span><span class="pitcher-name">'+g.awaySP+'</span>'+pstat(g.awayERA,g.awayWHIP)+'</div>'
+      +'<div class="pitcher-line" style="margin-top:3px"><span class="pitcher-side">HME</span><span class="pitcher-name">'+g.homeSP+'</span>'+pstat(g.homeERA,g.homeWHIP)+'</div>'
+    +'</div>'
+    +'<div class="cell">'
+      +'<div class="pred-header">F5 pick</div>'
+      +'<div class="pred-pick '+g.f5p+'">'+sn(f5PickName)+'</div>'
+      +'<div class="pred-totals"><span style="color:var(--green)">'+g.f5aw.toFixed(1)+'%</span><span style="color:var(--muted)">·</span><span style="color:var(--purple)">'+g.f5hw.toFixed(1)+'%</span><span style="color:var(--muted);margin-left:4px">tot</span><span class="tv">'+g.f5t+'</span></div>'
+      +'<div class="win-mini"><div class="wma" style="width:'+g.f5aw+'%"></div><div class="wmh" style="width:'+g.f5hw+'%"></div></div>'
+      +'<div class="win-pcts">'+g.f5c+' conf</div>'
+    +'</div>'
+    +'<div class="cell">'
+      +'<div class="pred-header">Full game pick</div>'
+      +'<div class="pred-pick '+g.fgp+'">'+sn(fgPickName)+'</div>'
+      +'<div class="pred-totals"><span style="color:var(--green)">'+g.fgaw.toFixed(1)+'%</span><span style="color:var(--muted)">·</span><span style="color:var(--purple)">'+g.fghw.toFixed(1)+'%</span><span style="color:var(--muted);margin-left:4px">tot</span><span class="tv">'+g.fgt+'</span></div>'
+      +'<div class="win-mini"><div class="wma" style="width:'+g.fgaw+'%"></div><div class="wmh" style="width:'+g.fghw+'%"></div></div>'
+      +'<div class="win-pcts">'+g.fgc+' conf</div>'
+    +'</div>'
+    +'<div class="cell rating-cell">'
+      +'<div class="rating-stars">'+stars+'</div>'
+      +'<div class="rating-label '+rl+'">'+g.rating.toUpperCase()+'</div>'
+      +'<div class="conf-indicator">'+pips(g.fgc)+'</div>'
+    +'</div>'
+    +'<div class="expand-panel">'
+      +'<div>'
+        +'<div class="expand-head">F5 breakdown</div>'
+        +'<div class="expand-row"><span class="expand-key">Pick</span><span class="expand-val" style="color:'+(g.f5p==='away'?'var(--green)':'var(--purple)')+'">'+g.f5Pick+'</span></div>'
+        +'<div class="expand-row"><span class="expand-key">Away win%</span><span class="expand-val" style="color:var(--green)">'+g.f5aw.toFixed(1)+'%</span></div>'
+        +'<div class="expand-row"><span class="expand-key">Home win%</span><span class="expand-val" style="color:var(--purple)">'+g.f5hw.toFixed(1)+'%</span></div>'
+        +'<div class="expand-row"><span class="expand-key">F5 total</span><span class="expand-val">'+g.f5t+'</span></div>'
+        +'<div class="expand-row"><span class="expand-key">Confidence</span><span class="expand-val">'+g.f5c+'</span></div>'
+        +'<div class="expand-bar-wrap"><div class="expand-bar-row"><span class="expand-bar-label">AWY</span><div class="expand-bar-track"><div class="expand-bar-fill-a" style="width:'+g.f5aw+'%"></div></div><span class="expand-bar-pct">'+g.f5aw.toFixed(1)+'%</span></div><div class="expand-bar-row"><span class="expand-bar-label">HME</span><div class="expand-bar-track"><div class="expand-bar-fill-h" style="width:'+g.f5hw+'%"></div></div><span class="expand-bar-pct">'+g.f5hw.toFixed(1)+'%</span></div></div>'
+      +'</div>'
+      +'<div>'
+        +'<div class="expand-head">Full game breakdown</div>'
+        +'<div class="expand-row"><span class="expand-key">Pick</span><span class="expand-val" style="color:'+(g.fgp==='away'?'var(--green)':'var(--purple)')+'">'+g.fgPick+'</span></div>'
+        +'<div class="expand-row"><span class="expand-key">Away win%</span><span class="expand-val" style="color:var(--green)">'+g.fgaw.toFixed(1)+'%</span></div>'
+        +'<div class="expand-row"><span class="expand-key">Home win%</span><span class="expand-val" style="color:var(--purple)">'+g.fghw.toFixed(1)+'%</span></div>'
+        +'<div class="expand-row"><span class="expand-key">FG total</span><span class="expand-val">'+g.fgt+'</span></div>'
+        +'<div class="expand-row"><span class="expand-key">Confidence</span><span class="expand-val">'+g.fgc+'</span></div>'
+        +'<div class="expand-row"><span class="expand-key">Park factor</span><span class="expand-val">'+g.park+parkLabel+'</span></div>'
+        +'<div class="expand-bar-wrap"><div class="expand-bar-row"><span class="expand-bar-label">AWY</span><div class="expand-bar-track"><div class="expand-bar-fill-a" style="width:'+g.fgaw+'%"></div></div><span class="expand-bar-pct">'+g.fgaw.toFixed(1)+'%</span></div><div class="expand-bar-row"><span class="expand-bar-label">HME</span><div class="expand-bar-track"><div class="expand-bar-fill-h" style="width:'+g.fghw+'%"></div></div><span class="expand-bar-pct">'+g.fghw.toFixed(1)+'%</span></div></div>'
+      +'</div>'
+      +'<div>'
+        +'<div class="expand-head">Starting pitchers</div>'
+        +'<div class="expand-row"><span class="expand-key">Away SP</span><span class="expand-val">'+g.awaySP+'</span></div>'
+        +'<div class="expand-row"><span class="expand-key">Away ERA</span><span class="expand-val">'+(g.awayERA||'—')+'</span></div>'
+        +'<div class="expand-row"><span class="expand-key">Away WHIP</span><span class="expand-val">'+(g.awayWHIP||'—')+'</span></div>'
+        +'<div class="expand-row" style="margin-top:6px"><span class="expand-key">Home SP</span><span class="expand-val">'+g.homeSP+'</span></div>'
+        +'<div class="expand-row"><span class="expand-key">Home ERA</span><span class="expand-val">'+(g.homeERA||'—')+'</span></div>'
+        +'<div class="expand-row"><span class="expand-key">Home WHIP</span><span class="expand-val">'+(g.homeWHIP||'—')+'</span></div>'
+      +'</div>'
+      +'<div>'
+        +'<div class="expand-head">Bullpens</div>'
+        +'<div class="expand-row"><span class="expand-key">'+sn(g.away)+' bp</span><span class="grade-pill '+gc(abp.grade)+'">'+abp.grade+'</span></div>'
+        +'<div style="font-size:10px;color:var(--muted);margin-bottom:8px">'+abp.closer+' · ERA '+abp.era+'</div>'
+        +'<div class="expand-row"><span class="expand-key">'+sn(g.home)+' bp</span><span class="grade-pill '+gc(hbp.grade)+'">'+hbp.grade+'</span></div>'
+        +'<div style="font-size:10px;color:var(--muted);margin-bottom:8px">'+hbp.closer+' · ERA '+hbp.era+'</div>'
+        +(g.wxAdj&&g.wxAdj!=='+0%'?'<div class="expand-row"><span class="expand-key">Weather adj</span><span class="expand-val" style="color:var(--green)">'+g.wxAdj+'</span></div>':'')
+        +(g.venue?'<div class="expand-row" style="margin-top:4px"><span class="expand-key">Venue</span><span class="expand-val" style="font-size:10px">'+g.venue+'</span></div>':'')
+      +'</div>'
+    +'</div>'
+    +'<span class="chevron">▼</span>';
+
+  row.addEventListener('click', () => {
+    const panel = row.querySelector('.expand-panel');
+    const open = row.classList.toggle('expanded');
+    panel.style.display = open ? 'grid' : 'none';
   });
   return row;
 }
 
-function updateSummary(games){
+// ── Render ─────────────────────────────────────────────────────────────────
+function updateSummary(games) {
+  if (!games.length) { document.getElementById('summary-bar').innerHTML=''; return; }
   const elite=games.filter(g=>g.rating==='Elite').length;
   const strong=games.filter(g=>g.rating==='Strong').length;
   const hc=games.filter(g=>g.fgc==='High').length;
   const avg=(games.reduce((s,g)=>s+g.fgt,0)/games.length).toFixed(1);
-  document.getElementById('summary-bar').innerHTML=`
-    <div class="sum-item"><div class="sdot" style="background:var(--green)"></div><span class="sum-label">Elite plays</span><span class="sum-val">${elite}</span></div>
-    <div class="sum-item"><div class="sdot" style="background:var(--blue)"></div><span class="sum-label">Strong plays</span><span class="sum-val">${strong}</span></div>
-    <div class="sum-item"><div class="sdot" style="background:var(--amber)"></div><span class="sum-label">High conf FG</span><span class="sum-val">${hc}</span></div>
-    <div class="sum-item"><div class="sdot" style="background:var(--muted)"></div><span class="sum-label">Avg FG total</span><span class="sum-val">${avg}</span></div>
-    <div class="sum-meta">Click any row to expand · Source: MLB Prediction Model / Google Drive</div>
-  `;
+  const ts=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('summary-bar').innerHTML =
+    '<div class="sum-item"><div class="sdot" style="background:var(--green)"></div><span class="sum-label">Elite</span><span class="sum-val">'+elite+'</span></div>'
+    +'<div class="sum-item"><div class="sdot" style="background:var(--blue)"></div><span class="sum-label">Strong</span><span class="sum-val">'+strong+'</span></div>'
+    +'<div class="sum-item"><div class="sdot" style="background:var(--amber)"></div><span class="sum-label">High conf FG</span><span class="sum-val">'+hc+'</span></div>'
+    +'<div class="sum-item"><div class="sdot" style="background:var(--muted)"></div><span class="sum-label">Avg FG total</span><span class="sum-val">'+avg+'</span></div>'
+    +'<div class="sum-meta">Live · Google Sheets · '+ts+' · Click any row to expand</div>';
 }
 
-function render(){
-  let games=[...GAMES[day]];
-  if(filt!=='all') games=games.filter(g=>g.rating===filt);
-  if(sort==='rating') games.sort((a,b)=>RO[a.rating]-RO[b.rating]);
-  else if(sort==='total') games.sort((a,b)=>b.fgt-a.fgt);
-  const list=document.getElementById('game-list');
-  list.innerHTML='';
-  document.getElementById('count-label').textContent=games.length+' game'+(games.length!==1?'s':'');
-  if(!games.length){list.innerHTML='<div class="no-games">NO GAMES MATCH THIS FILTER</div>';return}
-  games.forEach(g=>list.appendChild(buildRow(g)));
+function render() {
+  let games = [...(GAMES[currentDay]||[])];
+  if (currentFilter!=='all') games = games.filter(g=>g.rating===currentFilter);
+  if (currentSort==='rating') games.sort((a,b)=>RO[a.rating]-RO[b.rating]);
+  else if (currentSort==='total') games.sort((a,b)=>b.fgt-a.fgt);
+  else games.sort((a,b)=>timeMin(a.time)-timeMin(b.time));
+  const list = document.getElementById('game-list');
+  list.innerHTML = '';
+  document.getElementById('count-label').textContent = games.length+' game'+(games.length!==1?'s':'');
+  if (!games.length) { list.innerHTML='<div class="no-games">NO GAMES FOUND</div>'; updateSummary([]); return; }
+  games.forEach(g => list.appendChild(buildRow(g)));
   updateSummary(games);
 }
 
-function switchDay(d,btn){day=d;document.querySelectorAll('.day-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render()}
-function setFilter(f,btn){filt=f;document.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render()}
-function setSort(v){sort=v;render()}
+function switchDay(d, btn) { currentDay=d; document.querySelectorAll('.day-tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); render(); }
+function setFilter(f, btn) { currentFilter=f; document.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); render(); }
+function setSort(v) { currentSort=v; render(); }
 
-loadSheets();
+loadData();
 </script>
 </body>
 </html>
