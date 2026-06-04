@@ -369,6 +369,9 @@ async function loadData(){
     const dm=hdr.match(/(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)[,.\s]+\w+\.?\s+\d+[,.\s]+\d{4}/i);
     if(dm)document.getElementById('sheet-date').textContent=dm[0].trim().substring(0,55);
 
+    // DEBUG - show raw rows on page
+    document.getElementById('sheet-date').innerHTML = 'rows:'+predRows.length+' | r4:'+JSON.stringify((predRows[4]||[]).slice(0,2))+' | r5:'+JSON.stringify((predRows[5]||[]).slice(0,2));
+
     allGames=parsePreds(predRows);
     const whipMap=parseSchedWHIP(schedRows);
 
