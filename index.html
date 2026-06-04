@@ -51,12 +51,9 @@ body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-ser
 .game-row[data-rating="Lean"]::before{background:var(--border2)}
 .cell{padding:10px 12px;border-right:1px solid var(--border);display:flex;flex-direction:column;justify-content:center;gap:3px}
 .cell:last-child{border-right:none}.cell:first-child{padding-left:16px}
-.matchup-time{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:3px}
-.matchup-logos{display:flex;align-items:center;gap:6px}
-.team-logo{width:22px;height:22px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5))}
-.team-name{font-family:'Oswald',sans-serif;font-size:13px;font-weight:500;letter-spacing:.04em;color:var(--text)}
-.vs-sep{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin:0 1px}
-.matchup-sub{font-size:10px;color:var(--muted);margin-top:3px}
+.matchup-time{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)}
+.matchup-teams{font-family:'Oswald',sans-serif;font-size:14px;font-weight:500;letter-spacing:.04em;line-height:1.2}
+.matchup-sub{font-size:10px;color:var(--muted)}.team-logo{width:20px;height:20px;object-fit:contain;vertical-align:middle;margin-right:3px;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4))}
 .pitcher-line{display:flex;align-items:baseline;gap:6px;font-size:11px}
 .pitcher-side{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.08em;min-width:18px;flex-shrink:0}
 .pitcher-name{color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -101,7 +98,6 @@ body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-ser
 </style>
 </head>
 <body>
-
 <div class="header">
   <div class="logo"><div class="logo-dot"></div>MLB PREDICTION MODEL</div>
   <span class="live-badge">LIVE</span>
@@ -132,7 +128,6 @@ body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-ser
 <div class="summary-bar" id="summary-bar">
   <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber)">Loading from Google Sheets...</span>
 </div>
-<div id="debug-out" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#ffb300;background:#111417;padding:8px 20px;border-bottom:1px solid #252b34"></div>
 <div class="col-headers">
   <div class="col-head">Matchup</div>
   <div class="col-head">Starting pitchers</div>
@@ -145,50 +140,24 @@ body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-ser
 </div>
 
 <script>
-// ── Google Sheets CSV URLs ─────────────────────────────────────────────────
-// gid=141272668 = Predictions tab (confirmed): col0="Away @ Home", col1=Time
-// gid=596859801 = Schedule tab (confirmed): col0=Time, col1=Today/Tmrw, ERA/WHIP cols
+// ── Sheet URLs ─────────────────────────────────────────────────────────────
+// Predictions tab (gid=141272668): col0=Matchup(@), col1=Time, col2=Away SP(ERA),
+//   col3=Home SP(ERA), col4=Park, col5=WxAdj, col6=F5 Away Win%, col7=F5 Home Win%,
+//   col8=F5 Pick, col9=F5 Conf, col10=F5 Total, col11=F5 O/U,
+//   col12=FG Away Win%, col13=FG Home Win%, col14=FG Pick, col15=FG Conf,
+//   col16=FG Total, col17=FG O/U, col18=Rating
+//   TODAY/TOMORROW sections separated by label rows containing "TODAY"/"TOMORROW"
 const PREDS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=141272668&single=true&output=csv';
+
+// Schedule tab (gid=596859801): col0=Time, col1=Day(Today/Tmrw), col2=Away,
+//   col3=vs, col4=Home, col5=Venue, col6=Away SP, col7=Away ERA, col8=Away WHIP,
+//   col9=Home SP, col10=Home ERA, col11=Home WHIP
 const SCHED_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=596859801&single=true&output=csv';
 
-// ── ESPN team logos ────────────────────────────────────────────────────────
-const LOGOS = {
-  "Arizona Diamondbacks":"https://a.espncdn.com/i/teamlogos/mlb/500/ari.png",
-  "Atlanta Braves":"https://a.espncdn.com/i/teamlogos/mlb/500/atl.png",
-  "Baltimore Orioles":"https://a.espncdn.com/i/teamlogos/mlb/500/bal.png",
-  "Boston Red Sox":"https://a.espncdn.com/i/teamlogos/mlb/500/bos.png",
-  "Chicago Cubs":"https://a.espncdn.com/i/teamlogos/mlb/500/chc.png",
-  "Chicago White Sox":"https://a.espncdn.com/i/teamlogos/mlb/500/cws.png",
-  "Cincinnati Reds":"https://a.espncdn.com/i/teamlogos/mlb/500/cin.png",
-  "Cleveland Guardians":"https://a.espncdn.com/i/teamlogos/mlb/500/cle.png",
-  "Colorado Rockies":"https://a.espncdn.com/i/teamlogos/mlb/500/col.png",
-  "Detroit Tigers":"https://a.espncdn.com/i/teamlogos/mlb/500/det.png",
-  "Houston Astros":"https://a.espncdn.com/i/teamlogos/mlb/500/hou.png",
-  "Kansas City Royals":"https://a.espncdn.com/i/teamlogos/mlb/500/kc.png",
-  "Los Angeles Angels":"https://a.espncdn.com/i/teamlogos/mlb/500/laa.png",
-  "Los Angeles Dodgers":"https://a.espncdn.com/i/teamlogos/mlb/500/lad.png",
-  "Miami Marlins":"https://a.espncdn.com/i/teamlogos/mlb/500/mia.png",
-  "Milwaukee Brewers":"https://a.espncdn.com/i/teamlogos/mlb/500/mil.png",
-  "Minnesota Twins":"https://a.espncdn.com/i/teamlogos/mlb/500/min.png",
-  "New York Mets":"https://a.espncdn.com/i/teamlogos/mlb/500/nym.png",
-  "New York Yankees":"https://a.espncdn.com/i/teamlogos/mlb/500/nyy.png",
-  "Athletics":"https://a.espncdn.com/i/teamlogos/mlb/500/oak.png",
-  "Philadelphia Phillies":"https://a.espncdn.com/i/teamlogos/mlb/500/phi.png",
-  "Pittsburgh Pirates":"https://a.espncdn.com/i/teamlogos/mlb/500/pit.png",
-  "San Diego Padres":"https://a.espncdn.com/i/teamlogos/mlb/500/sd.png",
-  "San Francisco Giants":"https://a.espncdn.com/i/teamlogos/mlb/500/sf.png",
-  "Seattle Mariners":"https://a.espncdn.com/i/teamlogos/mlb/500/sea.png",
-  "St. Louis Cardinals":"https://a.espncdn.com/i/teamlogos/mlb/500/stl.png",
-  "Tampa Bay Rays":"https://a.espncdn.com/i/teamlogos/mlb/500/tb.png",
-  "Texas Rangers":"https://a.espncdn.com/i/teamlogos/mlb/500/tex.png",
-  "Toronto Blue Jays":"https://a.espncdn.com/i/teamlogos/mlb/500/tor.png",
-  "Washington Nationals":"https://a.espncdn.com/i/teamlogos/mlb/500/wsh.png",
-};
-
-// ── Bullpen data ───────────────────────────────────────────────────────────
-const BULLPEN = {
+// ── Bullpen data (from Bullpen Stats tab) ──────────────────────────────────
+const BULLPEN={
   "Atlanta Braves":{grade:"A",era:"2.90",closer:"Robert Suarez"},
-  "Seattle Mariners":{grade:"A",era:"2.95",closer:"Jose A. Ferrer"},
+  "Seattle Mariners":{grade:"A",era:"2.95",closer:"José A. Ferrer"},
   "Los Angeles Dodgers":{grade:"B",era:"3.10",closer:"Tanner Scott"},
   "Milwaukee Brewers":{grade:"B",era:"3.24",closer:"Abner Uribe"},
   "New York Mets":{grade:"B",era:"3.29",closer:"Devin Williams"},
@@ -219,211 +188,235 @@ const BULLPEN = {
   "Los Angeles Angels":{grade:"D",era:"5.41",closer:"Jordan Romano"},
 };
 
-const RO = {Elite:0,Strong:1,Moderate:2,Lean:3};
-let GAMES = {today:[], tomorrow:[]};
-let currentDay='today', currentFilter='all', currentSort='time';
+const LOGOS={
+  'Arizona Diamondbacks':'https://a.espncdn.com/i/teamlogos/mlb/500/ari.png',
+  'Atlanta Braves':'https://a.espncdn.com/i/teamlogos/mlb/500/atl.png',
+  'Baltimore Orioles':'https://a.espncdn.com/i/teamlogos/mlb/500/bal.png',
+  'Boston Red Sox':'https://a.espncdn.com/i/teamlogos/mlb/500/bos.png',
+  'Chicago Cubs':'https://a.espncdn.com/i/teamlogos/mlb/500/chc.png',
+  'Chicago White Sox':'https://a.espncdn.com/i/teamlogos/mlb/500/cws.png',
+  'Cincinnati Reds':'https://a.espncdn.com/i/teamlogos/mlb/500/cin.png',
+  'Cleveland Guardians':'https://a.espncdn.com/i/teamlogos/mlb/500/cle.png',
+  'Colorado Rockies':'https://a.espncdn.com/i/teamlogos/mlb/500/col.png',
+  'Detroit Tigers':'https://a.espncdn.com/i/teamlogos/mlb/500/det.png',
+  'Houston Astros':'https://a.espncdn.com/i/teamlogos/mlb/500/hou.png',
+  'Kansas City Royals':'https://a.espncdn.com/i/teamlogos/mlb/500/kc.png',
+  'Los Angeles Angels':'https://a.espncdn.com/i/teamlogos/mlb/500/laa.png',
+  'Los Angeles Dodgers':'https://a.espncdn.com/i/teamlogos/mlb/500/lad.png',
+  'Miami Marlins':'https://a.espncdn.com/i/teamlogos/mlb/500/mia.png',
+  'Milwaukee Brewers':'https://a.espncdn.com/i/teamlogos/mlb/500/mil.png',
+  'Minnesota Twins':'https://a.espncdn.com/i/teamlogos/mlb/500/min.png',
+  'New York Mets':'https://a.espncdn.com/i/teamlogos/mlb/500/nym.png',
+  'New York Yankees':'https://a.espncdn.com/i/teamlogos/mlb/500/nyy.png',
+  'Athletics':'https://a.espncdn.com/i/teamlogos/mlb/500/oak.png',
+  'Philadelphia Phillies':'https://a.espncdn.com/i/teamlogos/mlb/500/phi.png',
+  'Pittsburgh Pirates':'https://a.espncdn.com/i/teamlogos/mlb/500/pit.png',
+  'San Diego Padres':'https://a.espncdn.com/i/teamlogos/mlb/500/sd.png',
+  'San Francisco Giants':'https://a.espncdn.com/i/teamlogos/mlb/500/sf.png',
+  'Seattle Mariners':'https://a.espncdn.com/i/teamlogos/mlb/500/sea.png',
+  'St. Louis Cardinals':'https://a.espncdn.com/i/teamlogos/mlb/500/stl.png',
+  'Tampa Bay Rays':'https://a.espncdn.com/i/teamlogos/mlb/500/tb.png',
+  'Texas Rangers':'https://a.espncdn.com/i/teamlogos/mlb/500/tex.png',
+  'Toronto Blue Jays':'https://a.espncdn.com/i/teamlogos/mlb/500/tor.png',
+  'Washington Nationals':'https://a.espncdn.com/i/teamlogos/mlb/500/wsh.png',
+};
+function logoImg(t){const u=LOGOS[t];return u?'<img src="'+u+'" class="team-logo" alt="" onerror="this.style.display=\"none\"">':'';}
 
-// ── RFC 4180 CSV parser ────────────────────────────────────────────────────
-function parseCSV(text) {
+const RO={Elite:0,Strong:1,Moderate:2,Lean:3};
+let allGames={today:[],tomorrow:[]};
+let currentDay='today',currentFilter='all',currentSort='time';
+
+// ── RFC 4180 CSV parser (handles newlines inside quoted fields) ────────────
+function parseCSV(text){
   const rows=[];
-  let row=[], field='', inQ=false;
-  for (let i=0; i<text.length; i++) {
-    const ch=text[i], nx=text[i+1];
-    if (inQ) {
-      if (ch==='"' && nx==='"') { field+='"'; i++; }
-      else if (ch==='"') { inQ=false; }
-      else { field+=ch; }
+  let row=[],field='',inQ=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i],nx=text[i+1];
+    if(inQ){
+      if(ch==='"'&&nx==='"'){field+='"';i++;}
+      else if(ch==='"'){inQ=false;}
+      else{field+=ch;}
     } else {
-      if (ch==='"') { inQ=true; }
-      else if (ch===',') { row.push(field.trim()); field=''; }
-      else if (ch==='\r' && nx==='\n') { row.push(field.trim()); rows.push(row); row=[]; field=''; i++; }
-      else if (ch==='\r' || ch==='\n') { row.push(field.trim()); rows.push(row); row=[]; field=''; }
-      else { field+=ch; }
+      if(ch==='"'){inQ=true;}
+      else if(ch===','){row.push(field.trim());field='';}
+      else if(ch==='\r'&&nx==='\n'){row.push(field.trim());rows.push(row);row=[];field='';i++;}
+      else if(ch==='\r'||ch==='\n'){row.push(field.trim());rows.push(row);row=[];field='';}
+      else{field+=ch;}
     }
   }
-  if (field.length || row.length) { row.push(field.trim()); rows.push(row); }
+  if(field||row.length){row.push(field.trim());rows.push(row);}
   return rows;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
-function pct(s) { return parseFloat((s||'').replace(/[^0-9.\-]/g,''))||0; }
-function num(s) { return parseFloat((s||'').replace(/[^0-9.\-]/g,''))||0; }
-function spParse(s) {
-  if (!s || s.trim()==='' || s.trim()==='—') return {name:'TBD', era:null};
-  const m = s.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
-  if (m) return {name:m[1].trim(), era:(m[2].trim()==='—'?null:m[2].trim())};
-  return {name:s.trim(), era:null};
+function pct(s){return parseFloat((s||'').replace(/[^0-9.\-]/g,''))||0;}
+function num(s){return parseFloat((s||'').replace(/[^0-9.\-]/g,''))||0;}
+function isDash(s){const t=(s||'').trim();return t===''||t==='—'||t==='-'||t==='–';}
+function cleanSP(s){
+  // "Spencer Miles  (2.16)" → {name:"Spencer Miles", era:"2.16"}
+  if(!s||isDash(s))return{name:'TBD',era:null,whip:null};
+  const m=s.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+  if(m){const era=isDash(m[2])?null:m[2].trim();return{name:m[1].trim(),era};}
+  return{name:s.trim(),era:null};
 }
-function getConf(s) {
+function rating(s){
   const u=(s||'').toUpperCase();
-  if (u.includes('HIGH')) return 'High';
-  if (u.includes('MED')) return 'Med';
-  return 'Low';
+  if(u.includes('ELITE'))return'Elite';
+  if(u.includes('STRONG'))return'Strong';
+  if(u.includes('MODERATE'))return'Moderate';
+  return'Lean';
 }
-function getRating(s) {
+function conf(s){
   const u=(s||'').toUpperCase();
-  if (u.includes('ELITE')) return 'Elite';
-  if (u.includes('STRONG')) return 'Strong';
-  if (u.includes('MODERATE')) return 'Moderate';
-  return 'Lean';
+  if(u.includes('HIGH'))return'High';
+  if(u.includes('MED'))return'Med';
+  return'Low';
 }
-function timeMin(t) {
+function sn(t){return(t||'').split(' ').pop();}
+function gc(g){return'grade-'+g.toLowerCase();}
+function timeMin(t){
   const m=(t||'').match(/(\d+):(\d+)\s*(AM|PM)/i);
-  if (!m) return 0;
+  if(!m)return 0;
   let h=+m[1];
-  if (m[3].toUpperCase()==='PM' && h!==12) h+=12;
-  if (m[3].toUpperCase()==='AM' && h===12) h=0;
+  if(m[3].toUpperCase()==='PM'&&h!==12)h+=12;
+  if(m[3].toUpperCase()==='AM'&&h===12)h=0;
   return h*60+(+m[2]);
-}
-function sn(t) { return (t||'').split(' ').pop(); }
-function gc(g) { return 'grade-'+g.toLowerCase(); }
-function logoImg(team, size) {
-  const url = LOGOS[team];
-  if (!url) return '';
-  return '<img src="'+url+'" alt="'+team+'" class="team-logo" style="width:'+size+'px;height:'+size+'px" onerror="this.style.display=\'none\'">';
 }
 
 // ── Parse predictions tab ──────────────────────────────────────────────────
-function parsePreds(rows) {
-  GAMES = {today:[], tomorrow:[]};
-  let section = 'today';
-  for (const r of rows) {
-    const c0 = (r[0]||'').trim();
-    if (!c0.includes('@')) {
-      const up = c0.replace(/[^A-Za-z]/g,'').toUpperCase();
-      if (up.includes('TOMORROW')) { section='tomorrow'; continue; }
-      if (up.includes('TODAY')) { section='today'; continue; }
-      continue;
-    }
-    const t = (r[1]||'').trim();
-    if (!t.match(/\d+:\d+/)) continue;
-    const parts = c0.split('@');
-    if (parts.length < 2) continue;
-    const away = parts[0].trim(), home = parts[1].trim();
-    if (!away || !home) continue;
-    const asp = spParse(r[2]), hsp = spParse(r[3]);
-    const f5aw=pct(r[6]), f5hw=pct(r[7]);
-    const fgaw=pct(r[12]), fghw=pct(r[13]);
-    const f5Pick=(r[8]||'').trim(), fgPick=(r[14]||'').trim();
-    const g = {
-      away, home, time:t, venue:'',
-      awaySP:asp.name, awayERA:asp.era, awayWHIP:null,
-      homeSP:hsp.name, homeERA:hsp.era, homeWHIP:null,
-      park:num(r[4]), wxAdj:(r[5]||'+0%').trim(),
-      f5aw, f5hw, f5Pick,
-      f5p: f5Pick.toLowerCase().includes(away.toLowerCase().split(' ').pop()) ? 'away' : 'home',
-      f5c: getConf(r[9]), f5t: num(r[10]),
-      fgaw, fghw, fgPick,
-      fgp: fgPick.toLowerCase().includes(away.toLowerCase().split(' ').pop()) ? 'away' : 'home',
-      fgc: getConf(r[15]), fgt: num(r[16]),
-      rating: getRating(r[18]),
+// Game rows: col0 contains "@" (matchup), col1 is time
+// Section label rows: col0 contains "TODAY" or "TOMORROW"
+function parsePreds(rows){
+  const today=[],tomorrow=[];
+  let section='today';
+  for(const r of rows){
+    const c0=(r[0]||'').trim();
+    const c0up=c0.toUpperCase().replace(/[^\x20-\x7E]/g,'').trim();
+    // Section label detection
+    if(c0up.includes('TODAY')&&!c0.includes('@')){section='today';continue;}
+    if(c0up.includes('TOMORROW')&&!c0.includes('@')){section='tomorrow';continue;}
+    // Game row: must have @ in col0 and time in col1
+    if(!c0.includes('@'))continue;
+    if(!(r[1]||'').match(/\d+:\d+/))continue;
+    const parts=c0.split('@');
+    if(parts.length<2)continue;
+    const away=parts[0].trim(),home=parts[1].trim();
+    if(!away||!home)continue;
+    const awaySP=cleanSP(r[2]),homeSP=cleanSP(r[3]);
+    const f5PickRaw=(r[8]||'').trim();
+    const fgPickRaw=(r[14]||'').trim();
+    const f5aw=pct(r[6]),f5hw=pct(r[7]);
+    const fgaw=pct(r[12]),fghw=pct(r[13]);
+    const g={
+      away,home,
+      time:(r[1]||'').trim(),
+      awaySP:awaySP.name, awayERA:awaySP.era, awayWHIP:null,
+      homeSP:homeSP.name, homeERA:homeSP.era, homeWHIP:null,
+      park:num(r[4]),
+      wxAdj:(r[5]||'+0%').trim(),
+      f5aw,f5hw,
+      f5Pick:f5PickRaw,
+      f5p:f5PickRaw.toLowerCase().includes(away.toLowerCase().split(' ').pop())?'away':'home',
+      f5c:conf(r[9]),f5t:num(r[10]),
+      fgaw,fghw,
+      fgPick:fgPickRaw,
+      fgp:fgPickRaw.toLowerCase().includes(away.toLowerCase().split(' ').pop())?'away':'home',
+      fgc:conf(r[15]),fgt:num(r[16]),
+      rating:rating(r[18]),
     };
-    GAMES[section].push(g);
+    if(section==='tomorrow')tomorrow.push(g);
+    else today.push(g);
   }
+  return{today,tomorrow};
 }
 
-// ── Parse schedule tab for WHIP + venue ────────────────────────────────────
-function parseSchedWHIP(rows) {
-  const map = {};
-  for (const r of rows) {
-    if (r.length < 12) continue;
-    const d = (r[1]||'').toLowerCase();
-    if (!d.includes('today') && !d.includes('tmrw') && !d.includes('tomorrow')) continue;
-    if (!(r[0]||'').match(/\d+:\d+/)) continue;
-    const away=(r[2]||'').trim(), home=(r[4]||'').trim();
-    if (!away || !home) continue;
-    const aw=(r[8]||'').trim(), hw=(r[11]||'').trim();
-    map[away+'|'+home] = {
-      awayWHIP: (aw===''||aw==='—') ? null : aw,
-      homeWHIP: (hw===''||hw==='—') ? null : hw,
-      venue: (r[5]||'').trim(),
+// ── Parse schedule tab for WHIP (col8=Away WHIP, col11=Home WHIP) ──────────
+// Returns map: "Away@Home" → {awayWHIP, homeWHIP}
+function parseSchedWHIP(rows){
+  const map={};
+  for(const r of rows){
+    if(r.length<12)continue;
+    const dayRaw=(r[1]||'').toLowerCase();
+    if(!dayRaw.includes('today')&&!dayRaw.includes('tmrw')&&!dayRaw.includes('tomorrow'))continue;
+    if(!(r[0]||'').match(/\d+:\d+/))continue;
+    const away=(r[2]||'').trim(),home=(r[4]||'').trim();
+    if(!away||!home)continue;
+    map[away+'@'+home]={
+      awayWHIP:isDash(r[8])?null:r[8].trim(),
+      homeWHIP:isDash(r[11])?null:r[11].trim(),
+      venue:(r[5]||'').trim(),
     };
   }
-  for (const section of ['today','tomorrow']) {
-    for (const g of GAMES[section]) {
-      const w = map[g.away+'|'+g.home];
-      if (w) {
-        if (w.awayWHIP) g.awayWHIP = w.awayWHIP;
-        if (w.homeWHIP) g.homeWHIP = w.homeWHIP;
-        if (w.venue) g.venue = w.venue;
+  return map;
+}
+
+// ── Load & fetch ───────────────────────────────────────────────────────────
+async function loadData(){
+  const btn=document.getElementById('refresh-btn');
+  btn.disabled=true;btn.textContent='↻ LOADING...';
+  document.getElementById('game-list').innerHTML=Array(5).fill('<div class="skeleton"></div>').join('');
+  document.getElementById('summary-bar').innerHTML='<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:var(--amber)">⟳ Fetching live data from Google Sheets...</span>';
+  try{
+    const [pr,sr]=await Promise.all([fetch(PREDS_URL),fetch(SCHED_URL)]);
+    if(!pr.ok)throw new Error('Predictions tab HTTP '+pr.status);
+    if(!sr.ok)throw new Error('Schedule tab HTTP '+sr.status);
+    const [pt,st]=await Promise.all([pr.text(),sr.text()]);
+    const predRows=parseCSV(pt);
+    const schedRows=parseCSV(st);
+
+    // Extract date from predictions tab header row
+    const hdr=((predRows[0]||[])[0]||'').replace(/[^\x20-\x7E]/g,'').trim();
+    const dm=hdr.match(/(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)[,.\s]+\w+\.?\s+\d+[,.\s]+\d{4}/i);
+    if(dm)document.getElementById('sheet-date').textContent=dm[0].trim().substring(0,55);
+
+    allGames=parsePreds(predRows);
+    const whipMap=parseSchedWHIP(schedRows);
+
+    // Inject WHIP into games
+    for(const day of['today','tomorrow']){
+      for(const g of allGames[day]){
+        const w=whipMap[g.away+'@'+g.home]||{};
+        if(w.awayWHIP)g.awayWHIP=w.awayWHIP;
+        if(w.homeWHIP)g.homeWHIP=w.homeWHIP;
+        if(w.venue)g.venue=w.venue;
       }
     }
-  }
-}
 
-// ── Load data ──────────────────────────────────────────────────────────────
-async function loadData() {
-  const btn = document.getElementById('refresh-btn');
-  btn.disabled=true; btn.textContent='↻ LOADING...';
-  document.getElementById('game-list').innerHTML = Array(5).fill('<div class="skeleton"></div>').join('');
-  document.getElementById('summary-bar').innerHTML = '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:var(--amber)">⟳ Fetching live data from Google Sheets...</span>';
-  try {
-    const [pr, sr] = await Promise.all([fetch(PREDS_URL), fetch(SCHED_URL)]);
-    if (!pr.ok) throw new Error('Predictions tab HTTP '+pr.status);
-    if (!sr.ok) throw new Error('Schedule tab HTTP '+sr.status);
-    const [pt, st] = await Promise.all([pr.text(), sr.text()]);
-    const predRows = parseCSV(pt);
-    const schedRows = parseCSV(st);
-    // Extract date from header
-    const hdr = ((predRows[0]||[])[0]||'').replace(/[^\x20-\x7E]/g,'').trim();
-    const dm = hdr.match(/(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday).{0,30}\d{4}/i);
-    if (dm) document.getElementById('sheet-date').textContent = dm[0].trim().substring(0,55);
-    parsePreds(predRows);
-    parseSchedWHIP(schedRows);
-    document.getElementById('tab-today').textContent = 'Today' + (GAMES.today.length ? ' ('+GAMES.today.length+')' : '');
-    document.getElementById('tab-tomorrow').textContent = 'Tomorrow' + (GAMES.tomorrow.length ? ' ('+GAMES.tomorrow.length+')' : '');
-  } catch(e) {
-    const dbg = document.getElementById('debug-out');
-    if (dbg) dbg.innerHTML = 'FETCH ERROR: '+e.message;
-    document.getElementById('game-list').innerHTML = '<div class="no-games">⚠ '+e.message+'</div>';
-    document.getElementById('summary-bar').innerHTML = '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:var(--red)">⚠ Load failed</span>';
-    btn.disabled=false; btn.textContent='↻ REFRESH';
-    return;
+    document.getElementById('tab-today').textContent='Today'+(allGames.today.length?' ('+allGames.today.length+')':'');
+    document.getElementById('tab-tomorrow').textContent='Tomorrow'+(allGames.tomorrow.length?' ('+allGames.tomorrow.length+')':'');
+  }catch(e){
+    document.getElementById('game-list').innerHTML='<div class="no-games">⚠ Could not load sheet data<br><br><span style="font-size:10px;color:var(--muted2)">'+e.message+'</span></div>';
+    document.getElementById('summary-bar').innerHTML='<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:var(--red)">⚠ Load failed</span>';
+    btn.disabled=false;btn.textContent='↻ REFRESH';return;
   }
-  const dbg = document.getElementById('debug-out');
-  const sample = predRows.slice(0,8).map((r,i)=>`[${i}] c0=${JSON.stringify((r[0]||'').substring(0,40))} c1=${JSON.stringify(r[1]||'')} hasAt=${(r[0]||'').includes('@')}`).join('<br>');
-  if (dbg) dbg.innerHTML = 'predRows:'+predRows.length+' | Today:'+GAMES.today.length+' | Tomorrow:'+GAMES.tomorrow.length+'<br>'+sample;
-
-  btn.disabled=false; btn.textContent='↻ REFRESH';
+  btn.disabled=false;btn.textContent='↻ REFRESH';
   render();
 }
 
 // ── Build row ──────────────────────────────────────────────────────────────
-function pips(c) {
-  const n=c==='High'?3:c==='Med'?2:1, cls=c==='High'?'pip-high':c==='Med'?'pip-med':'pip-low';
-  let h=''; for(let i=0;i<3;i++) h+='<div class="conf-pip '+(i<n?cls:'pip-empty')+'"></div>'; return h;
+function pips(c){
+  const n=c==='High'?3:c==='Med'?2:1,cls=c==='High'?'pip-high':c==='Med'?'pip-med':'pip-low';
+  let h='';for(let i=0;i<3;i++)h+='<div class="conf-pip '+(i<n?cls:'pip-empty')+'"></div>';return h;
 }
-function pstat(era, whip) {
-  if (!era) return '<span class="pitcher-stats">TBD</span>';
-  const w = whip ? ' <span style="color:var(--muted)">·</span> WHIP <span class="sv">'+whip+'</span>' : '';
-  return '<span class="pitcher-stats">ERA <span class="sv">'+era+'</span>'+w+'</span>';
+function pstat(era,whip){
+  if(!era)return'<span class="pitcher-stats">TBD</span>';
+  const w=whip?'<span style="color:var(--muted)"> · </span>WHIP <span class="sv">'+whip+'</span>':'';
+  return'<span class="pitcher-stats">ERA <span class="sv">'+era+'</span>'+w+'</span>';
 }
 
-function buildRow(g) {
-  const rl = g.rating.toLowerCase();
-  const stars = g.rating==='Elite'?'★★★':g.rating==='Strong'?'★★':g.rating==='Moderate'?'★':'·';
-  const parkLabel = g.park>=1.1?' 🔥':g.park<=0.92?' ❄️':'';
-  const wxStr = (g.wxAdj && g.wxAdj!=='+0%' && g.wxAdj!=='0%') ? ' · <span style="color:var(--green)">'+g.wxAdj+'</span>' : '';
-  const abp = BULLPEN[g.away]||{grade:'?',era:'?',closer:'?'};
-  const hbp = BULLPEN[g.home]||{grade:'?',era:'?',closer:'?'};
-  const awayLogo = logoImg(g.away, 22);
-  const homeLogo = logoImg(g.home, 22);
-  const f5PickName = g.f5p==='away' ? g.away : g.home;
-  const fgPickName = g.fgp==='away' ? g.away : g.home;
-
-  const row = document.createElement('div');
-  row.className = 'game-row';
-  row.setAttribute('data-rating', g.rating);
-  row.innerHTML =
+function buildRow(g){
+  const rl=g.rating.toLowerCase();
+  const stars=g.rating==='Elite'?'★★★':g.rating==='Strong'?'★★':g.rating==='Moderate'?'★':'·';
+  const parkLabel=g.park>=1.1?' 🔥':g.park<=0.92?' ❄️':'';
+  const wxStr=g.wxAdj&&g.wxAdj!=='+0%'&&g.wxAdj!=='0%'?' <span style="color:var(--green)">'+g.wxAdj+'</span>':'';
+  const abp=BULLPEN[g.away]||{grade:'?',era:'?',closer:'?'};
+  const hbp=BULLPEN[g.home]||{grade:'?',era:'?',closer:'?'};
+  const row=document.createElement('div');
+  row.className='game-row';row.setAttribute('data-rating',g.rating);
+  row.innerHTML=
     '<div class="cell">'
       +'<div class="matchup-time">'+g.time+'</div>'
-      +'<div class="matchup-logos">'
-        +awayLogo
-        +'<span class="team-name">'+sn(g.away)+'</span>'
-        +'<span class="vs-sep">@</span>'
-        +homeLogo
-        +'<span class="team-name">'+sn(g.home)+'</span>'
-      +'</div>'
+      +'<div class="matchup-teams">'+logoImg(g.away)+g.away+' <span style="color:var(--muted);font-size:11px;font-weight:400"> @ </span>'+logoImg(g.home)+g.home+'</div>'
       +'<div class="matchup-sub">'+(g.park?'Park '+g.park+parkLabel:'')+(g.venue?' · '+g.venue:'')+wxStr+'</div>'
     +'</div>'
     +'<div class="cell">'
@@ -432,14 +425,14 @@ function buildRow(g) {
     +'</div>'
     +'<div class="cell">'
       +'<div class="pred-header">F5 pick</div>'
-      +'<div class="pred-pick '+g.f5p+'">'+sn(f5PickName)+'</div>'
+      +'<div class="pred-pick '+g.f5p+'">'+sn(g.f5Pick)+'</div>'
       +'<div class="pred-totals"><span style="color:var(--green)">'+g.f5aw.toFixed(1)+'%</span><span style="color:var(--muted)">·</span><span style="color:var(--purple)">'+g.f5hw.toFixed(1)+'%</span><span style="color:var(--muted);margin-left:4px">tot</span><span class="tv">'+g.f5t+'</span></div>'
       +'<div class="win-mini"><div class="wma" style="width:'+g.f5aw+'%"></div><div class="wmh" style="width:'+g.f5hw+'%"></div></div>'
       +'<div class="win-pcts">'+g.f5c+' conf</div>'
     +'</div>'
     +'<div class="cell">'
       +'<div class="pred-header">Full game pick</div>'
-      +'<div class="pred-pick '+g.fgp+'">'+sn(fgPickName)+'</div>'
+      +'<div class="pred-pick '+g.fgp+'">'+sn(g.fgPick)+'</div>'
       +'<div class="pred-totals"><span style="color:var(--green)">'+g.fgaw.toFixed(1)+'%</span><span style="color:var(--muted)">·</span><span style="color:var(--purple)">'+g.fghw.toFixed(1)+'%</span><span style="color:var(--muted);margin-left:4px">tot</span><span class="tv">'+g.fgt+'</span></div>'
       +'<div class="win-mini"><div class="wma" style="width:'+g.fgaw+'%"></div><div class="wmh" style="width:'+g.fghw+'%"></div></div>'
       +'<div class="win-pcts">'+g.fgc+' conf</div>'
@@ -489,24 +482,22 @@ function buildRow(g) {
       +'</div>'
     +'</div>'
     +'<span class="chevron">▼</span>';
-
-  row.addEventListener('click', () => {
-    const panel = row.querySelector('.expand-panel');
-    const open = row.classList.toggle('expanded');
-    panel.style.display = open ? 'grid' : 'none';
+  row.addEventListener('click',()=>{
+    const panel=row.querySelector('.expand-panel');
+    const open=row.classList.toggle('expanded');
+    panel.style.display=open?'grid':'none';
   });
   return row;
 }
 
-// ── Render ─────────────────────────────────────────────────────────────────
-function updateSummary(games) {
-  if (!games.length) { document.getElementById('summary-bar').innerHTML=''; return; }
+function updateSummary(games){
+  if(!games.length){document.getElementById('summary-bar').innerHTML='';return;}
   const elite=games.filter(g=>g.rating==='Elite').length;
   const strong=games.filter(g=>g.rating==='Strong').length;
   const hc=games.filter(g=>g.fgc==='High').length;
   const avg=(games.reduce((s,g)=>s+g.fgt,0)/games.length).toFixed(1);
   const ts=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
-  document.getElementById('summary-bar').innerHTML =
+  document.getElementById('summary-bar').innerHTML=
     '<div class="sum-item"><div class="sdot" style="background:var(--green)"></div><span class="sum-label">Elite</span><span class="sum-val">'+elite+'</span></div>'
     +'<div class="sum-item"><div class="sdot" style="background:var(--blue)"></div><span class="sum-label">Strong</span><span class="sum-val">'+strong+'</span></div>'
     +'<div class="sum-item"><div class="sdot" style="background:var(--amber)"></div><span class="sum-label">High conf FG</span><span class="sum-val">'+hc+'</span></div>'
@@ -514,23 +505,23 @@ function updateSummary(games) {
     +'<div class="sum-meta">Live · Google Sheets · '+ts+' · Click any row to expand</div>';
 }
 
-function render() {
-  let games = [...(GAMES[currentDay]||[])];
-  if (currentFilter!=='all') games = games.filter(g=>g.rating===currentFilter);
-  if (currentSort==='rating') games.sort((a,b)=>RO[a.rating]-RO[b.rating]);
-  else if (currentSort==='total') games.sort((a,b)=>b.fgt-a.fgt);
+function render(){
+  let games=[...(allGames[currentDay]||[])];
+  if(currentFilter!=='all')games=games.filter(g=>g.rating===currentFilter);
+  if(currentSort==='rating')games.sort((a,b)=>RO[a.rating]-RO[b.rating]);
+  else if(currentSort==='total')games.sort((a,b)=>b.fgt-a.fgt);
   else games.sort((a,b)=>timeMin(a.time)-timeMin(b.time));
-  const list = document.getElementById('game-list');
-  list.innerHTML = '';
-  document.getElementById('count-label').textContent = games.length+' game'+(games.length!==1?'s':'');
-  if (!games.length) { list.innerHTML='<div class="no-games">NO GAMES FOUND</div>'; updateSummary([]); return; }
-  games.forEach(g => list.appendChild(buildRow(g)));
+  const list=document.getElementById('game-list');
+  list.innerHTML='';
+  document.getElementById('count-label').textContent=games.length+' game'+(games.length!==1?'s':'');
+  if(!games.length){list.innerHTML='<div class="no-games">NO GAMES FOUND</div>';updateSummary([]);return;}
+  games.forEach(g=>list.appendChild(buildRow(g)));
   updateSummary(games);
 }
 
-function switchDay(d, btn) { currentDay=d; document.querySelectorAll('.day-tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); render(); }
-function setFilter(f, btn) { currentFilter=f; document.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); render(); }
-function setSort(v) { currentSort=v; render(); }
+function switchDay(d,btn){currentDay=d;document.querySelectorAll('.day-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render();}
+function setFilter(f,btn){currentFilter=f;document.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render();}
+function setSort(v){currentSort=v;render();}
 
 loadData();
 </script>
