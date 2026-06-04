@@ -297,10 +297,12 @@ function parsePreds(rows){
     if(c0up.includes('TOMORROW')&&!c0.includes('@')){section='tomorrow';continue;}
     // Game row: must have @ in col0 and time in col1
     if(!c0.includes('@'))continue;
-    if(!(r[1]||'').match(/\d+:\d+/))continue;
-    const parts=c0.split('@');
-    if(parts.length<2)continue;
-    const away=parts[0].trim(),home=parts[1].trim();
+    const t=(r[1]||'').trim();
+    if(!t.match(/\d+:\d+/))continue;
+    // Handle 'Team  @  Team' with spaces around @
+    const atIdx=c0.indexOf('@');
+    const away=c0.substring(0,atIdx).trim();
+    const home=c0.substring(atIdx+1).trim();
     if(!away||!home)continue;
     const awaySP=cleanSP(r[2]),homeSP=cleanSP(r[3]);
     const f5PickRaw=(r[8]||'').trim();
@@ -309,7 +311,7 @@ function parsePreds(rows){
     const fgaw=pct(r[12]),fghw=pct(r[13]);
     const g={
       away,home,
-      time:(r[1]||'').trim(),
+      time:t,
       awaySP:awaySP.name, awayERA:awaySP.era, awayWHIP:null,
       homeSP:homeSP.name, homeERA:homeSP.era, homeWHIP:null,
       park:num(r[4]),
@@ -370,7 +372,7 @@ async function loadData(){
     if(dm)document.getElementById('sheet-date').textContent=dm[0].trim().substring(0,55);
 
     // DEBUG - show raw rows on page
-    document.getElementById('sheet-date').innerHTML = 'rows:'+predRows.length+' | r4:'+JSON.stringify((predRows[4]||[]).slice(0,2))+' | r5:'+JSON.stringify((predRows[5]||[]).slice(0,2));
+    document.getElementById('sheet-date').innerHTML = predRows.length+' rows · today:'+allGames.today.length+' tmrw:'+allGames.tomorrow.length;
 
     allGames=parsePreds(predRows);
     const whipMap=parseSchedWHIP(schedRows);
