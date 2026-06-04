@@ -378,11 +378,9 @@ async function loadData() {
     btn.disabled=false; btn.textContent='↻ REFRESH';
     return;
   }
-  // Show debug info on page
   const dbg = document.getElementById('debug-out');
-  if (dbg) dbg.innerHTML =
-    'Today: '+GAMES.today.length+' games | Tomorrow: '+GAMES.tomorrow.length+' games<br>'
-    +'First today row: '+(GAMES.today[0]?JSON.stringify({away:GAMES.today[0].away,home:GAMES.today[0].home,rating:GAMES.today[0].rating,f5t:GAMES.today[0].f5t,fgt:GAMES.today[0].fgt}):'none');
+  const sample = predRows.slice(0,8).map((r,i)=>`[${i}] c0=${JSON.stringify((r[0]||'').substring(0,40))} c1=${JSON.stringify(r[1]||'')} hasAt=${(r[0]||'').includes('@')}`).join('<br>');
+  if (dbg) dbg.innerHTML = 'predRows:'+predRows.length+' | Today:'+GAMES.today.length+' | Tomorrow:'+GAMES.tomorrow.length+'<br>'+sample;
 
   btn.disabled=false; btn.textContent='↻ REFRESH';
   render();
