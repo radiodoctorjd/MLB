@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>CSV Debug</title>
+<style>body{background:#0a0c0f;color:#e8eaed;font-family:monospace;font-size:11px;padding:20px}
+.row{border-bottom:1px solid #222;padding:3px 0;white-space:pre-wrap;word-break:break-all}
+.has-at{color:#00e676}.has-colon{color:#ffb300}.has-wx{color:#4fc3f7}.head{color:#9c6fff;font-weight:bold}
+input{background:#111;color:#fff;border:1px solid #444;padding:4px 8px;margin:4px;width:600px;font-size:11px}
+button{background:#222;color:#fff;border:1px solid #444;padding:4px 12px;cursor:pointer;margin:4px}
+</style></head>
+<body>
+<h2 style="color:#00e676">CSV Row Diagnostic</h2>
+<div>
+  <input id="url1" value="https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=596859801&single=true&output=csv" placeholder="Predictions URL"/>
+  <button onclick="load('url1','out1')">Load Predictions Tab</button>
+</div>
+<div>
+  <input id="url2" value="https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=141272668&single=true&output=csv" placeholder="Stats URL"/>
+  <button onclick="load('url2','out2')">Load Stats Tab (gid=141272668)</button>
+</div>
+<div id="out1"></div>
+<div id="out2"></div>
+<script>
+function parseCSV(text){
+  const rows=[];let row=[],f='',q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i],n=text[i+1];
+    if(q){if(c==='"'&&n==='"'){f+='"';i++;}else if(c==='"'){q=false;}else{f+=c;}}
+    else{if(c==='"'){q=true;}else if(c===','){row.push(f.trim());f='';}
+    else if(c==='\r'&&n==='\n'){row.push(f.trim());rows.push(row);row=[];f='';i++;}
+    else if(c==='\r'||c==='\n'){row.push(f.trim());rows.push(row);row=[];f='';}
+    else{f+=c;}}
+  }
+  if(f||row.length){row.push(f.trim());rows.push(row);}
+  return rows;
+}
+async function load(inputId, outId){
+  const url=document.getElementById(inputId).value;
+  const out=document.getElementById(outId);
+  out.innerHTML='Loading...';
+  try{
+    const r=await fetch(url);
+    if(!r.ok){out.innerHTML='HTTP ERROR: '+r.status;return;}
+    const t=await r.text();
+    const rows=parseCSV(t);
+    let html='<div class="head">TOTAL ROWS: '+rows.length+' | URL: '+url.substring(0,80)+'</div>';
+    html+='<div class="head">ROW# | col0 (60ch) | col1 | col6 | col7 | col8 | col9 (60ch) | col10 | col12 | col13</div>';
+    rows.forEach((r,i)=>{
+      const c0=(r[0]||'').substring(0,60);
+      const c1=(r[1]||'').substring(0,15);
+      const c6=(r[6]||'').substring(0,20);
+      const c7=(r[7]||'').substring(0,20);
+      const c8=(r[8]||'').substring(0,20);
+      const c9=(r[9]||'').substring(0,60);
+      const c10=(r[10]||'').substring(0,10);
+      const c12=(r[12]||'').substring(0,20);
+      const c13=(r[13]||'').substring(0,20);
+      if(!c0&&!c1&&!c6&&!c9)return;
+      let cls='row';
+      if(c0.includes('@')&&c6.includes(':'))cls+=' has-colon';
+      else if(c0.includes('@'))cls+=' has-at';
+      if(c9.includes('@')&&c9.includes('('))cls+=' has-wx';
+      html+=`<div class="${cls}">R${String(i).padStart(3)}: [${c0}] | [${c1}] | c6:[${c6}] | c7:[${c7}] | c8:[${c8}] | c9:[${c9}] | c10:[${c10}] | c12:[${c12}] | c13:[${c13}]</div>`;
+    });
+    out.innerHTML=html;
+  }catch(e){out.innerHTML='ERROR: '+e.message;}
+}
+</script>
+</body></html>
