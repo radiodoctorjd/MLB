@@ -421,8 +421,9 @@ async function loadData(){
   document.getElementById('card-grid').innerHTML=Array(6).fill('<div class="skeleton"></div>').join('');
   document.getElementById('summary-bar').innerHTML='<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:var(--amber)">⟳ Fetching live data from Google Sheets...</span>';
   try{
+    const cb='&_cb='+Date.now();
     const [pr,sr,tr,wr,ar]=await Promise.all([
-      fetch(PREDS_URL),fetch(SCHED_URL),fetch(TOTALS_URL),fetch(WEATHER_URL),fetch(STATS_URL)
+      fetch(PREDS_URL+cb),fetch(SCHED_URL+cb),fetch(TOTALS_URL+cb),fetch(WEATHER_URL+cb),fetch(STATS_URL+cb)
     ]);
     if(!pr.ok)throw new Error('Predictions HTTP '+pr.status);
     if(!sr.ok)throw new Error('Schedule HTTP '+sr.status);
@@ -541,11 +542,13 @@ function buildCard(g){
       +'</div>';
   }
 
-  function spBlock(spName,spData){
+  function spBlock(spName,spData,era,whip){
     if(!spData.era3){
       return'<div class="exp-team-block">'
         +'<div class="exp-team-name">'+spName+'</div>'
-        +'<div style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:var(--muted);padding:4px 0">No recent start data</div>'
+        +(era?'<div class="exp-stat-row"><span class="exp-stat-label">Season ERA</span><span class="exp-stat-val">'+era+'</span></div>':'')
+        +(whip?'<div class="exp-stat-row"><span class="exp-stat-label">Season WHIP</span><span class="exp-stat-val">'+whip+'</span></div>':'')
+        +'<div style="font-family:\'IBM Plex Mono\',monospace;font-size:9px;color:var(--muted);margin-top:4px">No L3 start data in model</div>'
         +'</div>';
     }
     return'<div class="exp-team-block">'
@@ -557,6 +560,7 @@ function buildCard(g){
       +'<div class="exp-stat-row"><span class="exp-stat-label">Last 3 WHIP</span><span class="exp-stat-val">'+parseFloat(spData.whip3).toFixed(2)+'</span></div>'
       +'<div class="exp-stat-row"><span class="exp-stat-label">Last 3 IP</span><span class="exp-stat-val">'+spData.ip3+'</span></div>'
       +'<div class="exp-stat-row"><span class="exp-stat-label">Last 3 K</span><span class="exp-stat-val">'+spData.k3+'</span></div>'
+      +(era?'<div class="exp-stat-row" style="margin-top:4px;border-top:1px solid var(--border);padding-top:4px"><span class="exp-stat-label">Season ERA/WHIP</span><span class="exp-stat-val">'+era+' / '+whip+'</span></div>':'')
       +'</div>';
   }
 
@@ -576,8 +580,8 @@ function buildCard(g){
     +'<div class="exp-section">'
       +'<div class="exp-section-title">⚾ Starting Pitcher — Last 3 Starts</div>'
       +'<div class="exp-grid">'
-        +spBlock(g.awaySP,awaySPData)
-        +spBlock(g.homeSP,homeSPData)
+        +spBlock(g.awaySP,awaySPData,g.awayERA,g.awayWHIP)
+        +spBlock(g.homeSP,homeSPData,g.homeERA,g.homeWHIP)
       +'</div>'
     +'</div>'
 
