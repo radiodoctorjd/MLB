@@ -144,18 +144,30 @@ body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-ser
   <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
 </div>
 <script>
-// Confirmed GIDs from browser debug + Drive read:
-// gid=596859801 = Predictions tab (37 rows):
-//   Schedule rows:    col0=/^\d+:\d+/, col1="Today"/"Tmrw" → WHIP in col8, col11; venue col5
-//   Prediction rows:  col0 has "@", col1=/\d+:\d+/, col2 has "(" → picks/ratings
-//   Section labels:   col0 has "TODAY"/"TOMORROW", no "@", col1=""
+// Sheet structure (confirmed via Google Drive read, June 2026):
+// Single published tab (gid=596859801) contains ALL data sections:
 //
-// gid=141272668 = Stats tab (181 rows):
-//   Totals rows:  col0 has "@", col1=/\d+:\d+/, col6 has ":" (e.g."SD: 1.2")
-//   Weather rows: col9 has "@" AND "(", col10=temp number
+// SECTION A – Schedule rows: col0=time "1:05 PM", col1="Today"/"Tmrw", col2=Away, col3="vs", col4=Home,
+//   col5=Venue, col6=Away SP, col7=Away ERA, col8=Away WHIP, col9=Home SP, col10=Home ERA, col11=Home WHIP
+//
+// SECTION B – Predictions rows (Win%/Pick/Conf/Total):
+//   col0="Away  @  Home" (double-space around @), col1=time,
+//   col2=Away SP(ERA), col3=Home SP(ERA), col4=Park, col5=WxAdj,
+//   col6=Away F5 Win%, col7=Home F5 Win%, col8=F5 Pick, col9=F5 Conf, col10=F5 Total,
+//   col12=Away FG Win%, col13=Home FG Win%, col14=FG Pick, col15=FG Conf, col16=FG Total,
+//   col18=Rating
+//
+// SECTION C – Run totals rows (two sub-tables: Tomorrow then Today):
+//   col0="Away @ Home" (single-space), col6="AWY: N.NN", col7="HME: N.NN",
+//   col8=F5 Total, col12="AWY: N.NN", col13="HME: N.NN", col14=FG Total
+//   Identified by: col0 has "@", col6 has ":", /\d+\.\d+/ in col6
+//
+// SECTION D – Weather rows (inside Park Factors table):
+//   col9="Away @ Home  (time ET)", col10=temp (number), col11=humidity,
+//   col12=wind mph, col13=wind dir, col14=rain%, col15=cloud%, col16=conditions, col17=impact, col18=runAdj%
+//   Identified by: col9 has "@" AND "(", col10 is numeric
 
-const PREDS_URL  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=596859801&single=true&output=csv';
-const TOTALS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=141272668&single=true&output=csv';
+const PREDS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=596859801&single=true&output=csv';
 
 const LOGOS={'Arizona Diamondbacks':'https://a.espncdn.com/i/teamlogos/mlb/500/ari.png','Atlanta Braves':'https://a.espncdn.com/i/teamlogos/mlb/500/atl.png','Baltimore Orioles':'https://a.espncdn.com/i/teamlogos/mlb/500/bal.png','Boston Red Sox':'https://a.espncdn.com/i/teamlogos/mlb/500/bos.png','Chicago Cubs':'https://a.espncdn.com/i/teamlogos/mlb/500/chc.png','Chicago White Sox':'https://a.espncdn.com/i/teamlogos/mlb/500/cws.png','Cincinnati Reds':'https://a.espncdn.com/i/teamlogos/mlb/500/cin.png','Cleveland Guardians':'https://a.espncdn.com/i/teamlogos/mlb/500/cle.png','Colorado Rockies':'https://a.espncdn.com/i/teamlogos/mlb/500/col.png','Detroit Tigers':'https://a.espncdn.com/i/teamlogos/mlb/500/det.png','Houston Astros':'https://a.espncdn.com/i/teamlogos/mlb/500/hou.png','Kansas City Royals':'https://a.espncdn.com/i/teamlogos/mlb/500/kc.png','Los Angeles Angels':'https://a.espncdn.com/i/teamlogos/mlb/500/laa.png','Los Angeles Dodgers':'https://a.espncdn.com/i/teamlogos/mlb/500/lad.png','Miami Marlins':'https://a.espncdn.com/i/teamlogos/mlb/500/mia.png','Milwaukee Brewers':'https://a.espncdn.com/i/teamlogos/mlb/500/mil.png','Minnesota Twins':'https://a.espncdn.com/i/teamlogos/mlb/500/min.png','New York Mets':'https://a.espncdn.com/i/teamlogos/mlb/500/nym.png','New York Yankees':'https://a.espncdn.com/i/teamlogos/mlb/500/nyy.png','Athletics':'https://a.espncdn.com/i/teamlogos/mlb/500/oak.png','Philadelphia Phillies':'https://a.espncdn.com/i/teamlogos/mlb/500/phi.png','Pittsburgh Pirates':'https://a.espncdn.com/i/teamlogos/mlb/500/pit.png','San Diego Padres':'https://a.espncdn.com/i/teamlogos/mlb/500/sd.png','San Francisco Giants':'https://a.espncdn.com/i/teamlogos/mlb/500/sf.png','Seattle Mariners':'https://a.espncdn.com/i/teamlogos/mlb/500/sea.png','St. Louis Cardinals':'https://a.espncdn.com/i/teamlogos/mlb/500/stl.png','Tampa Bay Rays':'https://a.espncdn.com/i/teamlogos/mlb/500/tb.png','Texas Rangers':'https://a.espncdn.com/i/teamlogos/mlb/500/tex.png','Toronto Blue Jays':'https://a.espncdn.com/i/teamlogos/mlb/500/tor.png','Washington Nationals':'https://a.espncdn.com/i/teamlogos/mlb/500/wsh.png'};
 const ABBR={'Arizona Diamondbacks':'ARI','Atlanta Braves':'ATL','Baltimore Orioles':'BAL','Boston Red Sox':'BOS','Chicago Cubs':'CHC','Chicago White Sox':'CWS','Cincinnati Reds':'CIN','Cleveland Guardians':'CLE','Colorado Rockies':'COL','Detroit Tigers':'DET','Houston Astros':'HOU','Kansas City Royals':'KC','Los Angeles Angels':'LAA','Los Angeles Dodgers':'LAD','Miami Marlins':'MIA','Milwaukee Brewers':'MIL','Minnesota Twins':'MIN','New York Mets':'NYM','New York Yankees':'NYY','Athletics':'ATH','Philadelphia Phillies':'PHI','Pittsburgh Pirates':'PIT','San Diego Padres':'SD','San Francisco Giants':'SF','Seattle Mariners':'SEA','St. Louis Cardinals':'STL','Tampa Bay Rays':'TB','Texas Rangers':'TEX','Toronto Blue Jays':'TOR','Washington Nationals':'WSH'};
@@ -194,42 +206,45 @@ function num1(s){const m=(s||'').match(/[\d.]+/);return m?m[0]:null;}
 function norm(s){return (s||'').replace(/\s+/g,' ').trim();}
 function key(a,h){return norm(a)+'|'+norm(h);}
 
-function parsePreds(rows){
-  // Pass 1: collect whip map from schedule rows and weather-free section labels
+function parseAll(rows){
+  // ── Pass 1: Schedule rows → WHIP + venue map
+  // Col0=time "1:05 PM", col1="Today"/"Tmrw", col2=Away, col3="vs", col4=Home,
+  // col5=Venue, col6=Away SP, col7=Away ERA, col8=Away WHIP, col9=Home SP, col10=Home ERA, col11=Home WHIP
   const whipMap={};
   for(const r of rows){
     const c0=(r[0]||'').trim(), c1=(r[1]||'').trim();
-    // Schedule row: col0=time like "1:05 PM", col1="Today"/"Tmrw"
     if(/^\d+:\d+/.test(c0) && /today|tmrw|tomorrow/i.test(c1) && r.length>=12){
       const away=(r[2]||'').trim(), home=(r[4]||'').trim();
       if(away&&home){
         whipMap[key(away,home)]={
-          awayWHIP: dash(r[8])?null:r[8].trim(),
-          homeWHIP: dash(r[11])?null:r[11].trim(),
-          venue: (r[5]||'').trim(),
+          awayWHIP:dash(r[8])?null:r[8].trim(),
+          homeWHIP:dash(r[11])?null:r[11].trim(),
+          venue:(r[5]||'').trim(),
         };
       }
     }
   }
 
-  // Pass 2: build games from prediction rows, track section
+  // ── Pass 2: Prediction rows → game objects
+  // Col0="Away  @  Home" (double-space @), col1=time, col2=Away SP(ERA), col3=Home SP(ERA),
+  // col4=Park, col5=WxAdj, col6=Away F5 Win%, col7=Home F5 Win%, col8=F5 Pick,
+  // col9=F5 Conf, col10=F5 Total, col12=Away FG Win%, col13=Home FG Win%, col14=FG Pick,
+  // col15=FG Conf, col16=FG Total, col18=Rating
   GAMES={today:[],tomorrow:[]};
   let section='today';
-  // DEBUG
-  console.log('whipMap keys:', Object.keys(whipMap));
   for(const r of rows){
     const c0=(r[0]||'').trim(), c1=(r[1]||'').trim();
-    // Section label: col0 has TODAY/TOMORROW text, no @, col1 is empty
-    if(!c0.includes('@') && c1==='' ){
+    // Section header detection (TODAY / TOMORROW label rows)
+    if(c1===''&&!c0.includes('@')){
       const up=c0.replace(/[^A-Za-z]/g,'').toUpperCase();
       if(up.includes('TOMORROW'))section='tomorrow';
       else if(up.includes('TODAY'))section='today';
       continue;
     }
     // Prediction row: col0 has "@", col1 is a time, col2 has "(" for SP(ERA)
-    if(c0.includes('@') && /\d+:\d+/.test(c1) && (r[2]||'').includes('(')){
+    if(c0.includes('@')&&/\d+:\d+/.test(c1)&&(r[2]||'').includes('(')){
       const at=c0.indexOf('@');
-      const away=c0.substring(0,at).trim(), home=c0.substring(at+1).trim();
+      const away=norm(c0.substring(0,at)), home=norm(c0.substring(at+1));
       if(!away||!home)continue;
       const asp=sp(r[2]), hsp=sp(r[3]);
       const f5Pick=(r[8]||'').trim(), fgPick=(r[14]||'').trim();
@@ -253,24 +268,18 @@ function parsePreds(rows){
       });
     }
   }
-}
 
-function parseStats(rows){
-  // Totals rows: col0 has "@", col1 is time, col6 has ":" (e.g. "SD: 1.2")
-  // Weather rows: col9 has "@" AND "(", col10 is a number
-  const totMap={}, wxMap={};
-
+  // ── Pass 3: Run-totals rows  (two sub-tables in the sheet: Tomorrow block then Today block)
+  // Col0="Away @ Home" (single space), col6="AWY: N.NN", col7="HME: N.NN" (F5),
+  // col12="AWY: N.NN", col13="HME: N.NN" (FG)
+  // Identified by: col0 has "@", col6 contains ":" and a number
+  const totMap={};
   for(const r of rows){
     const c0=(r[0]||'').trim();
-    const c1=(r[1]||'').trim();
     const c6=(r[6]||'').trim();
-    const c9=(r[9]||'').trim();
-    const c10=(r[10]||'').trim();
-
-    // Totals row: col0="Away @ Home", col1=time, col6="AWY: 1.2" (has colon)
-    if(c0.includes('@') && /\d+:\d+/.test(c1) && c6.includes(':')){
+    if(c0.includes('@')&&c6.includes(':')&&/\d+\.\d+/.test(c6)){
       const at=c0.indexOf('@');
-      const away=c0.substring(0,at).trim(), home=c0.substring(at+1).trim();
+      const away=norm(c0.substring(0,at)), home=norm(c0.substring(at+1));
       if(away&&home){
         totMap[key(away,home)]={
           f5AwayRuns:num1(r[6]),
@@ -280,18 +289,27 @@ function parseStats(rows){
         };
       }
     }
+  }
 
-    // Weather row: col9="Away @ Home  (time ET)", col10=temp number
-    if(c9.includes('@') && c9.includes('(') && c10!=='' && !dash(c10) && parseFloat(c10)>0){
+  // ── Pass 4: Weather rows (inside Park Factors / Weather section)
+  // Col9="Away @ Home  (time ET)", col10=temp, col12=wind mph, col13=wind dir,
+  // col14=rain%, col15=cloud%, col16=conditions, col17=impact, col18=runAdj
+  // Identified by: col9 has "@" AND "(", col10 is numeric and > 0
+  const wxMap={};
+  for(const r of rows){
+    const c9=(r[9]||'').trim();
+    const c10=(r[10]||'').trim();
+    if(c9.includes('@')&&c9.includes('(')&&c10!==''&&!dash(c10)&&parseFloat(c10)>0){
       const at=c9.indexOf('@');
-      const away=c9.substring(0,at).trim();
-      const rest=c9.substring(at+1).replace(/\s*\(.*\).*$/,'').trim();
+      const away=norm(c9.substring(0,at));
+      // strip everything from " (" onward to get home team
+      const rest=norm(c9.substring(at+1).replace(/\s*\(.*$/,''));
       if(away&&rest){
-        const cond=(r[16]||'').replace(/[^\x20-\x7E\u2600-\u27BF]/g,'').trim();
-        const impact=(r[17]||'').replace(/[^\x20-\x7E]/g,'').trim();
+        const cond=(r[16]||'').replace(/[^\x20-\x7E\u2600-\u27BF\u{1F300}-\u{1F9FF}]/gu,'').trim();
+        const impact=(r[17]||'').replace(/[^\x20-\x7E\u2600-\u27BF\u{1F300}-\u{1F9FF}]/gu,'').trim();
         wxMap[key(away,rest)]={
           conditions:cond,
-          temp:dash(r[10])?'':r[10].trim(),
+          temp:dash(c10)?'':c10,
           windMph:dash(r[12])?'':r[12].trim(),
           windDir:dash(r[13])?'':r[13].trim(),
           rain:dash(r[14])?'':r[14].trim(),
@@ -302,20 +320,25 @@ function parseStats(rows){
     }
   }
 
-  // Inject into games
-  // DEBUG
-  console.log('totMap keys:', Object.keys(totMap).slice(0,3));
-  console.log('wxMap keys:', Object.keys(wxMap).slice(0,3));
-  console.log('game keys:', GAMES.today.slice(0,3).map(g=>key(g.away,g.home)));
+  // ── Inject totals + weather into game objects
+  console.log('totMap keys (first 3):', Object.keys(totMap).slice(0,3));
+  console.log('wxMap keys (first 3):', Object.keys(wxMap).slice(0,3));
+  console.log('game keys today:', GAMES.today.slice(0,3).map(g=>key(g.away,g.home)));
+  let totCount=0, wxCount=0;
   for(const sec of['today','tomorrow']){
     for(const g of GAMES[sec]){
       const k=key(g.away,g.home);
       const t=totMap[k];
-      if(t){g.f5AwayRuns=t.f5AwayRuns;g.f5HomeRuns=t.f5HomeRuns;g.fgAwayRuns=t.fgAwayRuns;g.fgHomeRuns=t.fgHomeRuns;}
+      if(t){
+        g.f5AwayRuns=t.f5AwayRuns;g.f5HomeRuns=t.f5HomeRuns;
+        g.fgAwayRuns=t.fgAwayRuns;g.fgHomeRuns=t.fgHomeRuns;
+        totCount++;
+      }
       const wx=wxMap[k];
-      if(wx)g.wx=wx;
+      if(wx){g.wx=wx;wxCount++;}
     }
   }
+  console.log('Totals matched:'+totCount+' Weather matched:'+wxCount+' Today:'+GAMES.today.length+' Tmrw:'+GAMES.tomorrow.length);
 }
 
 async function loadData(){
@@ -324,24 +347,14 @@ async function loadData(){
   document.getElementById('card-grid').innerHTML=Array(6).fill('<div class="skeleton"></div>').join('');
   document.getElementById('summary-bar').innerHTML='<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:var(--amber)">⟳ Fetching live data from Google Sheets...</span>';
   try{
-    const [pr,sr]=await Promise.all([fetch(PREDS_URL),fetch(TOTALS_URL)]);
+    const pr=await fetch(PREDS_URL);
     if(!pr.ok)throw new Error('Predictions HTTP '+pr.status);
-    if(!sr.ok)throw new Error('Stats HTTP '+sr.status);
-    const [pt,st]=await Promise.all([pr.text(),sr.text()]);
-    const predRows=parseCSV(pt), statRows=parseCSV(st);
+    const pt=await pr.text();
+    const predRows=parseCSV(pt);
     const hdr=((predRows[0]||[])[0]||'').replace(/[^\x20-\x7E]/g,'').trim();
     const dm=hdr.match(/(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday).{0,35}\d{4}/i);
     if(dm)document.getElementById('sheet-date').textContent=dm[0].trim().substring(0,55);
-    parsePreds(predRows);
-    parseStats(statRows);
-    // Debug: count how many games got WHIP/totals/weather
-    let whipCount=0,totCount=0,wxCount=0;
-    for(const g of [...GAMES.today,...GAMES.tomorrow]){
-      if(g.awayWHIP)whipCount++;
-      if(g.f5AwayRuns)totCount++;
-      if(g.wx)wxCount++;
-    }
-    console.log('WHIP:'+whipCount+' Totals:'+totCount+' Weather:'+wxCount+' Today:'+GAMES.today.length+' Tmrw:'+GAMES.tomorrow.length);
+    parseAll(predRows);
     document.getElementById('tab-today').textContent='Today'+(GAMES.today.length?' ('+GAMES.today.length+')':'');
     document.getElementById('tab-tomorrow').textContent='Tomorrow'+(GAMES.tomorrow.length?' ('+GAMES.tomorrow.length+')':'');
   }catch(e){
