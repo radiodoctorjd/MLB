@@ -556,9 +556,9 @@ function buildCard(g){
         +'</div>'
         +'<div class="exp-h2h">'
           +'<div class="exp-h2h-title">FATIGUE</div>'
-          +'<div class="exp-fatigue-row">'
-            +fatigue(awayFatigue)
-            +fatigue(homeFatigue)
+          +'<div style="display:flex;flex-direction:column;gap:5px;margin-top:4px">'
+            +'<div style="display:flex;align-items:center;gap:6px"><span style="font-family:\'IBM Plex Mono\',monospace;font-size:9px;color:var(--muted);min-width:28px">AWY</span><span style="font-family:\'IBM Plex Mono\',monospace;font-size:9px;color:var(--muted2);margin-right:4px">'+aw+'</span>'+fatigue(awayFatigue)+'</div>'
+            +'<div style="display:flex;align-items:center;gap:6px"><span style="font-family:\'IBM Plex Mono\',monospace;font-size:9px;color:var(--muted);min-width:28px">HME</span><span style="font-family:\'IBM Plex Mono\',monospace;font-size:9px;color:var(--muted2);margin-right:4px">'+hm+'</span>'+fatigue(homeFatigue)+'</div>'
           +'</div>'
         +'</div>'
       +'</div>'
