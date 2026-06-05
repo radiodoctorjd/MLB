@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>GID Test</title>
+<style>body{background:#0a0c0f;color:#e8eaed;font-family:monospace;font-size:11px;padding:20px}
+.ok{color:#00e676}.err{color:#ff4c4c}.row{padding:2px 0;border-bottom:1px solid #1a1a1a}</style></head>
+<body>
+<h2 style="color:#00e676">Testing Sheet GIDs</h2>
+<div id="out">Testing...</div>
+<script>
+const BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?single=true&output=csv&gid=';
+
+// Internal sheetIds from xlsx workbook.xml:
+// 4=Park&Weather, 5=Schedule, 6=Game Predictions, 7=Team Totals
+// Also test the already-known working ones: 0 (default/schedule?), 596859801 (predictions), 141272668 (advanced stats)
+const GIDS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 596859801, 141272668];
+
+async function run(){
+  const out = document.getElementById('out');
+  let html = '';
+  for(const gid of GIDS){
+    try{
+      const r = await fetch(BASE + gid);
+      if(!r.ok){html+=`<div class="row err">GID ${gid} → HTTP ${r.status}</div>`;out.innerHTML=html;continue;}
+      const t = await r.text();
+      const lines = t.split('\n').slice(0,3).map(l=>l.substring(0,80));
+      html+=`<div class="row ok">GID ${gid} → OK (${t.split('\n').length} lines) | Row1: ${lines[0]}</div>`;
+    }catch(e){
+      html+=`<div class="row err">GID ${gid} → ERROR: ${e.message}</div>`;
+    }
+    out.innerHTML=html;
+    await new Promise(r=>setTimeout(r,300));
+  }
+  out.innerHTML=html+'<div style="color:#ffb300">Done.</div>';
+}
+run();
+</script>
+</body></html>
