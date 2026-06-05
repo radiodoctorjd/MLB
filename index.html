@@ -107,6 +107,39 @@ body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-ser
 .skeleton{height:380px;background:linear-gradient(90deg,var(--surface) 0%,var(--surface2) 50%,var(--surface) 100%);background-size:200% 100%;animation:shimmer 1.4s ease infinite;border-radius:10px;border:1px solid var(--border)}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .no-games{text-align:center;padding:70px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:.08em;grid-column:1/-1}
+/* Expand panel */
+.game-card{cursor:pointer}
+.expand-btn{display:flex;align-items:center;justify-content:center;gap:5px;padding:8px 16px;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;color:var(--muted);border-top:1px solid var(--border);background:none;width:100%;cursor:pointer;transition:color .15s,background .15s}
+.expand-btn:hover{color:var(--text);background:var(--surface2)}
+.expand-btn .chevron{transition:transform .2s;display:inline-block}
+.expand-btn.open .chevron{transform:rotate(180deg)}
+.expand-panel{display:none;padding:0 16px 14px;border-top:1px solid var(--border);background:var(--surface2)}
+.expand-panel.open{display:block}
+.exp-section{margin-top:12px}
+.exp-section-title{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.exp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.exp-team-block{background:var(--surface3);border-radius:6px;padding:9px 11px}
+.exp-team-name{font-family:'Oswald',sans-serif;font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px}
+.exp-stat-row{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:10px;margin-bottom:3px}
+.exp-stat-label{color:var(--muted)}
+.exp-stat-val{color:var(--text);font-weight:500}
+.exp-stat-val.hot{color:var(--green)}
+.exp-stat-val.cold{color:var(--red)}
+.exp-stat-val.neutral{color:var(--amber)}
+.exp-h2h{background:var(--surface3);border-radius:6px;padding:9px 11px;font-family:'IBM Plex Mono',monospace;font-size:10px}
+.exp-h2h-title{color:var(--muted);margin-bottom:4px;font-size:9px;letter-spacing:.06em}
+.exp-h2h-rec{color:var(--text);font-size:12px;font-weight:500;margin-bottom:2px}
+.exp-h2h-detail{color:var(--muted2);font-size:9px}
+.exp-fatigue-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.exp-fatigue-chip{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:3px 8px;border-radius:3px;background:var(--surface3);color:var(--muted2)}
+.exp-fatigue-chip.bad{background:rgba(255,76,76,0.12);color:var(--red)}
+.exp-fatigue-chip.ok{background:var(--green-bg);color:var(--green)}
+.exp-sp-row{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:10px;margin-bottom:3px}
+.exp-sp-label{color:var(--muted);min-width:32px}
+.exp-sp-trend{font-size:9px;padding:1px 6px;border-radius:3px}
+.improving{background:var(--green-bg);color:var(--green)}
+.declining{background:var(--red-bg);color:var(--red)}
+.consistent{background:var(--surface3);color:var(--muted2)}
 </style>
 </head>
 <body>
@@ -169,12 +202,14 @@ const PREDS_URL  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1N
 const SCHED_URL  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=750739564&single=true&output=csv';
 const TOTALS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=1142815985&single=true&output=csv';
 const WEATHER_URL= 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=1276454419&single=true&output=csv';
+const STATS_URL  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=141272668&single=true&output=csv';
 
 const LOGOS={'Arizona Diamondbacks':'https://a.espncdn.com/i/teamlogos/mlb/500/ari.png','Atlanta Braves':'https://a.espncdn.com/i/teamlogos/mlb/500/atl.png','Baltimore Orioles':'https://a.espncdn.com/i/teamlogos/mlb/500/bal.png','Boston Red Sox':'https://a.espncdn.com/i/teamlogos/mlb/500/bos.png','Chicago Cubs':'https://a.espncdn.com/i/teamlogos/mlb/500/chc.png','Chicago White Sox':'https://a.espncdn.com/i/teamlogos/mlb/500/cws.png','Cincinnati Reds':'https://a.espncdn.com/i/teamlogos/mlb/500/cin.png','Cleveland Guardians':'https://a.espncdn.com/i/teamlogos/mlb/500/cle.png','Colorado Rockies':'https://a.espncdn.com/i/teamlogos/mlb/500/col.png','Detroit Tigers':'https://a.espncdn.com/i/teamlogos/mlb/500/det.png','Houston Astros':'https://a.espncdn.com/i/teamlogos/mlb/500/hou.png','Kansas City Royals':'https://a.espncdn.com/i/teamlogos/mlb/500/kc.png','Los Angeles Angels':'https://a.espncdn.com/i/teamlogos/mlb/500/laa.png','Los Angeles Dodgers':'https://a.espncdn.com/i/teamlogos/mlb/500/lad.png','Miami Marlins':'https://a.espncdn.com/i/teamlogos/mlb/500/mia.png','Milwaukee Brewers':'https://a.espncdn.com/i/teamlogos/mlb/500/mil.png','Minnesota Twins':'https://a.espncdn.com/i/teamlogos/mlb/500/min.png','New York Mets':'https://a.espncdn.com/i/teamlogos/mlb/500/nym.png','New York Yankees':'https://a.espncdn.com/i/teamlogos/mlb/500/nyy.png','Athletics':'https://a.espncdn.com/i/teamlogos/mlb/500/oak.png','Philadelphia Phillies':'https://a.espncdn.com/i/teamlogos/mlb/500/phi.png','Pittsburgh Pirates':'https://a.espncdn.com/i/teamlogos/mlb/500/pit.png','San Diego Padres':'https://a.espncdn.com/i/teamlogos/mlb/500/sd.png','San Francisco Giants':'https://a.espncdn.com/i/teamlogos/mlb/500/sf.png','Seattle Mariners':'https://a.espncdn.com/i/teamlogos/mlb/500/sea.png','St. Louis Cardinals':'https://a.espncdn.com/i/teamlogos/mlb/500/stl.png','Tampa Bay Rays':'https://a.espncdn.com/i/teamlogos/mlb/500/tb.png','Texas Rangers':'https://a.espncdn.com/i/teamlogos/mlb/500/tex.png','Toronto Blue Jays':'https://a.espncdn.com/i/teamlogos/mlb/500/tor.png','Washington Nationals':'https://a.espncdn.com/i/teamlogos/mlb/500/wsh.png'};
 const ABBR={'Arizona Diamondbacks':'ARI','Atlanta Braves':'ATL','Baltimore Orioles':'BAL','Boston Red Sox':'BOS','Chicago Cubs':'CHC','Chicago White Sox':'CWS','Cincinnati Reds':'CIN','Cleveland Guardians':'CLE','Colorado Rockies':'COL','Detroit Tigers':'DET','Houston Astros':'HOU','Kansas City Royals':'KC','Los Angeles Angels':'LAA','Los Angeles Dodgers':'LAD','Miami Marlins':'MIA','Milwaukee Brewers':'MIL','Minnesota Twins':'MIN','New York Mets':'NYM','New York Yankees':'NYY','Athletics':'ATH','Philadelphia Phillies':'PHI','Pittsburgh Pirates':'PIT','San Diego Padres':'SD','San Francisco Giants':'SF','Seattle Mariners':'SEA','St. Louis Cardinals':'STL','Tampa Bay Rays':'TB','Texas Rangers':'TEX','Toronto Blue Jays':'TOR','Washington Nationals':'WSH'};
 
 const RO={Elite:0,Strong:1,Moderate:2,Lean:3};
 let GAMES={today:[],tomorrow:[]};
+let STATSDATA={formMap:{},spMap:{},h2hMap:{},fatigueMap:{}};
 let day='today',filt='all',sort='time';
 
 function parseCSV(text){
@@ -334,20 +369,67 @@ function parsePreds(rows, schedMap, totMap, wxMap){
   }
 }
 
+// ── Advanced Stats (gid=141272668): L10 form, SP last 3, H2H, travel/fatigue
+// Form rows: col0=Team, col1=W, col2=L, col3=RS/G, col4=RA/G, col5=FormScore, col6=Trend, col7=Notes(streak)
+// SP rows: col0=Pitcher, col1=Team, col2=Last3ERA, col3=Last3WHIP, col4=Last3IP, col5=Last3K, col6=Trend
+// H2H rows: col0=Matchup "Away @ Home", col7=Season Series summary
+// Fatigue rows: col0=Team, col1=Role, col3=DaysRest, col4=ConsecG, col5=SeriesGame, col7=RestEdge
+function parseStats(rows){
+  const formMap={}, spMap={}, h2hMap={}, fatigueMap={};
+  let section='';
+  for(const r of rows){
+    const c0=(r[0]||'').trim();
+    // Section detection
+    if(c0.includes('L10 RECENT FORM')||c0.includes('RECENT FORM'))  {section='form';continue;}
+    if(c0.includes('SP LAST 3')||c0.includes('LAST 3 STARTS'))      {section='sp';continue;}
+    if(c0.includes('HEAD-TO-HEAD'))                                   {section='h2h';continue;}
+    if(c0.includes('TRAVEL')||c0.includes('FATIGUE'))                {section='fatigue';continue;}
+    if(c0.includes('DIVISION')||c0.includes('STANDINGS'))            {section='';continue;}
+    // Skip header rows (first cell is "Team" or "Pitcher" or "Matchup")
+    if(['team','pitcher','matchup'].includes(c0.toLowerCase()))continue;
+    if(!c0)continue;
+
+    if(section==='form'&&r[1]!==undefined){
+      formMap[norm(c0)]={
+        w:r[1],l:r[2],rs:r[3],ra:r[4],trend:(r[6]||'').trim(),streak:(r[7]||'').trim()
+      };
+    }
+    if(section==='sp'&&r[1]!==undefined){
+      spMap[norm(c0)]={
+        era3:r[2],whip3:r[3],ip3:r[4],k3:r[5],trend:(r[6]||'').trim()
+      };
+    }
+    if(section==='h2h'&&c0.includes('@')){
+      const at=c0.indexOf('@');
+      const away=norm(c0.substring(0,at)), home=norm(c0.substring(at+1));
+      h2hMap[key(away,home)]={series:(r[7]||'').trim()};
+    }
+    if(section==='fatigue'&&r[1]!==undefined){
+      fatigueMap[norm(c0)]={
+        role:(r[1]||'').trim(),rest:(r[3]||'').trim(),
+        consec:(r[4]||'').trim(),seriesGame:(r[5]||'').trim(),
+        restEdge:(r[7]||'').trim()
+      };
+    }
+  }
+  return{formMap,spMap,h2hMap,fatigueMap};
+}
+
 async function loadData(){
   const btn=document.getElementById('refresh-btn');
   btn.disabled=true;btn.textContent='↻ LOADING...';
   document.getElementById('card-grid').innerHTML=Array(6).fill('<div class="skeleton"></div>').join('');
   document.getElementById('summary-bar').innerHTML='<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:var(--amber)">⟳ Fetching live data from Google Sheets...</span>';
   try{
-    const [pr,sr,tr,wr]=await Promise.all([
-      fetch(PREDS_URL),fetch(SCHED_URL),fetch(TOTALS_URL),fetch(WEATHER_URL)
+    const [pr,sr,tr,wr,ar]=await Promise.all([
+      fetch(PREDS_URL),fetch(SCHED_URL),fetch(TOTALS_URL),fetch(WEATHER_URL),fetch(STATS_URL)
     ]);
     if(!pr.ok)throw new Error('Predictions HTTP '+pr.status);
     if(!sr.ok)throw new Error('Schedule HTTP '+sr.status);
     if(!tr.ok)throw new Error('Totals HTTP '+tr.status);
     if(!wr.ok)throw new Error('Weather HTTP '+wr.status);
-    const [pt,st,tt,wt]=await Promise.all([pr.text(),sr.text(),tr.text(),wr.text()]);
+    if(!ar.ok)throw new Error('Stats HTTP '+ar.status);
+    const [pt,st,tt,wt,at2]=await Promise.all([pr.text(),sr.text(),tr.text(),wr.text(),ar.text()]);
     const predRows=parseCSV(pt);
     const hdr=((predRows[0]||[])[0]||'').replace(/[^\x20-\x7E]/g,'').trim();
     const dm=hdr.match(/(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday).{0,35}\d{4}/i);
@@ -355,6 +437,7 @@ async function loadData(){
     const schedMap=parseSched(parseCSV(st));
     const totMap=parseTotals(parseCSV(tt));
     const wxMap=parseWeather(parseCSV(wt));
+    STATSDATA=parseStats(parseCSV(at2));
     parsePreds(predRows,schedMap,totMap,wxMap);
     document.getElementById('tab-today').textContent='Today'+(GAMES.today.length?' ('+GAMES.today.length+')':'');
     document.getElementById('tab-tomorrow').textContent='Tomorrow'+(GAMES.tomorrow.length?' ('+GAMES.tomorrow.length+')':'');
@@ -414,6 +497,76 @@ function buildCard(g){
   const card=document.createElement('div');
   card.className='game-card';card.setAttribute('data-rating',g.rating);
   const awL=LOGOS[g.away]||'', hmL=LOGOS[g.home]||'';
+
+  // ── Build expand panel content from STATSDATA
+  const {formMap,spMap,h2hMap,fatigueMap}=STATSDATA;
+  const awayForm=formMap[norm(g.away)]||{};
+  const homeForm=formMap[norm(g.home)]||{};
+  const awaySPData=spMap[norm(g.awaySP)]||{};
+  const homeSPData=spMap[norm(g.homeSP)]||{};
+  const h2h=h2hMap[key(g.away,g.home)]||{};
+  const awayFatigue=fatigueMap[norm(g.away)]||{};
+  const homeFatigue=fatigueMap[norm(g.home)]||{};
+
+  function trendCls(t){return(t||'').includes('Hot')||t==='Improving'?'hot':(t||'').includes('Cold')||t==='Declining'?'cold':'neutral';}
+  function trendChip(t){const cls=(t||'').includes('Hot')||t==='Improving'?'improving':(t||'').includes('Cold')||t==='Declining'?'declining':'consistent';return'<span class="exp-sp-trend '+cls+'">'+t+'</span>';}
+  function fatigue(f){
+    if(!f||!f.rest)return'';
+    const bad=f.rest==='B2B'||f.restEdge.includes('Fatigue');
+    return'<div class="exp-fatigue-chip'+(bad?' bad':' ok')+'">'+f.rest+' · '+f.consec+(f.seriesGame?' · '+f.seriesGame:'')+'</div>';
+  }
+
+  function teamBlock(team,form,spData,spName){
+    const w=form.w||'—', l=form.l||'—';
+    const rs=form.rs?parseFloat(form.rs).toFixed(1):'—';
+    const ra=form.ra?parseFloat(form.ra).toFixed(1):'—';
+    const trend=form.trend||'';
+    const streak=form.streak||'';
+    let h='<div class="exp-team-block">'
+      +'<div class="exp-team-name">'+team+'</div>'
+      +'<div class="exp-stat-row"><span class="exp-stat-label">L10 Record</span><span class="exp-stat-val">'+w+'-'+l+'</span></div>'
+      +'<div class="exp-stat-row"><span class="exp-stat-label">RS/G · RA/G</span><span class="exp-stat-val">'+rs+' · '+ra+'</span></div>'
+      +'<div class="exp-stat-row"><span class="exp-stat-label">Trend</span><span class="exp-stat-val '+trendCls(trend)+'">'+trend+(streak?' · '+streak:'')+'</span></div>';
+    if(spData.era3){
+      h+='<div style="margin-top:6px;border-top:1px solid var(--border);padding-top:6px">'
+        +'<div class="exp-stat-row"><span class="exp-stat-label" style="font-size:9px">'+spName+' L3</span>'+trendChip(spData.trend)+'</div>'
+        +'<div class="exp-stat-row"><span class="exp-stat-label">ERA · WHIP</span><span class="exp-stat-val">'+parseFloat(spData.era3).toFixed(2)+' · '+parseFloat(spData.whip3).toFixed(2)+'</span></div>'
+        +'<div class="exp-stat-row"><span class="exp-stat-label">IP · K</span><span class="exp-stat-val">'+spData.ip3+' · '+spData.k3+'</span></div>'
+        +'</div>';
+    }
+    h+='</div>';
+    return h;
+  }
+
+  const expandHTML=
+    '<div class="expand-panel" id="ep-'+g.away.replace(/\s/g,'')+g.home.replace(/\s/g,'')+'">'
+    +'<div class="exp-section">'
+      +'<div class="exp-section-title">📊 L10 Form + SP Last 3</div>'
+      +'<div class="exp-grid">'
+        +teamBlock(g.away,awayForm,awaySPData,g.awaySP)
+        +teamBlock(g.home,homeForm,homeSPData,g.homeSP)
+      +'</div>'
+    +'</div>'
+    +'<div class="exp-section">'
+      +'<div class="exp-section-title">🆚 Season Series + Travel</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+        +'<div class="exp-h2h">'
+          +'<div class="exp-h2h-title">HEAD TO HEAD</div>'
+          +'<div class="exp-h2h-detail">'+(h2h.series||'No data')+'</div>'
+        +'</div>'
+        +'<div class="exp-h2h">'
+          +'<div class="exp-h2h-title">FATIGUE</div>'
+          +'<div class="exp-fatigue-row">'
+            +fatigue(awayFatigue)
+            +fatigue(homeFatigue)
+          +'</div>'
+        +'</div>'
+      +'</div>'
+    +'</div>'
+    +'</div>';
+
+  const expandBtnHTML='<button class="expand-btn" onclick="toggleExpand(this,event)">MORE INTEL <span class="chevron">▾</span></button>';
+
   card.innerHTML=
     '<div class="card-header">'
       +'<div class="card-header-top">'
@@ -453,8 +606,20 @@ function buildCard(g){
         +'</div>'
       +'</div>'
       +(wxH||'')
-    +'</div>';
+    +'</div>'
+    +expandBtnHTML
+    +expandHTML;
   return card;
+}
+
+function toggleExpand(btn,e){
+  e.stopPropagation();
+  const card=btn.closest('.game-card');
+  const panel=card.querySelector('.expand-panel');
+  const isOpen=panel.classList.contains('open');
+  panel.classList.toggle('open',!isOpen);
+  btn.classList.toggle('open',!isOpen);
+  btn.innerHTML=(!isOpen?'LESS INTEL':'MORE INTEL')+' <span class="chevron">▾</span>';
 }
 
 function updateSummary(games){
