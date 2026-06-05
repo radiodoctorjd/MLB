@@ -502,8 +502,19 @@ function buildCard(g){
   const {formMap,spMap,h2hMap,fatigueMap}=STATSDATA;
   const awayForm=formMap[norm(g.away)]||{};
   const homeForm=formMap[norm(g.home)]||{};
-  const awaySPData=spMap[norm(g.awaySP)]||{};
-  const homeSPData=spMap[norm(g.homeSP)]||{};
+
+  // SP lookup: try exact norm match first, then last-name fuzzy match
+  function findSP(name){
+    if(!name||name==='TBD')return{};
+    const n=norm(name);
+    if(spMap[n])return spMap[n];
+    // try last name only
+    const last=n.split(' ').pop();
+    for(const k of Object.keys(spMap)){if(k.split(' ').pop()===last)return spMap[k];}
+    return{};
+  }
+  const awaySPData=findSP(g.awaySP);
+  const homeSPData=findSP(g.homeSP);
   const h2h=h2hMap[key(g.away,g.home)]||{};
   const awayFatigue=fatigueMap[norm(g.away)]||{};
   const homeFatigue=fatigueMap[norm(g.home)]||{};
@@ -511,44 +522,68 @@ function buildCard(g){
   function trendCls(t){return(t||'').includes('Hot')||t==='Improving'?'hot':(t||'').includes('Cold')||t==='Declining'?'cold':'neutral';}
   function trendChip(t){const cls=(t||'').includes('Hot')||t==='Improving'?'improving':(t||'').includes('Cold')||t==='Declining'?'declining':'consistent';return'<span class="exp-sp-trend '+cls+'">'+t+'</span>';}
   function fatigue(f){
-    if(!f||!f.rest)return'';
+    if(!f||!f.rest)return'<span style="font-family:\'IBM Plex Mono\',monospace;font-size:9px;color:var(--muted)">—</span>';
     const bad=f.rest==='B2B'||f.restEdge.includes('Fatigue');
     return'<div class="exp-fatigue-chip'+(bad?' bad':' ok')+'">'+f.rest+' · '+f.consec+(f.seriesGame?' · '+f.seriesGame:'')+'</div>';
   }
 
-  function teamBlock(team,form,spData,spName){
+  function teamFormBlock(team,form){
     const w=form.w||'—', l=form.l||'—';
     const rs=form.rs?parseFloat(form.rs).toFixed(1):'—';
     const ra=form.ra?parseFloat(form.ra).toFixed(1):'—';
-    const trend=form.trend||'';
+    const trend=form.trend||'—';
     const streak=form.streak||'';
-    let h='<div class="exp-team-block">'
+    return'<div class="exp-team-block">'
       +'<div class="exp-team-name">'+team+'</div>'
       +'<div class="exp-stat-row"><span class="exp-stat-label">L10 Record</span><span class="exp-stat-val">'+w+'-'+l+'</span></div>'
       +'<div class="exp-stat-row"><span class="exp-stat-label">RS/G · RA/G</span><span class="exp-stat-val">'+rs+' · '+ra+'</span></div>'
-      +'<div class="exp-stat-row"><span class="exp-stat-label">Trend</span><span class="exp-stat-val '+trendCls(trend)+'">'+trend+(streak?' · '+streak:'')+'</span></div>';
-    if(spData.era3){
-      h+='<div style="margin-top:6px;border-top:1px solid var(--border);padding-top:6px">'
-        +'<div class="exp-stat-row"><span class="exp-stat-label" style="font-size:9px">'+spName+' L3</span>'+trendChip(spData.trend)+'</div>'
-        +'<div class="exp-stat-row"><span class="exp-stat-label">ERA · WHIP</span><span class="exp-stat-val">'+parseFloat(spData.era3).toFixed(2)+' · '+parseFloat(spData.whip3).toFixed(2)+'</span></div>'
-        +'<div class="exp-stat-row"><span class="exp-stat-label">IP · K</span><span class="exp-stat-val">'+spData.ip3+' · '+spData.k3+'</span></div>'
+      +'<div class="exp-stat-row"><span class="exp-stat-label">Trend</span><span class="exp-stat-val '+trendCls(trend)+'">'+trend+(streak?' · '+streak:'')+'</span></div>'
+      +'</div>';
+  }
+
+  function spBlock(spName,spData){
+    if(!spData.era3){
+      return'<div class="exp-team-block">'
+        +'<div class="exp-team-name">'+spName+'</div>'
+        +'<div style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:var(--muted);padding:4px 0">No recent start data</div>'
         +'</div>';
     }
-    h+='</div>';
-    return h;
+    return'<div class="exp-team-block">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+        +'<div class="exp-team-name" style="margin-bottom:0">'+spName+'</div>'
+        +trendChip(spData.trend)
+      +'</div>'
+      +'<div class="exp-stat-row"><span class="exp-stat-label">Last 3 ERA</span><span class="exp-stat-val '+trendCls(spData.trend)+'">'+parseFloat(spData.era3).toFixed(2)+'</span></div>'
+      +'<div class="exp-stat-row"><span class="exp-stat-label">Last 3 WHIP</span><span class="exp-stat-val">'+parseFloat(spData.whip3).toFixed(2)+'</span></div>'
+      +'<div class="exp-stat-row"><span class="exp-stat-label">Last 3 IP</span><span class="exp-stat-val">'+spData.ip3+'</span></div>'
+      +'<div class="exp-stat-row"><span class="exp-stat-label">Last 3 K</span><span class="exp-stat-val">'+spData.k3+'</span></div>'
+      +'</div>';
   }
 
   const expandHTML=
     '<div class="expand-panel" id="ep-'+g.away.replace(/\s/g,'')+g.home.replace(/\s/g,'')+'">'
+
+    // Section 1: Team L10 Form
     +'<div class="exp-section">'
-      +'<div class="exp-section-title">📊 L10 Form + SP Last 3</div>'
+      +'<div class="exp-section-title">📊 Last 10 Games — Team Form</div>'
       +'<div class="exp-grid">'
-        +teamBlock(g.away,awayForm,awaySPData,g.awaySP)
-        +teamBlock(g.home,homeForm,homeSPData,g.homeSP)
+        +teamFormBlock(g.away,awayForm)
+        +teamFormBlock(g.home,homeForm)
       +'</div>'
     +'</div>'
+
+    // Section 2: SP Last 3 Starts
     +'<div class="exp-section">'
-      +'<div class="exp-section-title">🆚 Season Series + Travel</div>'
+      +'<div class="exp-section-title">⚾ Starting Pitcher — Last 3 Starts</div>'
+      +'<div class="exp-grid">'
+        +spBlock(g.awaySP,awaySPData)
+        +spBlock(g.homeSP,homeSPData)
+      +'</div>'
+    +'</div>'
+
+    // Section 3: H2H + Fatigue
+    +'<div class="exp-section">'
+      +'<div class="exp-section-title">🆚 Season Series + Travel & Fatigue</div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
         +'<div class="exp-h2h">'
           +'<div class="exp-h2h-title">HEAD TO HEAD</div>'
@@ -563,6 +598,7 @@ function buildCard(g){
         +'</div>'
       +'</div>'
     +'</div>'
+
     +'</div>';
 
   const expandBtnHTML='<button class="expand-btn" onclick="toggleExpand(this,event)">MORE INTEL <span class="chevron">▾</span></button>';
