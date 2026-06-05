@@ -245,14 +245,17 @@ function key(a,h){return norm(a)+'|'+norm(h);}
 // ── Schedule: col2=Away, col4=Home, col5=Venue, col6=Away SP, col7=Away ERA,
 //   col8=Away WHIP, col9=Home SP, col10=Home ERA, col11=Home WHIP
 //   Row identified by: col1 matches "Today"/"Tmrw"
+// ── Schedule: split into todayMap and tmrwMap keyed by "away|home"
 function parseSched(rows){
-  const m={};
+  const todayMap={}, tmrwMap={}, todayKeys=new Set(), tmrwKeys=new Set();
   for(const r of rows){
     const c1=(r[1]||'').trim();
-    if(!/today|tmrw|tomorrow/i.test(c1))continue;
+    const isToday=/today/i.test(c1), isTmrw=/tmrw|tomorrow/i.test(c1);
+    if(!isToday&&!isTmrw) continue;
     const away=norm(r[2]||''), home=norm(r[4]||'');
-    if(!away||!home)continue;
-    m[key(away,home)]={
+    if(!away||!home) continue;
+    const k=key(away,home);
+    const entry={
       venue:(r[5]||'').trim(),
       awaySP:(r[6]||'').trim(),
       awayERA:dash(r[7])?null:r[7].trim(),
@@ -261,158 +264,126 @@ function parseSched(rows){
       homeERA:dash(r[10])?null:r[10].trim(),
       homeWHIP:dash(r[11])?null:r[11].trim(),
     };
+    if(isToday){todayMap[k]=entry;todayKeys.add(k);}
+    else{tmrwMap[k]=entry;tmrwKeys.add(k);}
   }
-  return m;
+  return{todayMap,tmrwMap,todayKeys,tmrwKeys};
 }
 
-// ── Team Totals: col0="Away @ Home", col6="SD: 1.18"(F5 away), col7="PHI: 2.48"(F5 home),
-//   col8=F5 Total, col12="SD: 2.85"(FG away), col13="PHI: 4.08"(FG home), col14=FG Total
-//   Row identified by: col0 has "@" AND col6 has ":"
+// ── Team Totals
 function parseTotals(rows){
   const m={};
   for(const r of rows){
     const c0=norm(r[0]||''), c6=(r[6]||'').trim();
-    if(!c0.includes('@')||!c6.includes(':'))continue;
+    if(!c0.includes('@')||!c6.includes(':')) continue;
     const at=c0.indexOf('@');
     const away=norm(c0.substring(0,at)), home=norm(c0.substring(at+1));
-    if(!away||!home)continue;
-    m[key(away,home)]={
-      f5AwayRuns:num1(r[6]),
-      f5HomeRuns:num1(r[7]),
-      fgAwayRuns:num1(r[12]),
-      fgHomeRuns:num1(r[13]),
-    };
+    if(!away||!home) continue;
+    m[key(away,home)]={f5AwayRuns:num1(r[6]),f5HomeRuns:num1(r[7]),fgAwayRuns:num1(r[12]),fgHomeRuns:num1(r[13])};
   }
   return m;
 }
 
-// ── Park & Weather: col9="Away @ Home  (time ET)", col10=Temp, col12=Wind mph,
-//   col13=Wind dir, col14=Rain%, col15=Cloud%, col16=Conditions, col17=Impact, col18=RunAdj
-//   Row identified by: col9 has "@" AND col9 has "("
+// ── Weather: build TWO maps (today/tomorrow) based on section header rows
+// col9="Away @ Home  (time ET)" — strip time, match on team names only
 function parseWeather(rows){
-  const m={};
+  const todayMap={}, tmrwMap={};
+  let section='today';
   for(const r of rows){
     const c9=(r[9]||'').trim();
-    if(!c9.includes('@')||!c9.includes('('))continue;
-    const at=c9.indexOf('@');
-    const away=norm(c9.substring(0,at));
-    const home=norm(c9.substring(at+1).replace(/\s*\(.*$/,''));
-    if(!away||!home)continue;
-    m[key(away,home)]={
+    // Section header detection in col9
+    if(c9.includes('TODAY'))   {section='today';continue;}
+    if(c9.includes('TOMORROW')){section='tomorrow';continue;}
+    if(!c9.includes('@')||!c9.includes('(')) continue;
+    // Strip "(time ET)" to get "Away @ Home"
+    const matchup=c9.replace(/\s*\(.*$/,'').trim();
+    const at=matchup.indexOf('@');
+    if(at<0) continue;
+    const away=norm(matchup.substring(0,at));
+    const home=norm(matchup.substring(at+1));
+    if(!away||!home) continue;
+    const entry={
       temp:dash(r[10])?'':r[10].trim(),
       windMph:dash(r[12])?'':r[12].trim(),
       windDir:dash(r[13])?'':r[13].trim(),
-      rain:dash(r[14])?'':r[14].trim(),
       conditions:(r[16]||'').trim(),
       impact:(r[17]||'').trim(),
       runAdj:dash(r[18])?'':r[18].trim(),
     };
+    (section==='today'?todayMap:tmrwMap)[key(away,home)]=entry;
   }
-  return m;
+  return{todayMap,tmrwMap};
 }
 
-// ── Predictions: col0="Away  @  Home", col1=Time,
-//   col6=F5 Away Win%, col7=F5 Home Win%, col8=F5 Pick, col9=F5 Conf, col10=F5 Total,
-//   col12=FG Away Win%, col13=FG Home Win%, col14=FG Pick, col15=FG Conf, col16=FG Total, col18=Rating
-function parsePreds(rows, schedMap, totMap, wxMap){
-  GAMES={today:[],tomorrow:[]};
-  let section='today';
-  for(const r of rows){
-    const c0=(r[0]||'').trim(), c1=(r[1]||'').trim();
-    if(!c0.includes('@')&&c1===''){
-      const up=c0.replace(/[^A-Za-z]/g,'').toUpperCase();
-      if(up.includes('TOMORROW'))section='tomorrow';
-      else if(up.includes('TODAY'))section='today';
-      continue;
-    }
-    if(!c0.includes('@')||!/\d+:\d+/.test(c1))continue;
-    const at=c0.indexOf('@');
-    const away=norm(c0.substring(0,at)), home=norm(c0.substring(at+1));
-    if(!away||!home)continue;
-
-    const k=key(away,home);
-    const sd=schedMap[k]||{};
-    const tot=totMap[k]||{};
-    const wx=wxMap[k]||null;
-
-    const f5aw=p(r[6]), f5hw=p(r[7]);
-    const f5Pick=norm(r[8]||'');
-    const f5c=conf(r[9]);
-    const f5t=p(r[10]);
-    const fgaw=p(r[12]), fghw=p(r[13]);
-    const fgPick=norm(r[14]||'');
-    const fgc=conf(r[15]);
-    const fgt=p(r[16]);
-
-    GAMES[section].push({
-      away,home,time:c1,
-      venue:sd.venue||'',
-      awaySP:sd.awaySP||'TBD',
-      awayERA:sd.awayERA||null,
-      awayWHIP:sd.awayWHIP||null,
-      homeSP:sd.homeSP||'TBD',
-      homeERA:sd.homeERA||null,
-      homeWHIP:sd.homeWHIP||null,
-      f5aw,f5hw,f5Pick,
-      f5p:f5Pick===away?'away':'home',
-      f5c,f5t,
-      f5AwayRuns:tot.f5AwayRuns||null,
-      f5HomeRuns:tot.f5HomeRuns||null,
-      fgaw,fghw,fgPick,
-      fgp:fgPick===away?'away':'home',
-      fgc,fgt,
-      fgAwayRuns:tot.fgAwayRuns||null,
-      fgHomeRuns:tot.fgHomeRuns||null,
-      rating:rating(r[18]),
-      wx,
-    });
-  }
-}
-
-// ── Advanced Stats (gid=141272668): L10 form, SP last 3, H2H, travel/fatigue
-// Form rows: col0=Team, col1=W, col2=L, col3=RS/G, col4=RA/G, col5=FormScore, col6=Trend, col7=Notes(streak)
-// SP rows: col0=Pitcher, col1=Team, col2=Last3ERA, col3=Last3WHIP, col4=Last3IP, col5=Last3K, col6=Trend
-// H2H rows: col0=Matchup "Away @ Home", col7=Season Series summary
-// Fatigue rows: col0=Team, col1=Role, col3=DaysRest, col4=ConsecG, col5=SeriesGame, col7=RestEdge
+// ── Advanced Stats: L10 form, SP last 3, H2H, fatigue
+// SP cols confirmed: c0=Pitcher, c1=Team, c2=ERA, c3=WHIP, c4=IP, c5=K, c6=Trend
 function parseStats(rows){
   const formMap={}, spMap={}, h2hMap={}, fatigueMap={};
   let section='';
   for(const r of rows){
     const c0=(r[0]||'').trim();
-    // Section detection
-    if(c0.includes('L10 RECENT FORM')||c0.includes('RECENT FORM'))  {section='form';continue;}
-    if(c0.includes('SP LAST 3')||c0.includes('LAST 3 STARTS'))      {section='sp';continue;}
-    if(c0.includes('HEAD-TO-HEAD'))                                   {section='h2h';continue;}
-    if(c0.includes('TRAVEL')||c0.includes('FATIGUE'))                {section='fatigue';continue;}
-    if(c0.includes('DIVISION')||c0.includes('STANDINGS'))            {section='';continue;}
-    // Skip header rows (first cell is "Team" or "Pitcher" or "Matchup")
-    if(['team','pitcher','matchup'].includes(c0.toLowerCase()))continue;
-    if(!c0)continue;
-
-    if(section==='form'&&r[1]!==undefined){
-      formMap[norm(c0)]={
-        w:r[1],l:r[2],rs:r[3],ra:r[4],trend:(r[6]||'').trim(),streak:(r[7]||'').trim()
-      };
+    if(c0.includes('L10 RECENT')||c0.includes('RECENT FORM'))  {section='form';continue;}
+    if(c0.includes('SP LAST 3')||c0.includes('LAST 3 STARTS')) {section='sp';continue;}
+    if(c0.includes('HEAD-TO-HEAD'))                             {section='h2h';continue;}
+    if(c0.includes('TRAVEL')||c0.includes('FATIGUE'))           {section='fatigue';continue;}
+    if(c0.includes('DIVISION')||c0.includes('STANDINGS'))       {section='';continue;}
+    if(['team','pitcher','matchup'].includes(c0.toLowerCase())) continue;
+    if(!c0) continue;
+    if(section==='form'){
+      formMap[norm(c0)]={w:r[1],l:r[2],rs:r[3],ra:r[4],trend:(r[6]||'').trim(),streak:(r[7]||'').trim()};
     }
-    if(section==='sp'&&r[1]!==undefined){
-      spMap[norm(c0)]={
-        era3:r[2],whip3:r[3],ip3:r[4],k3:r[5],trend:(r[6]||'').trim()
-      };
+    if(section==='sp'){
+      spMap[norm(c0)]={era3:r[2],whip3:r[3],ip3:r[4],k3:r[5],trend:(r[6]||'').trim()};
     }
     if(section==='h2h'&&c0.includes('@')){
       const at=c0.indexOf('@');
-      const away=norm(c0.substring(0,at)), home=norm(c0.substring(at+1));
-      h2hMap[key(away,home)]={series:(r[7]||'').trim()};
+      h2hMap[key(norm(c0.substring(0,at)),norm(c0.substring(at+1)))]={series:(r[7]||'').trim()};
     }
-    if(section==='fatigue'&&r[1]!==undefined){
-      fatigueMap[norm(c0)]={
-        role:(r[1]||'').trim(),rest:(r[3]||'').trim(),
-        consec:(r[4]||'').trim(),seriesGame:(r[5]||'').trim(),
-        restEdge:(r[7]||'').trim()
-      };
+    if(section==='fatigue'){
+      fatigueMap[norm(c0)]={role:(r[1]||'').trim(),rest:(r[3]||'').trim(),consec:(r[4]||'').trim(),seriesGame:(r[5]||'').trim(),restEdge:(r[7]||'').trim()};
     }
   }
   return{formMap,spMap,h2hMap,fatigueMap};
+}
+
+// ── Predictions: use Schedule todayKeys/tmrwKeys to split today vs tomorrow correctly
+// SP name from Predictions col2/3 is "Name  (ERA)" — extract name as fallback
+function spNameOnly(cell){return(cell||'').replace(/\s*\(.*\)\s*$/,'').trim();}
+
+function parsePreds(rows, sched, totMap, wxMaps){
+  GAMES={today:[],tomorrow:[]};
+  for(const r of rows){
+    const c0=(r[0]||'').trim(), c1=(r[1]||'').trim();
+    if(!c0.includes('@')||!/\d+:\d+/.test(c1)) continue;
+    const at=c0.indexOf('@');
+    const away=norm(c0.substring(0,at)), home=norm(c0.substring(at+1));
+    if(!away||!home) continue;
+    const k=key(away,home);
+    // Classify today vs tomorrow using Schedule tab — source of truth
+    const isToday=sched.todayKeys.has(k);
+    const isTmrw=!isToday&&sched.tmrwKeys.has(k);
+    if(!isToday&&!isTmrw) continue;
+    const sd=(isToday?sched.todayMap:sched.tmrwMap)[k]||{};
+    const tot=totMap[k]||{};
+    const wx=(isToday?wxMaps.todayMap:wxMaps.tmrwMap)[k]||null;
+    const f5aw=p(r[6]),f5hw=p(r[7]),f5Pick=norm(r[8]||''),f5c=conf(r[9]),f5t=p(r[10]);
+    const fgaw=p(r[12]),fghw=p(r[13]),fgPick=norm(r[14]||''),fgc=conf(r[15]),fgt=p(r[16]);
+    GAMES[isToday?'today':'tomorrow'].push({
+      away,home,time:c1,
+      venue:sd.venue||'',
+      awaySP:sd.awaySP||spNameOnly(r[2]),
+      awayERA:sd.awayERA||null,
+      awayWHIP:sd.awayWHIP||null,
+      homeSP:sd.homeSP||spNameOnly(r[3]),
+      homeERA:sd.homeERA||null,
+      homeWHIP:sd.homeWHIP||null,
+      f5aw,f5hw,f5Pick,f5p:f5Pick===away?'away':'home',f5c,f5t,
+      f5AwayRuns:tot.f5AwayRuns||null,f5HomeRuns:tot.f5HomeRuns||null,
+      fgaw,fghw,fgPick,fgp:fgPick===away?'away':'home',fgc,fgt,
+      fgAwayRuns:tot.fgAwayRuns||null,fgHomeRuns:tot.fgHomeRuns||null,
+      rating:rating(r[18]),wx,
+    });
+  }
 }
 
 async function loadData(){
@@ -435,11 +406,11 @@ async function loadData(){
     const hdr=((predRows[0]||[])[0]||'').replace(/[^\x20-\x7E]/g,'').trim();
     const dm=hdr.match(/(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday).{0,35}\d{4}/i);
     if(dm)document.getElementById('sheet-date').textContent=dm[0].trim().substring(0,55);
-    const schedMap=parseSched(parseCSV(st));
+    const sched=parseSched(parseCSV(st));
     const totMap=parseTotals(parseCSV(tt));
-    const wxMap=parseWeather(parseCSV(wt));
+    const wxMaps=parseWeather(parseCSV(wt));
     STATSDATA=parseStats(parseCSV(at2));
-    parsePreds(predRows,schedMap,totMap,wxMap);
+    parsePreds(predRows,sched,totMap,wxMaps);
     document.getElementById('tab-today').textContent='Today'+(GAMES.today.length?' ('+GAMES.today.length+')':'');
     document.getElementById('tab-tomorrow').textContent='Tomorrow'+(GAMES.tomorrow.length?' ('+GAMES.tomorrow.length+')':'');
   }catch(e){
