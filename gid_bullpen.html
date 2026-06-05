@@ -1,0 +1,30 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Test Bullpen GID</title>
+<style>body{background:#0a0c0f;color:#e8eaed;font-family:monospace;font-size:11px;padding:20px}</style></head>
+<body><div id="out">Testing...</div>
+<script>
+const BASE='https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?single=true&output=csv&gid=';
+async function test(){
+  const out=document.getElementById('out');
+  let html='';
+  // sheet2 internal sheetId = 2, but published GID may differ
+  // Try likely GIDs for bullpen tab
+  const gids=[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,
+    100,200,300,400,500,600,700,800,900,1000,
+    123456,234567,345678,456789,567890,678901,789012,890123,901234,
+    1234567,2345678,3456789,4567890,5678901];
+  for(const gid of gids){
+    try{
+      const r=await fetch(BASE+gid+'&_cb='+Date.now());
+      if(!r.ok){html+=`<div>GID ${gid} → HTTP ${r.status}</div>`;out.innerHTML=html;continue;}
+      const t=await r.text();
+      const line1=t.split('\n')[0].substring(0,80);
+      html+=`<div style="color:#00e676">✓ GID ${gid} → ${t.split('\n').length} lines | ${line1}</div>`;
+      out.innerHTML=html;
+    }catch(e){html+=`<div style="color:#ff4c4c">GID ${gid} → ${e.message}</div>`;}
+    out.innerHTML=html;
+    await new Promise(r=>setTimeout(r,200));
+  }
+  out.innerHTML=html+'<div style="color:#ffb300">Done.</div>';
+}
+test();
+</script></body></html>
