@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Full Diagnostic</title>
+<style>body{background:#0a0c0f;color:#e8eaed;font-family:monospace;font-size:10px;padding:16px}
+h3{color:#00e676;margin:14px 0 4px}.row{padding:2px 0;border-bottom:1px solid #1a1a1a;white-space:pre-wrap;word-break:break-all}
+button{background:#222;color:#fff;border:1px solid #444;padding:5px 12px;cursor:pointer;margin:4px;font-size:11px}</style>
+</head><body>
+<h2 style="color:#00e676">Full Data Diagnostic</h2>
+<button onclick="runAll()">▶ Run All Diagnostics</button>
+<div id="out"></div>
+<script>
+const URLS = {
+  Predictions: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=596859801&single=true&output=csv',
+  Schedule:    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=750739564&single=true&output=csv',
+  Totals:      'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=1142815985&single=true&output=csv',
+  Weather:     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=1276454419&single=true&output=csv',
+  Stats:       'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=141272668&single=true&output=csv',
+};
+
+function parseCSV(text){
+  const rows=[];let row=[],f='',q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i],n=text[i+1];
+    if(q){if(c==='"'&&n==='"'){f+='"';i++;}else if(c==='"'){q=false;}else{f+=c;}}
+    else{if(c==='"'){q=true;}else if(c===','){row.push(f.trim());f='';}
+    else if(c==='\r'&&n==='\n'){row.push(f.trim());rows.push(row);row=[];f='';i++;}
+    else if(c==='\r'||c==='\n'){row.push(f.trim());rows.push(row);row=[];f='';}
+    else{f+=c;}}
+  }
+  if(f||row.length){row.push(f.trim());rows.push(row);}
+  return rows;
+}
+
+async function fetchCSV(name, url){
+  const r = await fetch(url + '&_cb=' + Date.now());
+  if(!r.ok) return {name, error: 'HTTP '+r.status, rows:[]};
+  const t = await r.text();
+  return {name, rows: parseCSV(t)};
+}
+
+function show(html){ document.getElementById('out').innerHTML += html; }
+
+async function runAll(){
+  document.getElementById('out').innerHTML = '';
+
+  // 1. SCHEDULE — show every row, all columns
+  const sched = await fetchCSV('Schedule', URLS.Schedule);
+  show('<h3>SCHEDULE (' + sched.rows.length + ' rows) — showing ALL rows with ALL cols</h3>');
+  sched.rows.forEach((r,i) => {
+    if(r.every(c=>!c)) return;
+    const cols = r.map((c,j)=>'c'+j+'=['+c.substring(0,35)+']').join(' | ');
+    show('<div class="row">R'+i+': '+cols+'</div>');
+  });
+
+  // 2. PREDICTIONS — show game rows only
+  const pred = await fetchCSV('Predictions', URLS.Predictions);
+  show('<h3>PREDICTIONS (' + pred.rows.length + ' rows) — game rows only</h3>');
+  pred.rows.forEach((r,i) => {
+    if(!(r[0]||'').includes('@')) return;
+    const cols = r.map((c,j)=>'c'+j+'=['+c.substring(0,30)+']').join(' | ');
+    show('<div class="row">R'+i+': '+cols+'</div>');
+  });
+
+  // 3. WEATHER — show all non-empty rows
+  const wx = await fetchCSV('Weather', URLS.Weather);
+  show('<h3>WEATHER (' + wx.rows.length + ' rows) — non-empty rows, cols 0,1,9,10,12,13,14,16,17</h3>');
+  wx.rows.forEach((r,i) => {
+    const c0=r[0]||'', c9=r[9]||'';
+    if(!c0&&!c9) return;
+    show('<div class="row">R'+i+': c0=['+c0.substring(0,40)+'] c9=['+c9.substring(0,50)+'] c10=['+((r[10]||'')).substring(0,10)+'] c12=['+((r[12]||'')).substring(0,10)+'] c13=['+((r[13]||'')).substring(0,10)+'] c16=['+((r[16]||'')).substring(0,20)+'] c17=['+((r[17]||'')).substring(0,25)+']</div>');
+  });
+
+  // 4. STATS — SP section only
+  const stats = await fetchCSV('Stats', URLS.Stats);
+  show('<h3>STATS SP SECTION — rows where c0 looks like a pitcher name</h3>');
+  let inSP = false;
+  stats.rows.forEach((r,i) => {
+    const c0=(r[0]||'').trim();
+    if(c0.includes('SP LAST') || c0.includes('LAST 3')) inSP=true;
+    if(c0.includes('DIVISION') || c0.includes('HEAD-TO')) inSP=false;
+    if(!inSP) return;
+    if(!c0) return;
+    show('<div class="row">R'+i+': c0=['+c0+'] c1=['+((r[1]||'').substring(0,20))+'] c2=['+((r[2]||''))+'] c3=['+((r[3]||''))+'] c4=['+((r[4]||''))+'] c5=['+((r[5]||''))+'] c6=['+((r[6]||'').substring(0,15))+']</div>');
+  });
+
+  show('<div style="color:#ffb300;margin-top:12px">✓ Done</div>');
+}
+</script>
+</body></html>
