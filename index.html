@@ -245,16 +245,17 @@ function key(a,h){return norm(a)+'|'+norm(h);}
 // ── Schedule: col2=Away, col4=Home, col5=Venue, col6=Away SP, col7=Away ERA,
 //   col8=Away WHIP, col9=Home SP, col10=Home ERA, col11=Home WHIP
 //   Row identified by: col1 matches "Today"/"Tmrw"
-// ── Schedule: split into todayMap and tmrwMap keyed by "away|home"
+// ── Schedule: single map keyed by "away|home" — used for SP, ERA, WHIP, venue only
+// For games where same teams play both days, the Schedule has separate Today/Tmrw rows
+// but we key both the same way — that's fine since SP/venue is what we need
 function parseSched(rows){
-  const todayMap={}, tmrwMap={}, todayKeys=new Set(), tmrwKeys=new Set();
+  const todayMap={}, tmrwMap={};
   for(const r of rows){
     const c1=(r[1]||'').trim();
     const isToday=/today/i.test(c1), isTmrw=/tmrw|tomorrow/i.test(c1);
     if(!isToday&&!isTmrw) continue;
     const away=norm(r[2]||''), home=norm(r[4]||'');
     if(!away||!home) continue;
-    const k=key(away,home);
     const entry={
       venue:(r[5]||'').trim(),
       awaySP:(r[6]||'').trim(),
@@ -264,10 +265,10 @@ function parseSched(rows){
       homeERA:dash(r[10])?null:r[10].trim(),
       homeWHIP:dash(r[11])?null:r[11].trim(),
     };
-    if(isToday){todayMap[k]=entry;todayKeys.add(k);}
-    else{tmrwMap[k]=entry;tmrwKeys.add(k);}
+    if(isToday) todayMap[key(away,home)]=entry;
+    else tmrwMap[key(away,home)]=entry;
   }
-  return{todayMap,tmrwMap,todayKeys,tmrwKeys};
+  return{todayMap,tmrwMap};
 }
 
 // ── Team Totals
@@ -352,23 +353,28 @@ function spNameOnly(cell){return(cell||'').replace(/\s*\(.*\)\s*$/,'').trim();}
 
 function parsePreds(rows, sched, totMap, wxMaps){
   GAMES={today:[],tomorrow:[]};
+  let section='today';
   for(const r of rows){
     const c0=(r[0]||'').trim(), c1=(r[1]||'').trim();
+    // Section header rows: col0 contains TODAY/TOMORROW, no @ in col0, col1 empty
+    if(!c0.includes('@') && c1===''){
+      const up=c0.toUpperCase();
+      if(up.includes('TOMORROW')) section='tomorrow';
+      else if(up.includes('TODAY')) section='today';
+      continue;
+    }
     if(!c0.includes('@')||!/\d+:\d+/.test(c1)) continue;
     const at=c0.indexOf('@');
     const away=norm(c0.substring(0,at)), home=norm(c0.substring(at+1));
     if(!away||!home) continue;
     const k=key(away,home);
-    // Classify today vs tomorrow using Schedule tab — source of truth
-    const isToday=sched.todayKeys.has(k);
-    const isTmrw=!isToday&&sched.tmrwKeys.has(k);
-    if(!isToday&&!isTmrw) continue;
-    const sd=(isToday?sched.todayMap:sched.tmrwMap)[k]||{};
+    // Use correct day's schedule entry for SP/venue/WHIP
+    const sd=(section==='today'?sched.todayMap:sched.tmrwMap)[k]||{};
     const tot=totMap[k]||{};
-    const wx=(isToday?wxMaps.todayMap:wxMaps.tmrwMap)[k]||null;
+    const wx=(section==='today'?wxMaps.todayMap:wxMaps.tmrwMap)[k]||null;
     const f5aw=p(r[6]),f5hw=p(r[7]),f5Pick=norm(r[8]||''),f5c=conf(r[9]),f5t=p(r[10]);
     const fgaw=p(r[12]),fghw=p(r[13]),fgPick=norm(r[14]||''),fgc=conf(r[15]),fgt=p(r[16]);
-    GAMES[isToday?'today':'tomorrow'].push({
+    GAMES[section].push({
       away,home,time:c1,
       venue:sd.venue||'',
       awaySP:sd.awaySP||spNameOnly(r[2]),
