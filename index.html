@@ -3,673 +3,1189 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MLB Prediction Model</title>
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<title>⚾ MLB Predictions Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <style>
-:root{
-  --bg:#0a0c0f;--surface:#111417;--surface2:#181c21;--surface3:#1e232a;
-  --border:#252b34;--border2:#2e3640;--text:#e8eaed;--muted:#6b7480;--muted2:#8a939f;
-  --green:#00e676;--green-bg:rgba(0,230,118,0.08);
-  --purple:#9c6fff;--purple-bg:rgba(156,111,255,0.08);
-  --amber:#ffb300;--amber-bg:rgba(255,179,0,0.1);
-  --red:#ff4c4c;--red-bg:rgba(255,76,76,0.08);
-  --blue:#4fc3f7;--blue-bg:rgba(79,195,247,0.08);
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;min-height:100vh}
-.header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;gap:14px;height:54px}
-.logo{font-family:'Oswald',sans-serif;font-size:21px;font-weight:700;letter-spacing:.08em;display:flex;align-items:center;gap:8px}
-.logo-dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
-.live-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.25);color:var(--green);font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.1em;padding:3px 9px;border-radius:3px}
-.live-badge::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 1.5s ease infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.header-right{margin-left:auto;display:flex;align-items:center;gap:10px}
-.sheet-date{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)}
-.refresh-btn{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;color:var(--muted2);background:var(--surface2);border:1px solid var(--border2);padding:5px 12px;border-radius:3px;cursor:pointer;transition:all .15s}
-.refresh-btn:hover{color:var(--green);border-color:rgba(0,230,118,0.4)}
-.refresh-btn:disabled{opacity:.5;cursor:not-allowed}
-.controls{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;height:46px}
-.day-tabs{display:flex;border-right:1px solid var(--border);margin-right:16px;padding-right:16px;height:100%;align-items:center}
-.day-tab{font-family:'Oswald',sans-serif;font-size:13px;font-weight:500;letter-spacing:.06em;color:var(--muted);background:none;border:none;padding:6px 16px;cursor:pointer;border-radius:3px;transition:all .15s;text-transform:uppercase}
-.day-tab:hover{color:var(--text);background:var(--surface2)}
-.day-tab.active{color:var(--bg);background:var(--green)}
-.filter-group{display:flex;align-items:center;gap:6px}
-.filter-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-right:2px}
-.filter-chip{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;color:var(--muted2);background:var(--surface2);border:1px solid var(--border);padding:4px 10px;border-radius:3px;cursor:pointer;transition:all .15s}
-.filter-chip:hover{border-color:var(--border2);color:var(--text)}
-.filter-chip.active{background:var(--surface3);border-color:var(--green);color:var(--green)}
-.sort-sel{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted2);background:var(--surface2);border:1px solid var(--border);padding:5px 22px 5px 10px;border-radius:3px;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b7480' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
-.count-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-left:12px}
-.summary-bar{background:var(--surface2);border-bottom:1px solid var(--border);padding:7px 20px;display:flex;align-items:center;gap:22px;flex-wrap:wrap;min-height:36px}
-.sum-item{display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:10px}
-.sdot{width:6px;height:6px;border-radius:50%}
-.sum-label{color:var(--muted)}.sum-val{color:var(--text);font-weight:500}
-.sum-meta{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted)}
-.card-grid{padding:18px 20px 48px;display:grid;grid-template-columns:repeat(auto-fill,minmax(440px,1fr));gap:16px}
-.game-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s,box-shadow .15s}
-.game-card:hover{border-color:var(--border2);box-shadow:0 6px 24px rgba(0,0,0,0.35)}
-.game-card[data-rating="Elite"]{border-top:3px solid var(--green)}
-.game-card[data-rating="Strong"]{border-top:3px solid var(--blue)}
-.game-card[data-rating="Moderate"]{border-top:3px solid var(--amber)}
-.game-card[data-rating="Lean"]{border-top:3px solid var(--border2)}
-.card-header{padding:14px 16px 12px;border-bottom:1px solid var(--border)}
-.card-header-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
-.card-time{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text);font-weight:500}
-.card-venue{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-top:2px}
-.card-rating{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;padding:3px 9px;border-radius:3px;white-space:nowrap}
-.rating-elite{background:var(--green-bg);color:var(--green);border:1px solid rgba(0,230,118,0.3)}
-.rating-strong{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(79,195,247,0.3)}
-.rating-moderate{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(255,179,0,0.3)}
-.rating-lean{background:var(--surface3);color:var(--muted2);border:1px solid var(--border2)}
-.matchup{display:flex;align-items:center;gap:10px}
-.team-block{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
-.team-block.home{flex-direction:row-reverse;text-align:right}
-.team-logo{width:36px;height:36px;object-fit:contain;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.5));flex-shrink:0}
-.team-info{min-width:0}
-.team-name{font-family:'Oswald',sans-serif;font-size:17px;font-weight:500;letter-spacing:.04em;color:var(--text);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.team-label{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.08em;margin-top:2px}
-.at-sep{font-family:'Oswald',sans-serif;font-size:15px;color:var(--muted);flex-shrink:0;padding:0 4px}
-.card-body{padding:14px 16px;display:flex;flex-direction:column;gap:12px}
-.section-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
-.pitcher-row{display:flex;align-items:baseline;gap:8px;padding:3px 0}
-.pitcher-side{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);min-width:28px;flex-shrink:0;letter-spacing:.06em}
-.pitcher-name{color:var(--text);font-size:12px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pitcher-stats{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted2);white-space:nowrap;flex-shrink:0}
-.st{color:var(--text)}
-.divider{height:1px;background:var(--border);margin:0 -16px}
-.pred-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.pred-box{background:var(--surface2);border-radius:7px;padding:11px 13px}
-.pred-box-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
-.pred-pick{font-family:'Oswald',sans-serif;font-size:15px;font-weight:600;letter-spacing:.04em;margin-bottom:3px;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pred-pick.away{color:var(--green)}.pred-pick.home{color:var(--purple)}
-.pred-conf{font-family:'IBM Plex Mono',monospace;font-size:9px;margin-bottom:8px}
-.conf-high{color:var(--green)}.conf-med{color:var(--amber)}.conf-low{color:var(--muted2)}
-.totals-row{display:flex;gap:5px;margin-bottom:7px}
-.tot-chip{flex:1;background:var(--surface3);border-radius:5px;padding:6px 4px;text-align:center}
-.tot-label{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:.05em;margin-bottom:3px}
-.tot-val{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:500}
-.tot-val.away{color:var(--green)}.tot-val.home{color:var(--purple)}.tot-val.tot{color:var(--text)}
-.win-bar{height:5px;border-radius:3px;overflow:hidden;display:flex;background:var(--surface3)}
-.wb-away{background:var(--green)}.wb-home{background:var(--purple)}
-.win-labels{display:flex;justify-content:space-between;margin-top:4px}
-.win-label{font-family:'IBM Plex Mono',monospace;font-size:9px}
-.wx-row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--surface2);border-radius:7px}
-.wx-icon{font-size:20px;flex-shrink:0}
-.wx-facts{display:flex;gap:10px;flex-wrap:wrap;flex:1}
-.wx-fact{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted2)}
-.wx-fact span{color:var(--text)}
-.wx-badge{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 7px;border-radius:3px;white-space:nowrap;flex-shrink:0}
-.wx-hot{background:rgba(255,100,100,0.15);color:#ff8080}
-.wx-carry{background:var(--amber-bg);color:var(--amber)}
-.wx-pitcher{background:var(--purple-bg);color:var(--purple)}
-.wx-dome{background:var(--surface3);color:var(--muted)}
-.wx-neutral{background:var(--surface3);color:var(--muted)}
-.skeleton{height:380px;background:linear-gradient(90deg,var(--surface) 0%,var(--surface2) 50%,var(--surface) 100%);background-size:200% 100%;animation:shimmer 1.4s ease infinite;border-radius:10px;border:1px solid var(--border)}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.no-games{text-align:center;padding:70px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:.08em;grid-column:1/-1}
-/* Expand panel */
-.game-card{cursor:pointer}
-.expand-btn{display:flex;align-items:center;justify-content:center;gap:5px;padding:8px 16px;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;color:var(--muted);border-top:1px solid var(--border);background:none;width:100%;cursor:pointer;transition:color .15s,background .15s}
-.expand-btn:hover{color:var(--text);background:var(--surface2)}
-.expand-btn .chevron{transition:transform .2s;display:inline-block}
-.expand-btn.open .chevron{transform:rotate(180deg)}
-.expand-panel{display:none;padding:0 16px 14px;border-top:1px solid var(--border);background:var(--surface2)}
-.expand-panel.open{display:block}
-.exp-section{margin-top:12px}
-.exp-section-title{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-.exp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.exp-team-block{background:var(--surface3);border-radius:6px;padding:9px 11px}
-.exp-team-name{font-family:'Oswald',sans-serif;font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px}
-.exp-stat-row{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:10px;margin-bottom:3px}
-.exp-stat-label{color:var(--muted)}
-.exp-stat-val{color:var(--text);font-weight:500}
-.exp-stat-val.hot{color:var(--green)}
-.exp-stat-val.cold{color:var(--red)}
-.exp-stat-val.neutral{color:var(--amber)}
-.exp-h2h{background:var(--surface3);border-radius:6px;padding:9px 11px;font-family:'IBM Plex Mono',monospace;font-size:10px}
-.exp-h2h-title{color:var(--muted);margin-bottom:4px;font-size:9px;letter-spacing:.06em}
-.exp-h2h-rec{color:var(--text);font-size:12px;font-weight:500;margin-bottom:2px}
-.exp-h2h-detail{color:var(--muted2);font-size:9px}
-.exp-fatigue-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
-.exp-fatigue-chip{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:3px 8px;border-radius:3px;background:var(--surface3);color:var(--muted2)}
-.exp-fatigue-chip.bad{background:rgba(255,76,76,0.12);color:var(--red)}
-.exp-fatigue-chip.ok{background:var(--green-bg);color:var(--green)}
-.exp-sp-row{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:10px;margin-bottom:3px}
-.exp-sp-label{color:var(--muted);min-width:32px}
-.exp-sp-trend{font-size:9px;padding:1px 6px;border-radius:3px}
-.improving{background:var(--green-bg);color:var(--green)}
-.declining{background:var(--red-bg);color:var(--red)}
-.consistent{background:var(--surface3);color:var(--muted2)}
+  :root {
+    --bg: #ffffff;
+    --bg2: #f7f7f5;
+    --bg3: #f0efec;
+    --text: #1a1a18;
+    --text2: #6b6b67;
+    --text3: #9e9e9a;
+    --border: rgba(0,0,0,0.1);
+    --border2: rgba(0,0,0,0.18);
+    --green: #1a7f3c;
+    --green-bg: #eaf3de;
+    --green-border: #c0dd97;
+    --blue: #185fa5;
+    --blue-bg: #e6f1fb;
+    --blue-border: #b5d4f4;
+    --amber: #ba7517;
+    --amber-bg: #faeeda;
+    --red: #a32d2d;
+    --red-bg: #fcebeb;
+    --radius: 10px;
+    --radius-sm: 7px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a;
+      --bg2: #242422;
+      --bg3: #2c2c2a;
+      --text: #f0efe8;
+      --text2: #a0a09a;
+      --text3: #6e6e68;
+      --border: rgba(255,255,255,0.1);
+      --border2: rgba(255,255,255,0.18);
+      --green-bg: #162b1c;
+      --green-border: #2a5c35;
+      --blue-bg: #122038;
+      --blue-border: #1e4475;
+      --amber-bg: #2a1f0a;
+      --red-bg: #2a1212;
+      --shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg3);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  /* ── HEADER ── */
+  .header {
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .logo { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .logo span { font-size: 22px; }
+  .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .date-pill {
+    font-size: 12px; background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 4px 12px; color: var(--text2);
+  }
+  .refresh-btn {
+    display: flex; align-items: center; gap: 5px; font-size: 12px;
+    padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border2);
+    background: var(--bg); color: var(--text2); cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: background .15s;
+  }
+  .refresh-btn:hover { background: var(--bg2); }
+  /* ── TABS ── */
+  .tab-bar {
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+  }
+  .tab {
+    padding: 12px 18px; font-size: 13px; font-weight: 500;
+    color: var(--text2); border: none; background: none;
+    cursor: pointer; border-bottom: 2px solid transparent;
+    font-family: 'DM Sans', sans-serif; white-space: nowrap;
+    transition: color .15s, border-color .15s;
+  }
+  .tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+  .tab:hover:not(.active) { color: var(--text); }
+  /* ── MAIN ── */
+  .main { padding: 20px; max-width: 1400px; margin: 0 auto; }
+  /* ── STATUS ── */
+  .status-bar {
+    text-align: center; padding: 60px 20px;
+    color: var(--text2); font-size: 14px;
+  }
+  .spinner {
+    width: 24px; height: 24px; border: 2px solid var(--border);
+    border-top-color: var(--blue); border-radius: 50%;
+    animation: spin .7s linear infinite;
+    display: inline-block; vertical-align: middle; margin-right: 10px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error-msg { color: var(--red); background: var(--red-bg); border-radius: var(--radius-sm); padding: 14px 18px; font-size: 13px; }
+  /* ── GAMES GRID ── */
+  .games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+  }
+  /* ── CARD ── */
+  .card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: transform .12s, box-shadow .12s, border-color .12s;
+  }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-color: var(--border2); }
+  .card.elite  { border-left: 3px solid var(--green); }
+  .card.strong { border-left: 3px solid var(--blue); }
+  .card.moderate { border-left: 3px solid var(--amber); }
+  .card-top {
+    background: var(--bg2); padding: 8px 13px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-time { font-size: 11px; color: var(--text2); font-weight: 500; display: flex; align-items: center; gap: 4px; }
+  .rating-badge { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 600; white-space: nowrap; }
+  .rb-elite    { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .rb-strong   { background: var(--blue-bg);  color: var(--blue);  border: 1px solid var(--blue-border); }
+  .rb-moderate { background: var(--amber-bg); color: var(--amber); }
+  .rb-lean     { background: var(--bg3); color: var(--text2); border: 1px solid var(--border); }
+  .card-body { padding: 12px 13px; }
+  .matchup { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px; }
+  .team { flex: 1; min-width: 0; }
+  .team.home { text-align: right; }
+  .team-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .team-rec  { font-size: 10px; color: var(--text2); margin-top: 1px; }
+  .at-sep { font-size: 11px; color: var(--text3); margin: 0 7px; flex-shrink: 0; }
+  .pitchers { display: flex; justify-content: space-between; gap: 6px; margin-bottom: 9px; }
+  .pitcher { flex: 1; min-width: 0; }
+  .pitcher.home-p { text-align: right; }
+  .sp-name { font-size: 11px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sp-stats { font-size: 10px; color: var(--text2); margin-top: 1px; }
+  .divider { height: 1px; background: var(--border); margin: 9px 0; }
+  /* winner boxes */
+  .winners { display: flex; gap: 5px; margin-bottom: 8px; }
+  .wb { flex: 1; border-radius: var(--radius-sm); padding: 6px 8px; text-align: center; }
+  .wb-f5 { background: var(--blue-bg); border: 1px solid var(--blue-border); }
+  .wb-fg { background: var(--green-bg); border: 1px solid var(--green-border); }
+  .wb-lbl { font-size: 9px; color: var(--text2); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
+  .wb-team { font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wb-f5 .wb-team { color: var(--blue); }
+  .wb-fg .wb-team { color: var(--green); }
+  /* totals */
+  .totals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 8px; }
+  .tot { background: var(--bg2); border-radius: var(--radius-sm); padding: 6px 8px; text-align: center; }
+  .tot-lbl { font-size: 9px; color: var(--text2); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
+  .tot-val { font-size: 13px; font-weight: 600; }
+  .tot-sub { font-size: 9px; margin-top: 1px; }
+  /* team run totals */
+  .run-totals {
+    background: var(--bg2); border-radius: var(--radius-sm); padding: 7px 10px;
+    margin-bottom: 8px;
+  }
+  .run-totals-lbl { font-size: 9px; color: var(--text2); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+  .run-totals-row { display: flex; justify-content: space-between; align-items: flex-start; }
+  .run-team { flex: 1; }
+  .run-team.away { text-align: left; }
+  .run-team.home { text-align: right; }
+  .run-tname { font-size: 9px; color: var(--text2); margin-bottom: 2px; }
+  .run-nums { font-size: 11px; font-weight: 600; }
+  .run-nums.away { color: var(--blue); }
+  .run-nums.home { color: var(--green); }
+  /* weather */
+  .wx-line { font-size: 10px; color: var(--text2); display: flex; align-items: flex-start; gap: 5px; margin-bottom: 6px; line-height: 1.45; }
+  .wx-line .wx-ico { flex-shrink: 0; font-size: 13px; }
+  /* park */
+  .park-line { font-size: 10px; color: var(--text3); margin-bottom: 5px; }
+  .tap-hint { font-size: 9px; color: var(--text3); text-align: center; margin-top: 4px; }
+  /* confidence colors */
+  .c-high { color: var(--green); }
+  .c-med  { color: var(--amber); }
+  .c-low  { color: var(--text3); }
+  /* ── MODAL ── */
+  .overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.5); z-index: 100;
+    align-items: flex-start; justify-content: center;
+    padding: 30px 14px; overflow-y: auto;
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: var(--bg); border-radius: var(--radius);
+    border: 1px solid var(--border2);
+    width: 100%; max-width: 620px;
+    padding: 20px; position: relative;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  }
+  .modal-close {
+    position: absolute; top: 14px; right: 16px;
+    background: none; border: none; cursor: pointer;
+    color: var(--text2); font-size: 20px; padding: 0; line-height: 1;
+  }
+  .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 14px; padding-right: 28px; }
+  .m-sec-hdr {
+    font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--text2); margin: 16px 0 8px;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .m-sec-hdr i { font-size: 13px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .m-box {
+    background: var(--bg2); border-radius: var(--radius-sm); padding: 10px 12px;
+  }
+  .m-box-title {
+    font-size: 11px; font-weight: 600; margin-bottom: 8px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .sr { display: flex; justify-content: space-between; align-items: center; padding: 3.5px 0; border-bottom: 1px solid var(--border); }
+  .sr:last-child { border-bottom: none; }
+  .sk { font-size: 11px; color: var(--text2); }
+  .sv { font-size: 11px; font-weight: 500; }
+  .trend-b { font-size: 10px; padding: 1px 7px; border-radius: 20px; }
+  .t-hot  { background: var(--green-bg); color: var(--green); }
+  .t-cold { background: var(--red-bg);   color: var(--red); }
+  .t-neut { background: var(--bg3); color: var(--text2); border: 1px solid var(--border); }
+  .bp-grade {
+    font-size: 12px; font-weight: 700; width: 22px; height: 22px;
+    border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+  }
+  .g-A { background: var(--green-bg); color: var(--green); }
+  .g-B { background: var(--blue-bg);  color: var(--blue); }
+  .g-C { background: var(--amber-bg); color: var(--amber); }
+  .g-D,.g-F { background: var(--red-bg); color: var(--red); }
+  /* prob bar */
+  .prob-wrap { background: var(--bg2); border-radius: var(--radius-sm); padding: 11px 13px; margin-bottom: 10px; }
+  .prob-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--text2); margin-bottom: 7px; }
+  .prob-bar-row { display: flex; align-items: center; gap: 9px; }
+  .prob-bar-bg { flex: 1; height: 7px; border-radius: 4px; background: var(--bg3); overflow: hidden; position: relative; }
+  .pb-away { height: 100%; background: var(--blue); border-radius: 4px 0 0 4px; }
+  .pb-home { position: absolute; right: 0; top: 0; height: 100%; background: var(--green); border-radius: 0 4px 4px 0; }
+  .prob-pct { font-size: 12px; font-weight: 600; min-width: 34px; }
+  .prob-teams { display: flex; justify-content: space-between; font-size: 10px; margin-top: 5px; color: var(--text2); }
+  /* run totals modal */
+  .run-detail { background: var(--bg2); border-radius: var(--radius-sm); padding: 10px 13px; margin-bottom: 10px; }
+  .run-detail-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--text2); margin-bottom: 8px; }
+  .run-detail-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; text-align: center; margin-bottom: 8px; }
+  .run-detail-cell .rdc-lbl { font-size: 9px; color: var(--text2); margin-bottom: 2px; }
+  .run-detail-cell .rdc-val { font-size: 18px; font-weight: 700; }
+  .rdc-away { color: var(--blue); }
+  .rdc-home { color: var(--green); }
+  .run-total-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .run-total-cell { background: var(--bg); border-radius: var(--radius-sm); padding: 6px; text-align: center; }
+  .rtc-lbl { font-size: 9px; color: var(--text2); margin-bottom: 2px; }
+  .rtc-val { font-size: 14px; font-weight: 600; }
+  /* weather modal */
+  .wx-detail { background: var(--bg2); border-radius: var(--radius-sm); padding: 10px 13px; margin-bottom: 10px; }
+  /* ── STANDINGS ── */
+  .standings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(285px,1fr)); gap: 14px; }
+  .div-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+  .div-hdr {
+    background: var(--bg2); padding: 9px 14px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--text2); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .div-hdr.al { border-left: 3px solid var(--blue); }
+  .div-hdr.nl { border-left: 3px solid var(--red); }
+  .std-tbl { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .std-tbl th {
+    font-size: 10px; color: var(--text3); font-weight: 500;
+    padding: 6px 8px; text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .std-tbl th:first-child { text-align: left; padding-left: 14px; }
+  .std-tbl td { padding: 6px 8px; text-align: center; border-bottom: 1px solid var(--border); color: var(--text); }
+  .std-tbl td:first-child { text-align: left; padding-left: 14px; font-weight: 500; }
+  .std-tbl tr:last-child td { border-bottom: none; }
+  .std-tbl tr.leader td:first-child { color: var(--green); font-weight: 700; }
+  .streak-hot  { color: var(--green); font-weight: 600; }
+  .streak-cold { color: var(--red);   font-weight: 600; }
+  .gb-dash { color: var(--text3); }
+  /* section day label */
+  .day-label {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .07em; color: var(--text2);
+    margin: 0 0 10px; display: flex; align-items: center; gap: 7px;
+  }
+  .day-label::after { content:''; flex:1; height:1px; background:var(--border); }
+  @media (max-width: 600px) {
+    .two-col { grid-template-columns: 1fr; }
+    .run-detail-grid { grid-template-columns: repeat(2,1fr); }
+    .main { padding: 12px; }
+  }
 </style>
 </head>
 <body>
+
 <div class="header">
-  <div class="logo"><div class="logo-dot"></div>MLB PREDICTION MODEL</div>
-  <span class="live-badge">LIVE</span>
+  <div class="logo"><span>⚾</span> MLB Predictions</div>
   <div class="header-right">
-    <span class="sheet-date" id="sheet-date">Loading...</span>
-    <button class="refresh-btn" id="refresh-btn" onclick="loadData()">↻ REFRESH</button>
+    <span class="date-pill" id="date-display"></span>
+    <button class="refresh-btn" onclick="loadAll()">
+      <i class="ti ti-refresh" style="font-size:13px"></i> Refresh
+    </button>
   </div>
 </div>
-<div class="controls">
-  <div class="day-tabs">
-    <button class="day-tab active" id="tab-today" onclick="switchDay('today',this)">Today</button>
-    <button class="day-tab" id="tab-tomorrow" onclick="switchDay('tomorrow',this)">Tomorrow</button>
+
+<div class="tab-bar">
+  <button class="tab active" id="tab-today"     onclick="switchTab('today')">Today</button>
+  <button class="tab"        id="tab-tomorrow"  onclick="switchTab('tomorrow')">Tomorrow</button>
+  <button class="tab"        id="tab-standings" onclick="switchTab('standings')">Standings</button>
+</div>
+
+<div class="main" id="main"></div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="closeOverlay(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></button>
+    <div id="modal-body"></div>
   </div>
-  <div class="filter-group">
-    <span class="filter-label">Rating</span>
-    <button class="filter-chip active" onclick="setFilter('all',this)">All</button>
-    <button class="filter-chip" onclick="setFilter('Elite',this)">⭐⭐⭐ Elite</button>
-    <button class="filter-chip" onclick="setFilter('Strong',this)">⭐⭐ Strong</button>
-    <button class="filter-chip" onclick="setFilter('Moderate',this)">⭐ Moderate</button>
-  </div>
-  <select class="sort-sel" onchange="setSort(this.value)">
-    <option value="time">Sort: Game time</option>
-    <option value="rating">Sort: Confidence</option>
-    <option value="total">Sort: FG total ↓</option>
-  </select>
-  <span class="count-label" id="count-label"></span>
 </div>
-<div class="summary-bar" id="summary-bar">
-  <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber)">Loading from Google Sheets...</span>
-</div>
-<div class="card-grid" id="card-grid">
-  <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
-</div>
+
 <script>
-// CONFIRMED sheet URLs (all verified via browser + xlsx inspection):
-//
-// PREDICTIONS (gid=596859801) — game rows only, 37 rows:
-//   col0="Away  @  Home"  col1=Time
-//   col6=F5 Away Win%  col7=F5 Home Win%  col8=F5 Pick  col9=F5 Conf  col10=F5 Total
-//   col12=FG Away Win%  col13=FG Home Win%  col14=FG Pick  col15=FG Conf  col16=FG Total  col18=Rating
-//
-// SCHEDULE (gid=750739564):
-//   col0=Time(decimal)  col1=Today/Tmrw  col2=Away  col3="vs"  col4=Home
-//   col5=Venue  col6=Away SP  col7=Away ERA  col8=Away WHIP  col9=Home SP  col10=Home ERA  col11=Home WHIP
-//
-// TEAM TOTALS (gid=1142815985):
-//   col0="Away @ Home"  col6="AWY: N.NN"(F5 away runs)  col7="HME: N.NN"(F5 home runs)  col8=F5 Total
-//   col12="AWY: N.NN"(FG away runs)  col13="HME: N.NN"(FG home runs)  col14=FG Total
-//   (identified by col0 has "@" and col6 has ":")
-//
-// PARK & WEATHER (gid=1276454419):
-//   col9="Away @ Home  (time ET)"  col10=Temp°F  col12=Wind mph  col13=Wind dir
-//   col14=Rain%  col15=Cloud%  col16=Conditions  col17=Impact  col18=RunAdj%
-//   (identified by col9 has "@" and col9 has "(")
+/* ===================================================
+   CONFIG — your Google Sheet ID + GIDs
+   =================================================== */
+const SHEET_ID = '18akScsNGlflTQ8MM2iLZ8fi9rKW8cE7zPPh4bKsSdkk';
+const GIDS = {
+  schedule:    577339871,
+  predictions: 785483277,
+  teamTotals:  367925334,
+  pitchers:    221778536,
+  bullpen:     1783803778,
+  parkWeather: 866267891,
+  teamStats:   1418505229,
+  advanced:    1867140111,
+};
 
-const PREDS_URL  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=596859801&single=true&output=csv';
-const SCHED_URL  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=750739564&single=true&output=csv';
-const TOTALS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=1142815985&single=true&output=csv';
-const WEATHER_URL= 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=1276454419&single=true&output=csv';
-const STATS_URL  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQGduU7mNf1NWdcX4JE-g9y2BDvoROaFuB-zqyjqb9Im9pTXDsTzfhUhca3j1XEJt_HHeJkbKnNLRAa/pub?gid=141272668&single=true&output=csv';
+/* ===================================================
+   GLOBALS
+   =================================================== */
+let DATA       = {};   // parsed sheet data
+let WEATHER    = {};   // ESPN weather keyed by home abbr
+let currentTab = 'today';
+let todayGames = [];
+let tmrwGames  = [];
 
-const LOGOS={'Arizona Diamondbacks':'https://a.espncdn.com/i/teamlogos/mlb/500/ari.png','Atlanta Braves':'https://a.espncdn.com/i/teamlogos/mlb/500/atl.png','Baltimore Orioles':'https://a.espncdn.com/i/teamlogos/mlb/500/bal.png','Boston Red Sox':'https://a.espncdn.com/i/teamlogos/mlb/500/bos.png','Chicago Cubs':'https://a.espncdn.com/i/teamlogos/mlb/500/chc.png','Chicago White Sox':'https://a.espncdn.com/i/teamlogos/mlb/500/cws.png','Cincinnati Reds':'https://a.espncdn.com/i/teamlogos/mlb/500/cin.png','Cleveland Guardians':'https://a.espncdn.com/i/teamlogos/mlb/500/cle.png','Colorado Rockies':'https://a.espncdn.com/i/teamlogos/mlb/500/col.png','Detroit Tigers':'https://a.espncdn.com/i/teamlogos/mlb/500/det.png','Houston Astros':'https://a.espncdn.com/i/teamlogos/mlb/500/hou.png','Kansas City Royals':'https://a.espncdn.com/i/teamlogos/mlb/500/kc.png','Los Angeles Angels':'https://a.espncdn.com/i/teamlogos/mlb/500/laa.png','Los Angeles Dodgers':'https://a.espncdn.com/i/teamlogos/mlb/500/lad.png','Miami Marlins':'https://a.espncdn.com/i/teamlogos/mlb/500/mia.png','Milwaukee Brewers':'https://a.espncdn.com/i/teamlogos/mlb/500/mil.png','Minnesota Twins':'https://a.espncdn.com/i/teamlogos/mlb/500/min.png','New York Mets':'https://a.espncdn.com/i/teamlogos/mlb/500/nym.png','New York Yankees':'https://a.espncdn.com/i/teamlogos/mlb/500/nyy.png','Athletics':'https://a.espncdn.com/i/teamlogos/mlb/500/oak.png','Philadelphia Phillies':'https://a.espncdn.com/i/teamlogos/mlb/500/phi.png','Pittsburgh Pirates':'https://a.espncdn.com/i/teamlogos/mlb/500/pit.png','San Diego Padres':'https://a.espncdn.com/i/teamlogos/mlb/500/sd.png','San Francisco Giants':'https://a.espncdn.com/i/teamlogos/mlb/500/sf.png','Seattle Mariners':'https://a.espncdn.com/i/teamlogos/mlb/500/sea.png','St. Louis Cardinals':'https://a.espncdn.com/i/teamlogos/mlb/500/stl.png','Tampa Bay Rays':'https://a.espncdn.com/i/teamlogos/mlb/500/tb.png','Texas Rangers':'https://a.espncdn.com/i/teamlogos/mlb/500/tex.png','Toronto Blue Jays':'https://a.espncdn.com/i/teamlogos/mlb/500/tor.png','Washington Nationals':'https://a.espncdn.com/i/teamlogos/mlb/500/wsh.png'};
-const ABBR={'Arizona Diamondbacks':'ARI','Atlanta Braves':'ATL','Baltimore Orioles':'BAL','Boston Red Sox':'BOS','Chicago Cubs':'CHC','Chicago White Sox':'CWS','Cincinnati Reds':'CIN','Cleveland Guardians':'CLE','Colorado Rockies':'COL','Detroit Tigers':'DET','Houston Astros':'HOU','Kansas City Royals':'KC','Los Angeles Angels':'LAA','Los Angeles Dodgers':'LAD','Miami Marlins':'MIA','Milwaukee Brewers':'MIL','Minnesota Twins':'MIN','New York Mets':'NYM','New York Yankees':'NYY','Athletics':'ATH','Philadelphia Phillies':'PHI','Pittsburgh Pirates':'PIT','San Diego Padres':'SD','San Francisco Giants':'SF','Seattle Mariners':'SEA','St. Louis Cardinals':'STL','Tampa Bay Rays':'TB','Texas Rangers':'TEX','Toronto Blue Jays':'TOR','Washington Nationals':'WSH'};
+/* ===================================================
+   DATE
+   =================================================== */
+const TODAY_STR = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+document.getElementById('date-display').textContent = TODAY_STR;
 
-const RO={Elite:0,Strong:1,Moderate:2,Lean:3};
-let GAMES={today:[],tomorrow:[]};
-let STATSDATA={formMap:{},spMap:{},h2hMap:{},fatigueMap:{}};
-let day='today',filt='all',sort='time';
+/* ===================================================
+   CSV FETCH + PARSE
+   =================================================== */
+async function fetchCSV(gid) {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Failed to fetch GID ${gid}: ${resp.status}`);
+  return parseCSV(await resp.text());
+}
 
-function parseCSV(text){
-  const rows=[];let row=[],f='',q=false;
-  for(let i=0;i<text.length;i++){
-    const c=text[i],n=text[i+1];
-    if(q){if(c==='"'&&n==='"'){f+='"';i++;}else if(c==='"'){q=false;}else{f+=c;}}
-    else{if(c==='"'){q=true;}else if(c===','){row.push(f.trim());f='';}
-    else if(c==='\r'&&n==='\n'){row.push(f.trim());rows.push(row);row=[];f='';i++;}
-    else if(c==='\r'||c==='\n'){row.push(f.trim());rows.push(row);row=[];f='';}
-    else{f+=c;}}
+function parseCSV(text) {
+  const lines = text.split('\n');
+  const rows = [];
+  for (const line of lines) {
+    if (line.trim()) rows.push(splitLine(line));
   }
-  if(f||row.length){row.push(f.trim());rows.push(row);}
   return rows;
 }
 
-function p(s){return parseFloat((s||'').replace(/[^0-9.\-]/g,''))||0;}
-function dash(s){return !s||['','—','-','–'].includes(s.trim());}
-function sp(s){
-  if(!s||dash(s))return{name:'TBD',era:null};
-  const m=s.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
-  if(m)return{name:m[1].trim(),era:dash(m[2])?null:m[2].trim()};
-  return{name:s.trim(),era:null};
-}
-function conf(s){const u=(s||'').toUpperCase();return u.includes('HIGH')?'High':u.includes('MED')?'Med':'Low';}
-function rating(s){const u=(s||'').toUpperCase();return u.includes('ELITE')?'Elite':u.includes('STRONG')?'Strong':u.includes('MODERATE')?'Moderate':'Lean';}
-function tmin(t){const m=(t||'').match(/(\d+):(\d+)\s*(AM|PM)/i);if(!m)return 0;let h=+m[1];if(m[3].toUpperCase()==='PM'&&h!==12)h+=12;if(m[3].toUpperCase()==='AM'&&h===12)h=0;return h*60+(+m[2]);}
-function num1(s){const m=(s||'').match(/[\d.]+/);return m?m[0]:null;}
-// Normalize team names by collapsing multiple spaces (sheet uses "Team  @  Team")
-function norm(s){return (s||'').replace(/\s+/g,' ').trim();}
-function key(a,h){return norm(a)+'|'+norm(h);}
-
-// ── Schedule: col2=Away, col4=Home, col5=Venue, col6=Away SP, col7=Away ERA,
-//   col8=Away WHIP, col9=Home SP, col10=Home ERA, col11=Home WHIP
-//   Row identified by: col1 matches "Today"/"Tmrw"
-// ── Schedule: single map keyed by "away|home" — used for SP, ERA, WHIP, venue only
-// For games where same teams play both days, the Schedule has separate Today/Tmrw rows
-// but we key both the same way — that's fine since SP/venue is what we need
-function parseSched(rows){
-  const todayMap={}, tmrwMap={};
-  for(const r of rows){
-    const c1=(r[1]||'').trim();
-    const isToday=/today/i.test(c1), isTmrw=/tmrw|tomorrow/i.test(c1);
-    if(!isToday&&!isTmrw) continue;
-    const away=norm(r[2]||''), home=norm(r[4]||'');
-    if(!away||!home) continue;
-    const entry={
-      venue:(r[5]||'').trim(),
-      awaySP:(r[6]||'').trim(),
-      awayERA:dash(r[7])?null:r[7].trim(),
-      awayWHIP:dash(r[8])?null:r[8].trim(),
-      homeSP:(r[9]||'').trim(),
-      homeERA:dash(r[10])?null:r[10].trim(),
-      homeWHIP:dash(r[11])?null:r[11].trim(),
-    };
-    if(isToday) todayMap[key(away,home)]=entry;
-    else tmrwMap[key(away,home)]=entry;
+function splitLine(line) {
+  const out = []; let cur = ''; let inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') { inQ = !inQ; }
+    else if (c === ',' && !inQ) { out.push(cur.trim()); cur = ''; }
+    else { cur += c; }
   }
-  return{todayMap,tmrwMap};
+  out.push(cur.trim());
+  return out;
 }
 
-// ── Team Totals
-function parseTotals(rows){
-  const m={};
-  for(const r of rows){
-    const c0=norm(r[0]||''), c6=(r[6]||'').trim();
-    if(!c0.includes('@')||!c6.includes(':')) continue;
-    const at=c0.indexOf('@');
-    const away=norm(c0.substring(0,at)), home=norm(c0.substring(at+1));
-    if(!away||!home) continue;
-    m[key(away,home)]={f5AwayRuns:num1(r[6]),f5HomeRuns:num1(r[7]),fgAwayRuns:num1(r[12]),fgHomeRuns:num1(r[13])};
+function csvToObjects(rows) {
+  // Find actual header row (first row where first cell doesn't look like a title/section header)
+  let headerIdx = 0;
+  for (let i = 0; i < Math.min(rows.length, 5); i++) {
+    const first = (rows[i][0] || '').toLowerCase();
+    // Skip emoji-laden title rows or section headers
+    if (first.includes('📅') || first.includes('📊') || first.includes('⚾') ||
+        first.includes('🔥') || first.includes('🏟️') || first.includes('📈') ||
+        first.includes('🎰') || first.match(/^[^\w]/)) continue;
+    // Skip totally blank rows
+    if (rows[i].every(c => !c)) continue;
+    headerIdx = i;
+    break;
   }
-  return m;
-}
-
-// ── Weather: build TWO maps (today/tomorrow) based on section header rows
-// col9="Away @ Home  (time ET)" — strip time, match on team names only
-function parseWeather(rows){
-  const todayMap={}, tmrwMap={};
-  let section='today';
-  for(const r of rows){
-    const c9=(r[9]||'').trim();
-    // Section header detection in col9
-    if(c9.includes('TODAY'))   {section='today';continue;}
-    if(c9.includes('TOMORROW')){section='tomorrow';continue;}
-    if(!c9.includes('@')||!c9.includes('(')) continue;
-    // Strip "(time ET)" to get "Away @ Home"
-    const matchup=c9.replace(/\s*\(.*$/,'').trim();
-    const at=matchup.indexOf('@');
-    if(at<0) continue;
-    const away=norm(matchup.substring(0,at));
-    const home=norm(matchup.substring(at+1));
-    if(!away||!home) continue;
-    const entry={
-      temp:dash(r[10])?'':r[10].trim(),
-      windMph:dash(r[12])?'':r[12].trim(),
-      windDir:dash(r[13])?'':r[13].trim(),
-      conditions:(r[16]||'').trim(),
-      impact:(r[17]||'').trim(),
-      runAdj:dash(r[18])?'':r[18].trim(),
-    };
-    (section==='today'?todayMap:tmrwMap)[key(away,home)]=entry;
+  const headers = rows[headerIdx].map(h => h.replace(/[^\w\s/%]/g, '').trim());
+  const objects = [];
+  for (let i = headerIdx + 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (row.every(c => !c)) continue;
+    const obj = {};
+    headers.forEach((h, idx) => { obj[h] = (row[idx] || '').trim(); });
+    objects.push(obj);
   }
-  return{todayMap,tmrwMap};
+  return objects;
 }
 
-// ── Advanced Stats: L10 form, SP last 3, H2H, fatigue
-// SP cols confirmed: c0=Pitcher, c1=Team, c2=ERA, c3=WHIP, c4=IP, c5=K, c6=Trend
-function parseStats(rows){
-  const formMap={}, spMap={}, h2hMap={}, fatigueMap={};
-  let section='';
-  for(const r of rows){
-    const c0=(r[0]||'').trim();
-    if(c0.includes('L10 RECENT')||c0.includes('RECENT FORM'))  {section='form';continue;}
-    if(c0.includes('SP LAST 3')||c0.includes('LAST 3 STARTS')) {section='sp';continue;}
-    if(c0.includes('HEAD-TO-HEAD'))                             {section='h2h';continue;}
-    if(c0.includes('TRAVEL')||c0.includes('FATIGUE'))           {section='fatigue';continue;}
-    if(c0.includes('DIVISION')||c0.includes('STANDINGS'))       {section='';continue;}
-    if(['team','pitcher','matchup'].includes(c0.toLowerCase())) continue;
-    if(!c0) continue;
-    if(section==='form'){
-      formMap[norm(c0)]={w:r[1],l:r[2],rs:r[3],ra:r[4],trend:(r[6]||'').trim(),streak:(r[7]||'').trim()};
-    }
-    if(section==='sp'){
-      spMap[norm(c0)]={era3:r[2],whip3:r[3],ip3:r[4],k3:r[5],trend:(r[6]||'').trim()};
-    }
-    if(section==='h2h'&&c0.includes('@')){
-      const at=c0.indexOf('@');
-      h2hMap[key(norm(c0.substring(0,at)),norm(c0.substring(at+1)))]={series:(r[7]||'').trim()};
-    }
-    if(section==='fatigue'){
-      fatigueMap[norm(c0)]={role:(r[1]||'').trim(),rest:(r[3]||'').trim(),consec:(r[4]||'').trim(),seriesGame:(r[5]||'').trim(),restEdge:(r[7]||'').trim()};
+/* ===================================================
+   LOAD ALL DATA
+   =================================================== */
+async function loadAll() {
+  showLoading();
+  try {
+    const [sched, preds, totals, pitchers, bullpen, parkWx, teamStats, advanced] = await Promise.all([
+      fetchCSV(GIDS.schedule),
+      fetchCSV(GIDS.predictions),
+      fetchCSV(GIDS.teamTotals),
+      fetchCSV(GIDS.pitchers),
+      fetchCSV(GIDS.bullpen),
+      fetchCSV(GIDS.parkWeather),
+      fetchCSV(GIDS.teamStats),
+      fetchCSV(GIDS.advanced),
+    ]);
+    DATA.schedule   = processSchedule(sched);
+    DATA.predictions = csvToObjects(preds);
+    DATA.totals     = csvToObjects(totals);
+    DATA.pitchers   = csvToObjects(pitchers);
+    DATA.bullpen    = csvToObjects(bullpen);
+    DATA.parkWeather = csvToObjects(parkWx);
+    DATA.teamStats  = csvToObjects(teamStats);
+    DATA.advanced   = processAdvanced(advanced);
+
+    buildGames();
+    fetchESPNWeather(); // async, re-renders cards when done
+    renderTab(currentTab);
+  } catch(e) {
+    document.getElementById('main').innerHTML =
+      `<div class="status-bar"><div class="error-msg">
+        <strong>Could not load data.</strong><br>
+        Make sure your Google Sheet is shared as "Anyone with the link can view."<br>
+        <small style="opacity:.7">${e.message}</small>
+      </div></div>`;
+  }
+}
+
+function showLoading() {
+  document.getElementById('main').innerHTML =
+    `<div class="status-bar"><span class="spinner"></span>Loading data from Google Sheets…</div>`;
+}
+
+/* ===================================================
+   PROCESS SCHEDULE — split today/tomorrow blocks
+   =================================================== */
+function processSchedule(rows) {
+  const all = [];
+  let section = null;
+  for (const row of rows) {
+    const first = (row[0] || '').trim();
+    if (first.includes('TODAY')) { section = 'today'; continue; }
+    if (first.includes('TOMORROW')) { section = 'tomorrow'; continue; }
+    if (!first || first.includes('Time') || first.includes('📅')) continue;
+    // Data row: Time, Day, Away Team, (vs), Home Team, Venue, Away SP, Away ERA, Away WHIP, Home SP, Home ERA, Home WHIP, ...
+    if (section && row.length >= 5 && row[0]) {
+      all.push({ _day: section, raw: row });
     }
   }
-  return{formMap,spMap,h2hMap,fatigueMap};
+  return all;
 }
 
-// ── Predictions: use Schedule todayKeys/tmrwKeys to split today vs tomorrow correctly
-// SP name from Predictions col2/3 is "Name  (ERA)" — extract name as fallback
-function spNameOnly(cell){return(cell||'').replace(/\s*\(.*\)\s*$/,'').trim();}
+function processAdvanced(rows) {
+  // Advanced sheet has multiple sections; parse each by looking for section headers
+  const result = { spForm: {}, teamForm: {}, h2h: {} };
+  let section = null;
+  let headers = [];
 
-function parsePreds(rows, sched, totMap, wxMaps){
-  GAMES={today:[],tomorrow:[]};
-  let section='today';
-  for(const r of rows){
-    const c0=(r[0]||'').trim(), c1=(r[1]||'').trim();
-    // Section header rows: col0 contains TODAY/TOMORROW, no @ in col0, col1 empty
-    if(!c0.includes('@') && c1===''){
-      const up=c0.toUpperCase();
-      if(up.includes('TOMORROW')) section='tomorrow';
-      else if(up.includes('TODAY')) section='today';
+  for (const row of rows) {
+    const first = (row[0] || '').trim();
+    if (first.includes('SECTION 1') || first.includes('STARTING PITCHER')) { section = 'sp'; headers = []; continue; }
+    if (first.includes('SECTION 2') || first.includes('TEAM FORM'))  { section = 'team'; headers = []; continue; }
+    if (first.includes('SECTION 3') || first.includes('HEAD-TO-HEAD')) { section = 'h2h';  headers = []; continue; }
+    if (!first || row.every(c => !c)) continue;
+
+    // Detect header rows (contains known header words)
+    const fl = first.toLowerCase();
+    if (fl === 'pitcher' || fl === 'team' || fl === 'matchup') {
+      headers = row.map(h => h.trim());
       continue;
     }
-    if(!c0.includes('@')||!/\d+:\d+/.test(c1)) continue;
-    const at=c0.indexOf('@');
-    const away=norm(c0.substring(0,at)), home=norm(c0.substring(at+1));
-    if(!away||!home) continue;
-    const k=key(away,home);
-    // Use correct day's schedule entry for SP/venue/WHIP
-    const sd=(section==='today'?sched.todayMap:sched.tmrwMap)[k]||{};
-    const tot=totMap[k]||{};
-    const wx=(section==='today'?wxMaps.todayMap:wxMaps.tmrwMap)[k]||null;
-    const f5aw=p(r[6]),f5hw=p(r[7]),f5Pick=norm(r[8]||''),f5c=conf(r[9]),f5t=p(r[10]);
-    const fgaw=p(r[12]),fghw=p(r[13]),fgPick=norm(r[14]||''),fgc=conf(r[15]),fgt=p(r[16]);
-    GAMES[section].push({
-      away,home,time:c1,
-      venue:sd.venue||'',
-      awaySP:sd.awaySP||spNameOnly(r[2]),
-      awayERA:sd.awayERA||null,
-      awayWHIP:sd.awayWHIP||null,
-      homeSP:sd.homeSP||spNameOnly(r[3]),
-      homeERA:sd.homeERA||null,
-      homeWHIP:sd.homeWHIP||null,
-      f5aw,f5hw,f5Pick,f5p:f5Pick===away?'away':'home',f5c,f5t,
-      f5AwayRuns:tot.f5AwayRuns||null,f5HomeRuns:tot.f5HomeRuns||null,
-      fgaw,fghw,fgPick,fgp:fgPick===away?'away':'home',fgc,fgt,
-      fgAwayRuns:tot.fgAwayRuns||null,fgHomeRuns:tot.fgHomeRuns||null,
-      rating:rating(r[18]),wx,
-    });
+
+    if (!headers.length) continue;
+
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = (row[i] || '').trim(); });
+
+    if (section === 'sp'   && obj['Pitcher'])  result.spForm[obj['Pitcher']]  = obj;
+    if (section === 'team' && obj['Team'])     result.teamForm[obj['Abbr'] || obj['Team']] = obj;
+    if (section === 'h2h'  && obj['Matchup'])  result.h2h[obj['Matchup']]    = obj;
+  }
+  return result;
+}
+
+/* ===================================================
+   BUILD GAME OBJECTS from parsed sheets
+   =================================================== */
+function buildGames() {
+  todayGames = [];
+  tmrwGames  = [];
+
+  for (const entry of DATA.schedule) {
+    const r = entry.raw;
+    // Schedule columns: Time, Day, Away Team, (vs literal), Home Team, Venue, Away SP, Away ERA, Away WHIP, Home SP, Home ERA, Home WHIP, Vegas O/U, Vegas ML, Proj Total, Away Win%, Home Win%, Edge
+    const [time, day, awayTeam,, homeTeam, venue, awaySP, awayERA, awayWHIP, homeSP, homeERA, homeWHIP] = r;
+    if (!awayTeam || !homeTeam) continue;
+
+    const awayAbbr = teamAbbr(awayTeam);
+    const homeAbbr = teamAbbr(homeTeam);
+    const matchupKey = `${awayTeam}  @  ${homeTeam}`;
+
+    // Lookup prediction row
+    const pred = DATA.predictions.find(p => rowMatch(p, awayTeam, homeTeam));
+    // Lookup totals row
+    const tot  = DATA.totals.find(t => rowMatch(t, awayTeam, homeTeam));
+    // Team stats
+    const aTS  = DATA.teamStats.find(t => t['Team'] === awayTeam || t['Abbr'] === awayAbbr) || {};
+    const hTS  = DATA.teamStats.find(t => t['Team'] === homeTeam  || t['Abbr'] === homeAbbr) || {};
+    // Park/weather
+    const pk   = DATA.parkWeather.find(p => p['Team'] === homeTeam) || {};
+    // Bullpen
+    const aBP  = DATA.bullpen.find(b => b['Team'] === awayTeam) || {};
+    const hBP  = DATA.bullpen.find(b => b['Team'] === homeTeam)  || {};
+    // SP pitcher stats
+    const aPit = DATA.pitchers.find(p => p['Pitcher'] === awaySP) || {};
+    const hPit = DATA.pitchers.find(p => p['Pitcher'] === homeSP)  || {};
+
+    const g = {
+      time, away: awayTeam, home: homeTeam, venue: venue || pk['Stadium'] || '',
+      awayAbbr, homeAbbr,
+      awaySP: awaySP || 'TBD', awayERA: awayERA || '—', awayWHIP: awayWHIP || '—',
+      homeSP: homeSP || 'TBD', homeERA: homeERA || '—', homeWHIP: homeWHIP || '—',
+      // predictions
+      f5Pick:   col(pred, 'F5 Pick', 'f5Pick') || '—',
+      f5Conf:   col(pred, 'F5 Conf') || '—',
+      f5Total:  col(pred, 'F5 Total') || col(tot, '⚡ F5 Tot', 'F5 Tot') || '—',
+      fgPick:   col(pred, 'FG Pick') || '—',
+      fgConf:   col(pred, 'FG Conf') || '—',
+      fgTotal:  col(pred, 'FG Total') || col(tot, '🏆 FG Tot', 'FG Tot') || '—',
+      rating:   col(pred, 'Rating') || '—',
+      awayF5pct: parseF(col(pred, 'Away F5%')),
+      homeF5pct: parseF(col(pred, 'Home F5%')),
+      awayFGpct: parseF(col(pred, 'Away FG%')),
+      homeFGpct: parseF(col(pred, 'Home FG%')),
+      f5OvUn:   col(pred, 'F5 O/U') || '—',
+      fgOvUn:   col(pred, 'FG O/U') || '—',
+      // team run totals
+      awayF5runs: col(tot, '⚡ Away F5', 'Away F5') || '—',
+      homeF5runs: col(tot, '⚡ Home F5', 'Home F5') || '—',
+      awayFGruns: col(tot, '🏆 Away FG', 'Away FG') || '—',
+      homeFGruns: col(tot, '🏆 Home FG', 'Home FG') || '—',
+      // team stats
+      awayRec: aTS['W'] && aTS['L'] ? `${aTS['W']}-${aTS['L']}` : '',
+      homeRec: hTS['W'] && hTS['L'] ? `${hTS['W']}-${hTS['L']}` : '',
+      aTS, hTS, aBP, hBP, aPit, hPit,
+      // park
+      park: pk['Stadium'] || venue || '',
+      parkFactor: pk['Park Factor'] || '—',
+      roof: pk['Roof'] || '—',
+      altitude: pk['Alt (ft)'] || '',
+    };
+
+    if (entry._day === 'today')    todayGames.push(g);
+    else if (entry._day === 'tomorrow') tmrwGames.push(g);
   }
 }
 
-async function loadData(){
-  const btn=document.getElementById('refresh-btn');
-  btn.disabled=true;btn.textContent='↻ LOADING...';
-  document.getElementById('card-grid').innerHTML=Array(6).fill('<div class="skeleton"></div>').join('');
-  document.getElementById('summary-bar').innerHTML='<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:var(--amber)">⟳ Fetching live data from Google Sheets...</span>';
-  try{
-    const cb='&_cb='+Date.now();
-    const [pr,sr,tr,wr,ar]=await Promise.all([
-      fetch(PREDS_URL+cb),fetch(SCHED_URL+cb),fetch(TOTALS_URL+cb),fetch(WEATHER_URL+cb),fetch(STATS_URL+cb)
-    ]);
-    if(!pr.ok)throw new Error('Predictions HTTP '+pr.status);
-    if(!sr.ok)throw new Error('Schedule HTTP '+sr.status);
-    if(!tr.ok)throw new Error('Totals HTTP '+tr.status);
-    if(!wr.ok)throw new Error('Weather HTTP '+wr.status);
-    if(!ar.ok)throw new Error('Stats HTTP '+ar.status);
-    const [pt,st,tt,wt,at2]=await Promise.all([pr.text(),sr.text(),tr.text(),wr.text(),ar.text()]);
-    const predRows=parseCSV(pt);
-    const hdr=((predRows[0]||[])[0]||'').replace(/[^\x20-\x7E]/g,'').trim();
-    const dm=hdr.match(/(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday).{0,35}\d{4}/i);
-    if(dm)document.getElementById('sheet-date').textContent=dm[0].trim().substring(0,55);
-    const sched=parseSched(parseCSV(st));
-    const totMap=parseTotals(parseCSV(tt));
-    const wxMaps=parseWeather(parseCSV(wt));
-    STATSDATA=parseStats(parseCSV(at2));
-    parsePreds(predRows,sched,totMap,wxMaps);
-    document.getElementById('tab-today').textContent='Today'+(GAMES.today.length?' ('+GAMES.today.length+')':'');
-    document.getElementById('tab-tomorrow').textContent='Tomorrow'+(GAMES.tomorrow.length?' ('+GAMES.tomorrow.length+')':'');
-  }catch(e){
-    document.getElementById('card-grid').innerHTML='<div class="no-games">⚠ '+e.message+'</div>';
-    document.getElementById('summary-bar').innerHTML='<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:var(--red)">⚠ Load failed: '+e.message+'</span>';
-    btn.disabled=false;btn.textContent='↻ REFRESH';return;
+/* helpers */
+function col(obj, ...keys) {
+  if (!obj) return '';
+  for (const k of keys) {
+    const found = Object.keys(obj).find(ok => ok.toLowerCase().replace(/[^a-z0-9]/g,'').includes(k.toLowerCase().replace(/[^a-z0-9]/g,'')));
+    if (found && obj[found]) return obj[found];
   }
-  btn.disabled=false;btn.textContent='↻ REFRESH';
-  render();
+  return '';
+}
+function rowMatch(row, away, home) {
+  const m = Object.values(row).join(' ').toLowerCase();
+  const aLast = away.split(' ').pop().toLowerCase();
+  const hLast = home.split(' ').pop().toLowerCase();
+  return m.includes(aLast) && m.includes(hLast);
+}
+function parseF(str) {
+  if (!str) return null;
+  return parseFloat(str.replace('%','')) || null;
+}
+function teamAbbr(name) {
+  const MAP = {
+    'Pittsburgh Pirates':'PIT','Atlanta Braves':'ATL','Chicago White Sox':'CWS',
+    'Philadelphia Phillies':'PHI','Boston Red Sox':'BOS','New York Yankees':'NYY',
+    'Baltimore Orioles':'BAL','Toronto Blue Jays':'TOR','Seattle Mariners':'SEA',
+    'Detroit Tigers':'DET','Tampa Bay Rays':'TB','Miami Marlins':'MIA',
+    'Athletics':'ATH','Houston Astros':'HOU','Kansas City Royals':'KC',
+    'Minnesota Twins':'MIN','Cincinnati Reds':'CIN','St. Louis Cardinals':'STL',
+    'Cleveland Guardians':'CLE','Texas Rangers':'TEX','Milwaukee Brewers':'MIL',
+    'Colorado Rockies':'COL','Washington Nationals':'WSH','Arizona Diamondbacks':'ARI',
+    'Los Angeles Angels':'LAA','Los Angeles Dodgers':'LAD','New York Mets':'NYM',
+    'San Diego Padres':'SD','San Francisco Giants':'SF','Chicago Cubs':'CHC'
+  };
+  return MAP[name] || name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,3);
+}
+function shortName(name) {
+  const MAP = {
+    'Pittsburgh Pirates':'Pittsburgh','Atlanta Braves':'Atlanta',
+    'Chicago White Sox':'Chi. White Sox','Philadelphia Phillies':'Philadelphia',
+    'Boston Red Sox':'Boston','New York Yankees':'NY Yankees',
+    'Baltimore Orioles':'Baltimore','Toronto Blue Jays':'Toronto',
+    'Seattle Mariners':'Seattle','Detroit Tigers':'Detroit',
+    'Tampa Bay Rays':'Tampa Bay','Miami Marlins':'Miami',
+    'Athletics':'Athletics','Houston Astros':'Houston',
+    'Kansas City Royals':'Kansas City','Minnesota Twins':'Minnesota',
+    'Cincinnati Reds':'Cincinnati','St. Louis Cardinals':'St. Louis',
+    'Cleveland Guardians':'Cleveland','Texas Rangers':'Texas',
+    'Milwaukee Brewers':'Milwaukee','Colorado Rockies':'Colorado',
+    'Washington Nationals':'Washington','Arizona Diamondbacks':'Arizona',
+    'Los Angeles Angels':'LA Angels','Los Angeles Dodgers':'LA Dodgers',
+    'New York Mets':'NY Mets','San Diego Padres':'San Diego',
+    'San Francisco Giants':'SF Giants','Chicago Cubs':'Chi. Cubs'
+  };
+  return MAP[name] || name;
 }
 
-function buildCard(g){
-  const aw=ABBR[g.away]||g.away.split(' ').pop().substring(0,3).toUpperCase();
-  const hm=ABBR[g.home]||g.home.split(' ').pop().substring(0,3).toUpperCase();
-  const rl=g.rating.toLowerCase();
-  const stars=g.rating==='Elite'?'⭐⭐⭐ Elite':g.rating==='Strong'?'⭐⭐ Strong':g.rating==='Moderate'?'⭐ Moderate':'📊 Lean';
+/* ===================================================
+   ESPN WEATHER
+   =================================================== */
+const ESPN_ABBR = {
+  OAK:'ATH',ATH:'ATH',WSH:'WSH',CWS:'CWS',TB:'TB',KC:'KC',SF:'SF',NYY:'NYY',NYM:'NYM',
+  LAD:'LAD',LAA:'LAA',ARI:'ARI',ATL:'ATL',BAL:'BAL',BOS:'BOS',CHC:'CHC',CIN:'CIN',
+  CLE:'CLE',COL:'COL',DET:'DET',HOU:'HOU',MIA:'MIA',MIL:'MIL',MIN:'MIN',PHI:'PHI',
+  PIT:'PIT',SD:'SD',SEA:'SEA',STL:'STL',TEX:'TEX',TOR:'TOR'
+};
 
-  function pstat(era,whip){
-    if(!era)return'<span style="color:var(--muted)">TBD</span>';
-    let s='ERA <span class="st">'+era+'</span>';
-    if(whip&&whip!=='—')s+=' · WHIP <span class="st">'+whip+'</span>';
-    return s;
-  }
-  function chips(ar,hr,tot){
-    return'<div class="totals-row">'
-      +'<div class="tot-chip"><div class="tot-label">'+aw+'</div><div class="tot-val away">'+(ar||'—')+'</div></div>'
-      +'<div class="tot-chip"><div class="tot-label">TOTAL</div><div class="tot-val tot">'+(tot||'—')+'</div></div>'
-      +'<div class="tot-chip"><div class="tot-label">'+hm+'</div><div class="tot-val home">'+(hr||'—')+'</div></div>'
-      +'</div>';
-  }
-  function wbar(a,h){
-    return'<div class="win-bar"><div class="wb-away" style="width:'+a+'%"></div><div class="wb-home" style="width:'+h+'%"></div></div>'
-      +'<div class="win-labels"><span class="win-label" style="color:var(--green)">'+a.toFixed(1)+'%</span><span class="win-label" style="color:var(--purple)">'+h.toFixed(1)+'%</span></div>';
-  }
-
-  let wxH='';
-  const wx=g.wx;
-  if(wx){
-    const cond=wx.conditions||'';
-    const isDome=/dome|retract/i.test(cond);
-    const icon=cond.includes('☀️')?'☀️':cond.includes('⛅')?'⛅':cond.includes('☁️')?'☁️':cond.includes('🌧')||cond.includes('🌦')?'🌧️':isDome?'🏟️':'🌡️';
-    const impact=wx.impact||'';
-    const bCls=impact.includes('Hot')||impact.includes('🔥')?'wx-hot':impact.includes('Carry')?'wx-carry':impact.includes('Pitcher')||impact.includes('🔵')?'wx-pitcher':isDome?'wx-dome':'wx-neutral';
-    const bTxt=impact.replace(/[🔥🔵⚪]/g,'').trim()||'Neutral';
-    const adj=wx.runAdj&&wx.runAdj!=='+0%'?' ('+wx.runAdj+')':'';
-    wxH='<div class="wx-row"><span class="wx-icon">'+icon+'</span><div class="wx-facts">';
-    if(cond)wxH+='<div class="wx-fact"><span>'+cond+'</span></div>';
-    if(!isDome&&wx.temp)wxH+='<div class="wx-fact">Temp: <span>'+wx.temp+'°F</span></div>';
-    if(!isDome&&wx.windMph)wxH+='<div class="wx-fact">Wind: <span>'+wx.windMph+' mph '+wx.windDir+'</span></div>';
-    if(!isDome&&wx.rain&&wx.rain!=='0%'&&wx.rain!=='0')wxH+='<div class="wx-fact">Rain: <span>'+wx.rain+'</span></div>';
-    wxH+='</div>';
-    if(bTxt&&bTxt!=='Neutral')wxH+='<span class="wx-badge '+bCls+'">'+bTxt+adj+'</span>';
-    wxH+='</div>';
-  }
-
-  const card=document.createElement('div');
-  card.className='game-card';card.setAttribute('data-rating',g.rating);
-  const awL=LOGOS[g.away]||'', hmL=LOGOS[g.home]||'';
-
-  // ── Build expand panel content from STATSDATA
-  const {formMap,spMap,h2hMap,fatigueMap}=STATSDATA;
-  const awayForm=formMap[norm(g.away)]||{};
-  const homeForm=formMap[norm(g.home)]||{};
-
-  // SP lookup: try exact norm match first, then last-name fuzzy match
-  function findSP(name){
-    if(!name||name==='TBD')return{};
-    const n=norm(name);
-    if(spMap[n])return spMap[n];
-    // try last name only
-    const last=n.split(' ').pop();
-    for(const k of Object.keys(spMap)){if(k.split(' ').pop()===last)return spMap[k];}
-    return{};
-  }
-  const awaySPData=findSP(g.awaySP);
-  const homeSPData=findSP(g.homeSP);
-  const h2h=h2hMap[key(g.away,g.home)]||{};
-  const awayFatigue=fatigueMap[norm(g.away)]||{};
-  const homeFatigue=fatigueMap[norm(g.home)]||{};
-
-  function trendCls(t){return(t||'').includes('Hot')||t==='Improving'?'hot':(t||'').includes('Cold')||t==='Declining'?'cold':'neutral';}
-  function trendChip(t){const cls=(t||'').includes('Hot')||t==='Improving'?'improving':(t||'').includes('Cold')||t==='Declining'?'declining':'consistent';return'<span class="exp-sp-trend '+cls+'">'+t+'</span>';}
-  function fatigue(f){
-    if(!f||!f.rest)return'<span style="font-family:\'IBM Plex Mono\',monospace;font-size:9px;color:var(--muted)">—</span>';
-    const bad=f.rest==='B2B'||f.restEdge.includes('Fatigue');
-    return'<div class="exp-fatigue-chip'+(bad?' bad':' ok')+'">'+f.rest+' · '+f.consec+(f.seriesGame?' · '+f.seriesGame:'')+'</div>';
-  }
-
-  function teamFormBlock(team,form){
-    const w=form.w||'—', l=form.l||'—';
-    const rs=form.rs?parseFloat(form.rs).toFixed(1):'—';
-    const ra=form.ra?parseFloat(form.ra).toFixed(1):'—';
-    const trend=form.trend||'—';
-    const streak=form.streak||'';
-    return'<div class="exp-team-block">'
-      +'<div class="exp-team-name">'+team+'</div>'
-      +'<div class="exp-stat-row"><span class="exp-stat-label">L10 Record</span><span class="exp-stat-val">'+w+'-'+l+'</span></div>'
-      +'<div class="exp-stat-row"><span class="exp-stat-label">RS/G · RA/G</span><span class="exp-stat-val">'+rs+' · '+ra+'</span></div>'
-      +'<div class="exp-stat-row"><span class="exp-stat-label">Trend</span><span class="exp-stat-val '+trendCls(trend)+'">'+trend+(streak?' · '+streak:'')+'</span></div>'
-      +'</div>';
-  }
-
-  function spBlock(spName,spData,era,whip){
-    if(!spData.era3){
-      return'<div class="exp-team-block">'
-        +'<div class="exp-team-name">'+spName+'</div>'
-        +(era?'<div class="exp-stat-row"><span class="exp-stat-label">Season ERA</span><span class="exp-stat-val">'+era+'</span></div>':'')
-        +(whip?'<div class="exp-stat-row"><span class="exp-stat-label">Season WHIP</span><span class="exp-stat-val">'+whip+'</span></div>':'')
-        +'<div style="font-family:\'IBM Plex Mono\',monospace;font-size:9px;color:var(--muted);margin-top:4px">No L3 start data in model</div>'
-        +'</div>';
+async function fetchESPNWeather() {
+  try {
+    const d = new Date();
+    const ds = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+    const url = `https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=${ds}`;
+    const resp = await fetch(url);
+    if (!resp.ok) return;
+    const json = await resp.json();
+    for (const ev of (json.events || [])) {
+      for (const comp of (ev.competitions || [])) {
+        const homeTeam = (comp.competitors || []).find(c => c.homeAway === 'home');
+        if (!homeTeam) continue;
+        const espnAbbr = homeTeam.team?.abbreviation || '';
+        const ourAbbr  = ESPN_ABBR[espnAbbr] || espnAbbr;
+        const wx = comp.weather;
+        const venue = comp.venue || {};
+        if (venue.indoor) {
+          WEATHER[ourAbbr] = { dome: true };
+        } else if (wx) {
+          WEATHER[ourAbbr] = {
+            dome: false,
+            temp: wx.temperature != null ? Math.round(wx.temperature) + '°' : null,
+            cond: wx.displayValue || null,
+            wind: buildWindStr(wx),
+            precip: wx.precipitation != null ? Math.round(wx.precipitation) + '%' : null,
+          };
+        }
+      }
     }
-    return'<div class="exp-team-block">'
-      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
-        +'<div class="exp-team-name" style="margin-bottom:0">'+spName+'</div>'
-        +trendChip(spData.trend)
-      +'</div>'
-      +'<div class="exp-stat-row"><span class="exp-stat-label">Last 3 ERA</span><span class="exp-stat-val '+trendCls(spData.trend)+'">'+parseFloat(spData.era3).toFixed(2)+'</span></div>'
-      +'<div class="exp-stat-row"><span class="exp-stat-label">Last 3 WHIP</span><span class="exp-stat-val">'+parseFloat(spData.whip3).toFixed(2)+'</span></div>'
-      +'<div class="exp-stat-row"><span class="exp-stat-label">Last 3 IP</span><span class="exp-stat-val">'+spData.ip3+'</span></div>'
-      +'<div class="exp-stat-row"><span class="exp-stat-label">Last 3 K</span><span class="exp-stat-val">'+spData.k3+'</span></div>'
-      +(era?'<div class="exp-stat-row" style="margin-top:4px;border-top:1px solid var(--border);padding-top:4px"><span class="exp-stat-label">Season ERA/WHIP</span><span class="exp-stat-val">'+era+' / '+whip+'</span></div>':'')
-      +'</div>';
+    // Re-render current games tab so weather updates
+    if (currentTab === 'today' || currentTab === 'tomorrow') renderTab(currentTab);
+  } catch(e) {
+    // Silent fail — weather is bonus info
+    console.warn('ESPN weather unavailable', e);
+  }
+}
+
+function buildWindStr(wx) {
+  if (!wx) return null;
+  const parts = [];
+  if (wx.windSpeed)     parts.push(wx.windSpeed + ' mph');
+  if (wx.displayValue && wx.displayValue.toLowerCase().includes('wind')) return wx.displayValue;
+  if (wx.wind?.speed)   parts.push(wx.wind.speed + ' mph');
+  if (wx.wind?.direction) parts.push(wx.wind.direction);
+  return parts.join(' ') || null;
+}
+
+function wxHTML(homeAbbr, roof) {
+  // Dome check
+  const isDome = (roof || '').toLowerCase().includes('dome') ||
+                 (roof || '').toLowerCase().includes('retract') ||
+                 (roof || '').toLowerCase().includes('indoor');
+  const wx = WEATHER[homeAbbr];
+  if (isDome && !wx) {
+    return `<div class="wx-line"><span class="wx-ico">🏟️</span><span>Dome — weather not a factor</span></div>`;
+  }
+  if (!wx) {
+    return `<div class="wx-line"><span class="wx-ico" style="font-size:11px;opacity:.5">⏳</span><span style="opacity:.6">Fetching ESPN weather…</span></div>`;
+  }
+  if (wx.dome) {
+    return `<div class="wx-line"><span class="wx-ico">🏟️</span><span>Dome — weather not a factor</span></div>`;
+  }
+  const icon = wxIcon(wx.cond);
+  const parts = [];
+  if (wx.temp)   parts.push(wx.temp);
+  if (wx.cond)   parts.push(wx.cond);
+  if (wx.wind)   parts.push('Wind ' + wx.wind);
+  if (wx.precip) parts.push(wx.precip + ' precip');
+  const str = parts.join(' · ') || 'Weather data unavailable';
+  return `<div class="wx-line"><span class="wx-ico">${icon}</span><span>${str}</span></div>`;
+}
+
+function wxIcon(c) {
+  if (!c) return '🌤️';
+  const l = c.toLowerCase();
+  if (l.includes('clear') || l.includes('sunny')) return '☀️';
+  if (l.includes('partly') || l.includes('partial')) return '⛅';
+  if (l.includes('cloud') || l.includes('overcast')) return '☁️';
+  if (l.includes('rain') || l.includes('shower') || l.includes('drizzle')) return '🌧️';
+  if (l.includes('storm') || l.includes('thunder')) return '⛈️';
+  if (l.includes('fog') || l.includes('haze')) return '🌫️';
+  if (l.includes('snow')) return '❄️';
+  return '🌤️';
+}
+
+/* ===================================================
+   RENDER HELPERS
+   =================================================== */
+function ratingClass(r) {
+  if (!r) return 'lean';
+  const l = r.toLowerCase();
+  if (l.includes('elite'))    return 'elite';
+  if (l.includes('strong'))   return 'strong';
+  if (l.includes('moderate')) return 'moderate';
+  return 'lean';
+}
+function ratingBadge(r) {
+  const rc = ratingClass(r);
+  const labels = { elite:'⭐⭐⭐ Elite', strong:'⭐⭐ Strong', moderate:'⭐ Moderate', lean:'📊 Lean' };
+  return `<span class="rating-badge rb-${rc}">${labels[rc]}</span>`;
+}
+function confClass(c) {
+  if (!c) return 'c-low';
+  const l = c.toLowerCase();
+  if (l.includes('high')) return 'c-high';
+  if (l.includes('med'))  return 'c-med';
+  return 'c-low';
+}
+function confLabel(c) {
+  if (!c) return '—';
+  const l = c.toLowerCase();
+  if (l.includes('high')) return '🟢 High';
+  if (l.includes('med'))  return '🟡 Med';
+  return '🔴 Low';
+}
+function trendClass(t) {
+  if (!t) return 't-neut';
+  if (t.includes('Hot') || t.includes('🔥')) return 't-hot';
+  if (t.includes('Cold') || t.includes('❄')) return 't-cold';
+  return 't-neut';
+}
+function gradeClass(g) {
+  if (!g) return '';
+  const l = g.trim().toUpperCase().replace(/[^A-F]/g,'')[0];
+  return l ? `g-${l}` : '';
+}
+
+/* ===================================================
+   BUILD GAME CARD
+   =================================================== */
+function buildCard(g, idx, day) {
+  const rc = ratingClass(g.rating);
+  return `
+  <div class="card ${rc}" onclick="openModal(${idx},'${day}')" tabindex="0" role="button" aria-label="${g.away} at ${g.home}">
+    <div class="card-top">
+      <span class="card-time"><i class="ti ti-clock" style="font-size:10px"></i> ${g.time}</span>
+      ${ratingBadge(g.rating)}
+    </div>
+    <div class="card-body">
+      <!-- Matchup -->
+      <div class="matchup">
+        <div class="team away">
+          <div class="team-name">${shortName(g.away)}</div>
+          <div class="team-rec">${g.awayRec}</div>
+        </div>
+        <span class="at-sep">@</span>
+        <div class="team home">
+          <div class="team-name">${shortName(g.home)}</div>
+          <div class="team-rec">${g.homeRec}</div>
+        </div>
+      </div>
+      <!-- Pitchers -->
+      <div class="pitchers">
+        <div class="pitcher">
+          <div class="sp-name">${g.awaySP}</div>
+          <div class="sp-stats">ERA ${g.awayERA} · WHIP ${g.awayWHIP}</div>
+        </div>
+        <div class="pitcher home-p">
+          <div class="sp-name">${g.homeSP}</div>
+          <div class="sp-stats">ERA ${g.homeERA} · WHIP ${g.homeWHIP}</div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <!-- Winner picks -->
+      <div class="winners">
+        <div class="wb wb-f5">
+          <div class="wb-lbl">F5 Winner</div>
+          <div class="wb-team">${shortName(g.f5Pick)}</div>
+        </div>
+        <div class="wb wb-fg">
+          <div class="wb-lbl">Full Game</div>
+          <div class="wb-team">${shortName(g.fgPick)}</div>
+        </div>
+      </div>
+      <!-- Totals -->
+      <div class="totals-grid">
+        <div class="tot">
+          <div class="tot-lbl">F5 Total</div>
+          <div class="tot-val">${g.f5Total}</div>
+          <div class="tot-sub ${confClass(g.f5Conf)}">${confLabel(g.f5Conf)}</div>
+        </div>
+        <div class="tot">
+          <div class="tot-lbl">Game Total</div>
+          <div class="tot-val">${g.fgTotal}</div>
+          <div class="tot-sub ${confClass(g.fgConf)}">${confLabel(g.fgConf)}</div>
+        </div>
+      </div>
+      <!-- Team run totals -->
+      <div class="run-totals">
+        <div class="run-totals-lbl">Projected Runs</div>
+        <div class="run-totals-row">
+          <div class="run-team away">
+            <div class="run-tname">${shortName(g.away)}</div>
+            <div class="run-nums away">F5: ${g.awayF5runs} &nbsp;·&nbsp; FG: ${g.awayFGruns}</div>
+          </div>
+          <div class="run-team home">
+            <div class="run-tname">${shortName(g.home)}</div>
+            <div class="run-nums home">F5: ${g.homeF5runs} &nbsp;·&nbsp; FG: ${g.homeFGruns}</div>
+          </div>
+        </div>
+      </div>
+      <!-- Park -->
+      <div class="park-line">${g.park} · ${g.parkFactor} · ${g.roof}</div>
+      <!-- Weather -->
+      ${wxHTML(g.homeAbbr, g.roof)}
+      <div class="tap-hint"><i class="ti ti-chevrons-down" style="font-size:9px"></i> Tap for full breakdown</div>
+    </div>
+  </div>`;
+}
+
+/* ===================================================
+   RENDER TAB
+   =================================================== */
+function renderTab(tab) {
+  const main = document.getElementById('main');
+  if (tab === 'today') {
+    if (!todayGames.length) { main.innerHTML = '<div class="status-bar">No games found for today.</div>'; return; }
+    main.innerHTML = todayGames.map((g, i) => buildCard(g, i, 'today')).join('');
+    main.className = 'main';
+    main.style.display = '';
+    // wrap in grid
+    main.innerHTML = `<div class="games-grid">${main.innerHTML}</div>`;
+  } else if (tab === 'tomorrow') {
+    if (!tmrwGames.length) { main.innerHTML = '<div class="status-bar">No games found for tomorrow.</div>'; return; }
+    main.innerHTML = `<div class="games-grid">${tmrwGames.map((g, i) => buildCard(g, i, 'tomorrow')).join('')}</div>`;
+  } else if (tab === 'standings') {
+    renderStandings();
+  }
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (!Object.keys(DATA).length) return;
+  renderTab(tab);
+}
+
+/* ===================================================
+   STANDINGS — built from Team Stats sheet
+   =================================================== */
+const DIVISIONS = {
+  'AL East':    ['New York Yankees','Boston Red Sox','Toronto Blue Jays','Baltimore Orioles','Tampa Bay Rays'],
+  'AL Central': ['Cleveland Guardians','Chicago White Sox','Kansas City Royals','Minnesota Twins','Detroit Tigers'],
+  'AL West':    ['Houston Astros','Los Angeles Angels','Texas Rangers','Seattle Mariners','Athletics'],
+  'NL East':    ['Atlanta Braves','Philadelphia Phillies','New York Mets','Miami Marlins','Washington Nationals'],
+  'NL Central': ['Milwaukee Brewers','Chicago Cubs','St. Louis Cardinals','Pittsburgh Pirates','Cincinnati Reds'],
+  'NL West':    ['Los Angeles Dodgers','San Diego Padres','Arizona Diamondbacks','San Francisco Giants','Colorado Rockies'],
+};
+
+function renderStandings() {
+  if (!DATA.teamStats || !DATA.teamStats.length) {
+    document.getElementById('main').innerHTML = '<div class="status-bar">Standings data not loaded yet.</div>';
+    return;
+  }
+  // Build lookup map by team name
+  const tsMap = {};
+  for (const t of DATA.teamStats) {
+    if (t['Team']) tsMap[t['Team']] = t;
+  }
+  const formMap = {};
+  if (DATA.advanced && DATA.advanced.teamForm) {
+    for (const [k, v] of Object.entries(DATA.advanced.teamForm)) {
+      // key might be abbr or team name
+      formMap[k] = v;
+    }
   }
 
-  const expandHTML=
-    '<div class="expand-panel" id="ep-'+g.away.replace(/\s/g,'')+g.home.replace(/\s/g,'')+'">'
+  let html = '<div class="standings-grid">';
+  for (const [divName, teams] of Object.entries(DIVISIONS)) {
+    const isAL = divName.startsWith('AL');
+    // Sort by winning pct descending
+    const sorted = [...teams].sort((a, b) => {
+      const ta = tsMap[a] || {}; const tb = tsMap[b] || {};
+      const wa = +(ta['W']||0), la = +(ta['L']||0);
+      const wb = +(tb['W']||0), lb = +(tb['L']||0);
+      const pa = (wa+la) ? wa/(wa+la) : 0;
+      const pb = (wb+lb) ? wb/(wb+lb) : 0;
+      return pb - pa;
+    });
+    const leader = tsMap[sorted[0]] || {};
+    const lw = +(leader['W']||0), ll = +(leader['L']||0);
 
-    // Section 1: Team L10 Form
-    +'<div class="exp-section">'
-      +'<div class="exp-section-title">📊 Last 10 Games — Team Form</div>'
-      +'<div class="exp-grid">'
-        +teamFormBlock(g.away,awayForm)
-        +teamFormBlock(g.home,homeForm)
-      +'</div>'
-    +'</div>'
+    html += `<div class="div-card">
+      <div class="div-hdr ${isAL?'al':'nl'}">${isAL?'🔵':'🔴'} ${divName}</div>
+      <table class="std-tbl">
+        <thead><tr><th>Team</th><th>W</th><th>L</th><th>PCT</th><th>GB</th><th>L10</th><th>Str</th></tr></thead>
+        <tbody>`;
 
-    // Section 2: SP Last 3 Starts
-    +'<div class="exp-section">'
-      +'<div class="exp-section-title">⚾ Starting Pitcher — Last 3 Starts</div>'
-      +'<div class="exp-grid">'
-        +spBlock(g.awaySP,awaySPData,g.awayERA,g.awayWHIP)
-        +spBlock(g.homeSP,homeSPData,g.homeERA,g.homeWHIP)
-      +'</div>'
-    +'</div>'
+    sorted.forEach((teamName, i) => {
+      const t = tsMap[teamName] || {};
+      const w = +(t['W']||0), l = +(t['L']||0);
+      const pct = (w+l) ? (w/(w+l)).toFixed(3).replace(/^0/, '') : '.000';
+      // GB
+      let gbStr = '—';
+      if (i > 0) {
+        const gbVal = ((lw - w) + (l - ll)) / 2;
+        gbStr = gbVal % 1 === 0 ? gbVal.toFixed(0) : gbVal.toFixed(1);
+      }
+      // Form — look in advanced teamForm by abbr
+      const abbr = teamAbbr(teamName);
+      const form = DATA.advanced?.teamForm?.[abbr] || DATA.advanced?.teamForm?.[teamName] || {};
+      const l10w = form['L10 W'] || form['L10W'] || '—';
+      const l10l = form['L10 L'] || form['L10L'] || '—';
+      const l10 = (l10w !== '—' && l10l !== '—') ? `${l10w}-${l10l}` : '—';
+      const streak = form['Streak'] || '—';
+      const streakNum = parseInt((streak||'').replace(/[WL]/,'')) || 0;
+      const streakClass = streak.startsWith('W') ? 'streak-hot' : (streak.startsWith('L') && streakNum >= 2 ? 'streak-cold' : '');
 
-    // Section 3: H2H + Fatigue
-    +'<div class="exp-section">'
-      +'<div class="exp-section-title">🆚 Season Series + Travel & Fatigue</div>'
-      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
-        +'<div class="exp-h2h">'
-          +'<div class="exp-h2h-title">HEAD TO HEAD</div>'
-          +'<div class="exp-h2h-detail">'+(h2h.series||'No data')+'</div>'
-        +'</div>'
-        +'<div class="exp-h2h">'
-          +'<div class="exp-h2h-title">FATIGUE</div>'
-          +'<div style="display:flex;flex-direction:column;gap:5px;margin-top:4px">'
-            +'<div style="display:flex;align-items:center;gap:6px"><span style="font-family:\'IBM Plex Mono\',monospace;font-size:9px;color:var(--muted);min-width:28px">AWY</span><span style="font-family:\'IBM Plex Mono\',monospace;font-size:9px;color:var(--muted2);margin-right:4px">'+aw+'</span>'+fatigue(awayFatigue)+'</div>'
-            +'<div style="display:flex;align-items:center;gap:6px"><span style="font-family:\'IBM Plex Mono\',monospace;font-size:9px;color:var(--muted);min-width:28px">HME</span><span style="font-family:\'IBM Plex Mono\',monospace;font-size:9px;color:var(--muted2);margin-right:4px">'+hm+'</span>'+fatigue(homeFatigue)+'</div>'
-          +'</div>'
-        +'</div>'
-      +'</div>'
-    +'</div>'
+      html += `<tr${i===0?' class="leader"':''}>
+        <td>${shortName(teamName)}</td>
+        <td>${w}</td><td>${l}</td>
+        <td>${pct}</td>
+        <td class="gb-dash">${gbStr}</td>
+        <td>${l10}</td>
+        <td class="${streakClass}">${streak}</td>
+      </tr>`;
+    });
 
-    +'</div>';
-
-  const expandBtnHTML='<button class="expand-btn" onclick="toggleExpand(this,event)">MORE INTEL <span class="chevron">▾</span></button>';
-
-  card.innerHTML=
-    '<div class="card-header">'
-      +'<div class="card-header-top">'
-        +'<div><div class="card-time">'+g.time+'</div>'+(g.venue?'<div class="card-venue">'+g.venue+'</div>':'')+'</div>'
-        +'<span class="card-rating rating-'+rl+'">'+stars+'</span>'
-      +'</div>'
-      +'<div class="matchup">'
-        +'<div class="team-block away">'
-          +(awL?'<img src="'+awL+'" class="team-logo" alt="" onerror="this.style.display=\'none\'">':'')
-          +'<div class="team-info"><div class="team-name">'+g.away+'</div><div class="team-label">AWAY</div></div>'
-        +'</div>'
-        +'<div class="at-sep">@</div>'
-        +'<div class="team-block home">'
-          +'<div class="team-info"><div class="team-name">'+g.home+'</div><div class="team-label">HOME</div></div>'
-          +(hmL?'<img src="'+hmL+'" class="team-logo" alt="" onerror="this.style.display=\'none\'">':'')
-        +'</div>'
-      +'</div>'
-    +'</div>'
-    +'<div class="card-body">'
-      +'<div><div class="section-label">Starting pitchers</div>'
-        +'<div class="pitcher-row"><span class="pitcher-side">AWY</span><span class="pitcher-name">'+g.awaySP+'</span><span class="pitcher-stats">'+pstat(g.awayERA,g.awayWHIP)+'</span></div>'
-        +'<div class="pitcher-row"><span class="pitcher-side">HME</span><span class="pitcher-name">'+g.homeSP+'</span><span class="pitcher-stats">'+pstat(g.homeERA,g.homeWHIP)+'</span></div>'
-      +'</div>'
-      +'<div class="divider"></div>'
-      +'<div class="pred-grid">'
-        +'<div class="pred-box"><div class="pred-box-label">⚡ First 5</div>'
-          +'<div class="pred-pick '+g.f5p+'">'+g.f5Pick+'</div>'
-          +'<div class="pred-conf conf-'+g.f5c.toLowerCase()+'">'+g.f5c+' confidence</div>'
-          +chips(g.f5AwayRuns,g.f5HomeRuns,g.f5t)
-          +wbar(g.f5aw,g.f5hw)
-        +'</div>'
-        +'<div class="pred-box"><div class="pred-box-label">🏆 Full Game</div>'
-          +'<div class="pred-pick '+g.fgp+'">'+g.fgPick+'</div>'
-          +'<div class="pred-conf conf-'+g.fgc.toLowerCase()+'">'+g.fgc+' confidence</div>'
-          +chips(g.fgAwayRuns,g.fgHomeRuns,g.fgt)
-          +wbar(g.fgaw,g.fghw)
-        +'</div>'
-      +'</div>'
-      +(wxH||'')
-    +'</div>'
-    +expandBtnHTML
-    +expandHTML;
-  return card;
+    html += '</tbody></table></div>';
+  }
+  html += '</div>';
+  document.getElementById('main').innerHTML = html;
 }
 
-function toggleExpand(btn,e){
-  e.stopPropagation();
-  const card=btn.closest('.game-card');
-  const panel=card.querySelector('.expand-panel');
-  const isOpen=panel.classList.contains('open');
-  panel.classList.toggle('open',!isOpen);
-  btn.classList.toggle('open',!isOpen);
-  btn.innerHTML=(!isOpen?'LESS INTEL':'MORE INTEL')+' <span class="chevron">▾</span>';
+/* ===================================================
+   MODAL
+   =================================================== */
+function openModal(idx, day) {
+  const g = day === 'today' ? todayGames[idx] : tmrwGames[idx];
+  if (!g) return;
+
+  // Win probability from FG%
+  const awayFGpct = g.awayFGpct || (g.awayFGruns && g.homeFGruns ?
+    Math.round(parseFloat(g.awayFGruns) / (parseFloat(g.awayFGruns) + parseFloat(g.homeFGruns)) * 100) : 50);
+  const homeFGpct = 100 - awayFGpct;
+
+  // Advanced SP form
+  const aSPF = DATA.advanced?.spForm?.[g.awaySP] || {};
+  const hSPF = DATA.advanced?.spForm?.[g.homeSP]  || {};
+
+  // Team form
+  const aForm = DATA.advanced?.teamForm?.[g.awayAbbr] || DATA.advanced?.teamForm?.[g.away] || {};
+  const hForm = DATA.advanced?.teamForm?.[g.homeAbbr] || DATA.advanced?.teamForm?.[g.home] || {};
+
+  // H2H
+  const h2hKey = Object.keys(DATA.advanced?.h2h || {}).find(k => {
+    const kl = k.toLowerCase();
+    return kl.includes(g.away.split(' ').pop().toLowerCase()) && kl.includes(g.home.split(' ').pop().toLowerCase());
+  });
+  const h2h = h2hKey ? DATA.advanced.h2h[h2hKey] : {};
+
+  // Weather full text
+  const isDome = (g.roof||'').toLowerCase().includes('dome') || (g.roof||'').toLowerCase().includes('retract');
+  const wx = WEATHER[g.homeAbbr];
+  let wxFull = '';
+  if (isDome && !wx) wxFull = '🏟️ Dome — weather not a factor';
+  else if (!wx) wxFull = '⏳ Loading weather from ESPN…';
+  else if (wx.dome) wxFull = '🏟️ Dome — weather not a factor';
+  else {
+    const parts = [];
+    if (wx.temp)   parts.push(wx.temp);
+    if (wx.cond)   parts.push(wx.cond);
+    if (wx.wind)   parts.push('Wind ' + wx.wind);
+    if (wx.precip) parts.push(wx.precip + ' precip');
+    wxFull = (wxIcon(wx.cond) + ' ' + (parts.join(' · ') || 'Unavailable'));
+  }
+
+  // Bullpen
+  const aBP = g.aBP || {}; const hBP = g.hBP || {};
+  const aBPgrade = aBP['Grade'] || aBP['BP Grade'] || '';
+  const hBPgrade = hBP['Grade'] || hBP['BP Grade'] || '';
+
+  let html = `<div class="modal-title">⚾ ${g.away} <span style="color:var(--text2);font-weight:400">@</span> ${g.home}</div>`;
+
+  // Probability bar
+  html += `<div class="prob-wrap">
+    <div class="prob-lbl">Full Game Win Probability</div>
+    <div class="prob-bar-row">
+      <span class="prob-pct" style="color:var(--blue)">${awayFGpct}%</span>
+      <div class="prob-bar-bg">
+        <div class="pb-away" style="width:${awayFGpct}%"></div>
+        <div class="pb-home" style="width:${homeFGpct}%"></div>
+      </div>
+      <span class="prob-pct" style="color:var(--green);text-align:right">${homeFGpct}%</span>
+    </div>
+    <div class="prob-teams">
+      <span style="color:var(--blue);font-weight:600">${shortName(g.away)}</span>
+      <span>Proj ${g.awayFGruns} – ${g.homeFGruns} runs</span>
+      <span style="color:var(--green);font-weight:600">${shortName(g.home)}</span>
+    </div>
+  </div>`;
+
+  // Run totals detail
+  html += `<div class="run-detail">
+    <div class="run-detail-lbl">Projected Run Totals</div>
+    <div class="run-detail-grid">
+      <div class="run-detail-cell"><div class="rdc-lbl">${shortName(g.away)} F5</div><div class="rdc-val rdc-away">${g.awayF5runs}</div></div>
+      <div class="run-detail-cell"><div class="rdc-lbl">${shortName(g.away)} FG</div><div class="rdc-val rdc-away">${g.awayFGruns}</div></div>
+      <div class="run-detail-cell"><div class="rdc-lbl">${shortName(g.home)} F5</div><div class="rdc-val rdc-home">${g.homeF5runs}</div></div>
+      <div class="run-detail-cell"><div class="rdc-lbl">${shortName(g.home)} FG</div><div class="rdc-val rdc-home">${g.homeFGruns}</div></div>
+    </div>
+    <div class="run-total-row">
+      <div class="run-total-cell">
+        <div class="rtc-lbl">F5 Total</div>
+        <div class="rtc-val">${g.f5Total} <span style="font-size:10px" class="${confClass(g.f5Conf)}">${confLabel(g.f5Conf)}</span></div>
+      </div>
+      <div class="run-total-cell">
+        <div class="rtc-lbl">Game Total</div>
+        <div class="rtc-val">${g.fgTotal} <span style="font-size:10px" class="${confClass(g.fgConf)}">${confLabel(g.fgConf)}</span></div>
+      </div>
+    </div>
+  </div>`;
+
+  // Park + weather
+  html += `<div class="wx-detail">
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:6px">Park &amp; Weather</div>
+    <div style="font-size:12px;font-weight:500;margin-bottom:5px">${g.park} <span style="color:var(--text2);font-weight:400">· ${g.parkFactor} · ${g.roof}${g.altitude?' · '+g.altitude+' ft':''}</span></div>
+    <div style="font-size:12px;color:var(--text2)">${wxFull}</div>
+  </div>`;
+
+  // Team form
+  html += `<div class="m-sec-hdr"><i class="ti ti-chart-line"></i> Team Form (Last 10)</div>
+  <div class="two-col">
+    <div class="m-box">
+      <div class="m-box-title">${shortName(g.away)}</div>
+      ${sr('L10', aForm['L10 W']&&aForm['L10 L'] ? aForm['L10 W']+'-'+aForm['L10 L'] : '—')}
+      ${sr('Trend', `<span class="trend-b ${trendClass(aForm['Trend']||'')}">${aForm['Trend']||'—'}</span>`)}
+      ${sr('Streak', aForm['Streak']||'—')}
+      ${sr('Season', g.awayRec||'—')}
+      ${sr('ERA', g.aTS?.['ERA']||g.aTS?.['Team ERA']||'—')}
+      ${sr('OPS', g.aTS?.['OPS']||'—')}
+      ${sr('H2H vs opp', aForm['H2H Record']||'—')}
+    </div>
+    <div class="m-box">
+      <div class="m-box-title">${shortName(g.home)}</div>
+      ${sr('L10', hForm['L10 W']&&hForm['L10 L'] ? hForm['L10 W']+'-'+hForm['L10 L'] : '—')}
+      ${sr('Trend', `<span class="trend-b ${trendClass(hForm['Trend']||'')}">${hForm['Trend']||'—'}</span>`)}
+      ${sr('Streak', hForm['Streak']||'—')}
+      ${sr('Season', g.homeRec||'—')}
+      ${sr('ERA', g.hTS?.['ERA']||g.hTS?.['Team ERA']||'—')}
+      ${sr('OPS', g.hTS?.['OPS']||'—')}
+      ${sr('H2H vs opp', hForm['H2H Record']||'—')}
+    </div>
+  </div>`;
+
+  // Starting pitchers
+  html += `<div class="m-sec-hdr"><i class="ti ti-baseball"></i> Starting Pitchers</div>
+  <div class="two-col">
+    <div class="m-box">
+      <div class="m-box-title">${g.awaySP}</div>
+      ${sr('ERA', g.awayERA)}
+      ${sr('WHIP', g.awayWHIP)}
+      ${sr('L3 ERA', aSPF['L3 ERA']||aSPF['L3ERA']||'—')}
+      ${sr('L3 WHIP', aSPF['L3 WHIP']||aSPF['L3WHIP']||'—')}
+      ${sr('Trend', aSPF['Trend']||'—')}
+      ${sr('K/9', g.aPit?.['K/9']||'—')}
+      ${sr('BB/9', g.aPit?.['BB/9']||'—')}
+    </div>
+    <div class="m-box">
+      <div class="m-box-title">${g.homeSP}</div>
+      ${sr('ERA', g.homeERA)}
+      ${sr('WHIP', g.homeWHIP)}
+      ${sr('L3 ERA', hSPF['L3 ERA']||hSPF['L3ERA']||'—')}
+      ${sr('L3 WHIP', hSPF['L3 WHIP']||hSPF['L3WHIP']||'—')}
+      ${sr('Trend', hSPF['Trend']||'—')}
+      ${sr('K/9', g.hPit?.['K/9']||'—')}
+      ${sr('BB/9', g.hPit?.['BB/9']||'—')}
+    </div>
+  </div>`;
+
+  // Bullpen
+  const aBPcl = gradeClass(aBPgrade); const hBPcl = gradeClass(hBPgrade);
+  html += `<div class="m-sec-hdr"><i class="ti ti-flame"></i> Bullpen</div>
+  <div class="two-col">
+    <div class="m-box">
+      <div class="m-box-title">${shortName(g.away)} <span class="bp-grade ${aBPcl}">${aBPgrade.charAt(0)||'—'}</span></div>
+      ${sr('BP ERA', aBP['BP ERA']||'—')}
+      ${sr('K/9', aBP['K/9']||'—')}
+      ${sr('Saves', aBP['Saves']||'—')}
+      ${sr('Save%', aBP['Save%']||'—')}
+      ${sr('Closer', aBP['Closer']||'—')}
+      ${sr('Setup 1', aBP['Setup 1']||'—')}
+      ${sr('Setup 2', aBP['Setup 2']||'—')}
+    </div>
+    <div class="m-box">
+      <div class="m-box-title">${shortName(g.home)} <span class="bp-grade ${hBPcl}">${hBPgrade.charAt(0)||'—'}</span></div>
+      ${sr('BP ERA', hBP['BP ERA']||'—')}
+      ${sr('K/9', hBP['K/9']||'—')}
+      ${sr('Saves', hBP['Saves']||'—')}
+      ${sr('Save%', hBP['Save%']||'—')}
+      ${sr('Closer', hBP['Closer']||'—')}
+      ${sr('Setup 1', hBP['Setup 1']||'—')}
+      ${sr('Setup 2', hBP['Setup 2']||'—')}
+    </div>
+  </div>`;
+
+  // H2H
+  if (Object.keys(h2h).length) {
+    html += `<div class="m-sec-hdr"><i class="ti ti-vs"></i> 2026 Head-to-Head</div>
+    <div class="m-box">
+      ${sr('Series', h2h['Series Leader']||'—')}
+      ${sr('Away record', h2h['Away Record']||'—')}
+      ${sr('Home record', h2h['Home Record']||'—')}
+      ${sr('Games played', h2h['Notes']||h2h['Away W']!=null ? ((+h2h['Away W']||0)+(+h2h['Away L']||0)+(+h2h['Home W']||0)+(+h2h['Home L']||0))/2+'games played':'—')}
+    </div>`;
+  }
+
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('overlay').classList.add('open');
 }
 
-function updateSummary(games){
-  if(!games.length){document.getElementById('summary-bar').innerHTML='';return;}
-  const el=games.filter(g=>g.rating==='Elite').length;
-  const st=games.filter(g=>g.rating==='Strong').length;
-  const hc=games.filter(g=>g.fgc==='High').length;
-  const avg=(games.reduce((s,g)=>s+g.fgt,0)/games.length).toFixed(1);
-  const ts=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
-  document.getElementById('summary-bar').innerHTML=
-    '<div class="sum-item"><div class="sdot" style="background:var(--green)"></div><span class="sum-label">Elite</span><span class="sum-val">'+el+'</span></div>'
-    +'<div class="sum-item"><div class="sdot" style="background:var(--blue)"></div><span class="sum-label">Strong</span><span class="sum-val">'+st+'</span></div>'
-    +'<div class="sum-item"><div class="sdot" style="background:var(--amber)"></div><span class="sum-label">High Conf FG</span><span class="sum-val">'+hc+'</span></div>'
-    +'<div class="sum-item"><div class="sdot" style="background:var(--muted)"></div><span class="sum-label">Avg FG total</span><span class="sum-val">'+avg+'</span></div>'
-    +'<div class="sum-meta">Live · Google Sheets · '+ts+'</div>';
+function sr(label, value) {
+  return `<div class="sr"><span class="sk">${label}</span><span class="sv">${value}</span></div>`;
 }
-function render(){
-  let games=[...(GAMES[day]||[])];
-  if(filt!=='all')games=games.filter(g=>g.rating===filt);
-  if(sort==='rating')games.sort((a,b)=>RO[a.rating]-RO[b.rating]);
-  else if(sort==='total')games.sort((a,b)=>b.fgt-a.fgt);
-  else games.sort((a,b)=>tmin(a.time)-tmin(b.time));
-  const grid=document.getElementById('card-grid');
-  grid.innerHTML='';
-  document.getElementById('count-label').textContent=games.length+' game'+(games.length!==1?'s':'');
-  if(!games.length){grid.innerHTML='<div class="no-games">NO GAMES FOUND</div>';updateSummary([]);return;}
-  games.forEach(g=>grid.appendChild(buildCard(g)));
-  updateSummary(games);
-}
-function switchDay(d,btn){day=d;document.querySelectorAll('.day-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render();}
-function setFilter(f,btn){filt=f;document.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render();}
-function setSort(v){sort=v;render();}
-loadData();
+function closeModal()  { document.getElementById('overlay').classList.remove('open'); }
+function closeOverlay(e) { if (e.target === document.getElementById('overlay')) closeModal(); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+/* ===================================================
+   KICK OFF
+   =================================================== */
+loadAll();
 </script>
 </body>
 </html>
