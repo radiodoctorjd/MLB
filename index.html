@@ -6,328 +6,181 @@
 <title>⚾ MLB Predictions Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <style>
-  :root {
-    --bg: #ffffff;
-    --bg2: #f7f7f5;
-    --bg3: #f0efec;
-    --text: #1a1a18;
-    --text2: #6b6b67;
-    --text3: #9e9e9a;
-    --border: rgba(0,0,0,0.1);
-    --border2: rgba(0,0,0,0.18);
-    --green: #1a7f3c;
-    --green-bg: #eaf3de;
-    --green-border: #c0dd97;
-    --blue: #185fa5;
-    --blue-bg: #e6f1fb;
-    --blue-border: #b5d4f4;
-    --amber: #ba7517;
-    --amber-bg: #faeeda;
-    --red: #a32d2d;
-    --red-bg: #fcebeb;
-    --radius: 10px;
-    --radius-sm: 7px;
-    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+:root {
+  --bg:#fff;--bg2:#f7f7f5;--bg3:#f0efec;
+  --text:#1a1a18;--text2:#6b6b67;--text3:#a0a09a;
+  --border:rgba(0,0,0,.1);--border2:rgba(0,0,0,.18);
+  --green:#1a7f3c;--green-bg:#eaf3de;--green-bd:#c0dd97;
+  --blue:#185fa5;--blue-bg:#e6f1fb;--blue-bd:#b5d4f4;
+  --amber:#ba7517;--amber-bg:#faeeda;
+  --red:#a32d2d;--red-bg:#fcebeb;
+  --r:10px;--rs:7px;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#1c1c1a;--bg2:#242422;--bg3:#2c2c2a;
+    --text:#f0efe8;--text2:#a0a09a;--text3:#6e6e68;
+    --border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.18);
+    --green-bg:#162b1c;--green-bd:#2a5c35;
+    --blue-bg:#122038;--blue-bd:#1e4475;
+    --amber-bg:#2a1f0a;--red-bg:#2a1212;
+    --shadow:0 1px 3px rgba(0,0,0,.3);
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #1c1c1a;
-      --bg2: #242422;
-      --bg3: #2c2c2a;
-      --text: #f0efe8;
-      --text2: #a0a09a;
-      --text3: #6e6e68;
-      --border: rgba(255,255,255,0.1);
-      --border2: rgba(255,255,255,0.18);
-      --green-bg: #162b1c;
-      --green-border: #2a5c35;
-      --blue-bg: #122038;
-      --blue-border: #1e4475;
-      --amber-bg: #2a1f0a;
-      --red-bg: #2a1212;
-      --shadow: 0 1px 3px rgba(0,0,0,0.3);
-    }
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg3);
-    color: var(--text);
-    min-height: 100vh;
-  }
-  /* ── HEADER ── */
-  .header {
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
-    padding: 14px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 10px;
-    position: sticky;
-    top: 0;
-    z-index: 50;
-  }
-  .logo { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-  .logo span { font-size: 22px; }
-  .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .date-pill {
-    font-size: 12px; background: var(--bg2); border: 1px solid var(--border);
-    border-radius: 20px; padding: 4px 12px; color: var(--text2);
-  }
-  .refresh-btn {
-    display: flex; align-items: center; gap: 5px; font-size: 12px;
-    padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border2);
-    background: var(--bg); color: var(--text2); cursor: pointer;
-    font-family: 'DM Sans', sans-serif; transition: background .15s;
-  }
-  .refresh-btn:hover { background: var(--bg2); }
-  /* ── TABS ── */
-  .tab-bar {
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
-    padding: 0 20px;
-    display: flex;
-    gap: 0;
-    overflow-x: auto;
-  }
-  .tab {
-    padding: 12px 18px; font-size: 13px; font-weight: 500;
-    color: var(--text2); border: none; background: none;
-    cursor: pointer; border-bottom: 2px solid transparent;
-    font-family: 'DM Sans', sans-serif; white-space: nowrap;
-    transition: color .15s, border-color .15s;
-  }
-  .tab.active { color: var(--blue); border-bottom-color: var(--blue); }
-  .tab:hover:not(.active) { color: var(--text); }
-  /* ── MAIN ── */
-  .main { padding: 20px; max-width: 1400px; margin: 0 auto; }
-  /* ── STATUS ── */
-  .status-bar {
-    text-align: center; padding: 60px 20px;
-    color: var(--text2); font-size: 14px;
-  }
-  .spinner {
-    width: 24px; height: 24px; border: 2px solid var(--border);
-    border-top-color: var(--blue); border-radius: 50%;
-    animation: spin .7s linear infinite;
-    display: inline-block; vertical-align: middle; margin-right: 10px;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .error-msg { color: var(--red); background: var(--red-bg); border-radius: var(--radius-sm); padding: 14px 18px; font-size: 13px; }
-  /* ── GAMES GRID ── */
-  .games-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 14px;
-  }
-  /* ── CARD ── */
-  .card {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-    cursor: pointer;
-    box-shadow: var(--shadow);
-    transition: transform .12s, box-shadow .12s, border-color .12s;
-  }
-  .card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-color: var(--border2); }
-  .card.elite  { border-left: 3px solid var(--green); }
-  .card.strong { border-left: 3px solid var(--blue); }
-  .card.moderate { border-left: 3px solid var(--amber); }
-  .card-top {
-    background: var(--bg2); padding: 8px 13px;
-    display: flex; justify-content: space-between; align-items: center;
-    border-bottom: 1px solid var(--border);
-  }
-  .card-time { font-size: 11px; color: var(--text2); font-weight: 500; display: flex; align-items: center; gap: 4px; }
-  .rating-badge { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 600; white-space: nowrap; }
-  .rb-elite    { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
-  .rb-strong   { background: var(--blue-bg);  color: var(--blue);  border: 1px solid var(--blue-border); }
-  .rb-moderate { background: var(--amber-bg); color: var(--amber); }
-  .rb-lean     { background: var(--bg3); color: var(--text2); border: 1px solid var(--border); }
-  .card-body { padding: 12px 13px; }
-  .matchup { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px; }
-  .team { flex: 1; min-width: 0; }
-  .team.home { text-align: right; }
-  .team-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .team-rec  { font-size: 10px; color: var(--text2); margin-top: 1px; }
-  .at-sep { font-size: 11px; color: var(--text3); margin: 0 7px; flex-shrink: 0; }
-  .pitchers { display: flex; justify-content: space-between; gap: 6px; margin-bottom: 9px; }
-  .pitcher { flex: 1; min-width: 0; }
-  .pitcher.home-p { text-align: right; }
-  .sp-name { font-size: 11px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .sp-stats { font-size: 10px; color: var(--text2); margin-top: 1px; }
-  .divider { height: 1px; background: var(--border); margin: 9px 0; }
-  /* winner boxes */
-  .winners { display: flex; gap: 5px; margin-bottom: 8px; }
-  .wb { flex: 1; border-radius: var(--radius-sm); padding: 6px 8px; text-align: center; }
-  .wb-f5 { background: var(--blue-bg); border: 1px solid var(--blue-border); }
-  .wb-fg { background: var(--green-bg); border: 1px solid var(--green-border); }
-  .wb-lbl { font-size: 9px; color: var(--text2); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
-  .wb-team { font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .wb-f5 .wb-team { color: var(--blue); }
-  .wb-fg .wb-team { color: var(--green); }
-  /* totals */
-  .totals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 8px; }
-  .tot { background: var(--bg2); border-radius: var(--radius-sm); padding: 6px 8px; text-align: center; }
-  .tot-lbl { font-size: 9px; color: var(--text2); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
-  .tot-val { font-size: 13px; font-weight: 600; }
-  .tot-sub { font-size: 9px; margin-top: 1px; }
-  /* team run totals */
-  .run-totals {
-    background: var(--bg2); border-radius: var(--radius-sm); padding: 7px 10px;
-    margin-bottom: 8px;
-  }
-  .run-totals-lbl { font-size: 9px; color: var(--text2); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
-  .run-totals-row { display: flex; justify-content: space-between; align-items: flex-start; }
-  .run-team { flex: 1; }
-  .run-team.away { text-align: left; }
-  .run-team.home { text-align: right; }
-  .run-tname { font-size: 9px; color: var(--text2); margin-bottom: 2px; }
-  .run-nums { font-size: 11px; font-weight: 600; }
-  .run-nums.away { color: var(--blue); }
-  .run-nums.home { color: var(--green); }
-  /* weather */
-  .wx-line { font-size: 10px; color: var(--text2); display: flex; align-items: flex-start; gap: 5px; margin-bottom: 6px; line-height: 1.45; }
-  .wx-line .wx-ico { flex-shrink: 0; font-size: 13px; }
-  /* park */
-  .park-line { font-size: 10px; color: var(--text3); margin-bottom: 5px; }
-  .tap-hint { font-size: 9px; color: var(--text3); text-align: center; margin-top: 4px; }
-  /* confidence colors */
-  .c-high { color: var(--green); }
-  .c-med  { color: var(--amber); }
-  .c-low  { color: var(--text3); }
-  /* ── MODAL ── */
-  .overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,.5); z-index: 100;
-    align-items: flex-start; justify-content: center;
-    padding: 30px 14px; overflow-y: auto;
-  }
-  .overlay.open { display: flex; }
-  .modal {
-    background: var(--bg); border-radius: var(--radius);
-    border: 1px solid var(--border2);
-    width: 100%; max-width: 620px;
-    padding: 20px; position: relative;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-  }
-  .modal-close {
-    position: absolute; top: 14px; right: 16px;
-    background: none; border: none; cursor: pointer;
-    color: var(--text2); font-size: 20px; padding: 0; line-height: 1;
-  }
-  .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 14px; padding-right: 28px; }
-  .m-sec-hdr {
-    font-size: 10px; font-weight: 600; text-transform: uppercase;
-    letter-spacing: .06em; color: var(--text2); margin: 16px 0 8px;
-    display: flex; align-items: center; gap: 5px;
-  }
-  .m-sec-hdr i { font-size: 13px; }
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .m-box {
-    background: var(--bg2); border-radius: var(--radius-sm); padding: 10px 12px;
-  }
-  .m-box-title {
-    font-size: 11px; font-weight: 600; margin-bottom: 8px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .sr { display: flex; justify-content: space-between; align-items: center; padding: 3.5px 0; border-bottom: 1px solid var(--border); }
-  .sr:last-child { border-bottom: none; }
-  .sk { font-size: 11px; color: var(--text2); }
-  .sv { font-size: 11px; font-weight: 500; }
-  .trend-b { font-size: 10px; padding: 1px 7px; border-radius: 20px; }
-  .t-hot  { background: var(--green-bg); color: var(--green); }
-  .t-cold { background: var(--red-bg);   color: var(--red); }
-  .t-neut { background: var(--bg3); color: var(--text2); border: 1px solid var(--border); }
-  .bp-grade {
-    font-size: 12px; font-weight: 700; width: 22px; height: 22px;
-    border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
-  }
-  .g-A { background: var(--green-bg); color: var(--green); }
-  .g-B { background: var(--blue-bg);  color: var(--blue); }
-  .g-C { background: var(--amber-bg); color: var(--amber); }
-  .g-D,.g-F { background: var(--red-bg); color: var(--red); }
-  /* prob bar */
-  .prob-wrap { background: var(--bg2); border-radius: var(--radius-sm); padding: 11px 13px; margin-bottom: 10px; }
-  .prob-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--text2); margin-bottom: 7px; }
-  .prob-bar-row { display: flex; align-items: center; gap: 9px; }
-  .prob-bar-bg { flex: 1; height: 7px; border-radius: 4px; background: var(--bg3); overflow: hidden; position: relative; }
-  .pb-away { height: 100%; background: var(--blue); border-radius: 4px 0 0 4px; }
-  .pb-home { position: absolute; right: 0; top: 0; height: 100%; background: var(--green); border-radius: 0 4px 4px 0; }
-  .prob-pct { font-size: 12px; font-weight: 600; min-width: 34px; }
-  .prob-teams { display: flex; justify-content: space-between; font-size: 10px; margin-top: 5px; color: var(--text2); }
-  /* run totals modal */
-  .run-detail { background: var(--bg2); border-radius: var(--radius-sm); padding: 10px 13px; margin-bottom: 10px; }
-  .run-detail-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--text2); margin-bottom: 8px; }
-  .run-detail-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; text-align: center; margin-bottom: 8px; }
-  .run-detail-cell .rdc-lbl { font-size: 9px; color: var(--text2); margin-bottom: 2px; }
-  .run-detail-cell .rdc-val { font-size: 18px; font-weight: 700; }
-  .rdc-away { color: var(--blue); }
-  .rdc-home { color: var(--green); }
-  .run-total-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-  .run-total-cell { background: var(--bg); border-radius: var(--radius-sm); padding: 6px; text-align: center; }
-  .rtc-lbl { font-size: 9px; color: var(--text2); margin-bottom: 2px; }
-  .rtc-val { font-size: 14px; font-weight: 600; }
-  /* weather modal */
-  .wx-detail { background: var(--bg2); border-radius: var(--radius-sm); padding: 10px 13px; margin-bottom: 10px; }
-  /* ── STANDINGS ── */
-  .standings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(285px,1fr)); gap: 14px; }
-  .div-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
-  .div-hdr {
-    background: var(--bg2); padding: 9px 14px;
-    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
-    color: var(--text2); border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: 6px;
-  }
-  .div-hdr.al { border-left: 3px solid var(--blue); }
-  .div-hdr.nl { border-left: 3px solid var(--red); }
-  .std-tbl { width: 100%; border-collapse: collapse; font-size: 11px; }
-  .std-tbl th {
-    font-size: 10px; color: var(--text3); font-weight: 500;
-    padding: 6px 8px; text-align: center;
-    border-bottom: 1px solid var(--border);
-  }
-  .std-tbl th:first-child { text-align: left; padding-left: 14px; }
-  .std-tbl td { padding: 6px 8px; text-align: center; border-bottom: 1px solid var(--border); color: var(--text); }
-  .std-tbl td:first-child { text-align: left; padding-left: 14px; font-weight: 500; }
-  .std-tbl tr:last-child td { border-bottom: none; }
-  .std-tbl tr.leader td:first-child { color: var(--green); font-weight: 700; }
-  .streak-hot  { color: var(--green); font-weight: 600; }
-  .streak-cold { color: var(--red);   font-weight: 600; }
-  .gb-dash { color: var(--text3); }
-  /* section day label */
-  .day-label {
-    font-size: 11px; font-weight: 600; text-transform: uppercase;
-    letter-spacing: .07em; color: var(--text2);
-    margin: 0 0 10px; display: flex; align-items: center; gap: 7px;
-  }
-  .day-label::after { content:''; flex:1; height:1px; background:var(--border); }
-  @media (max-width: 600px) {
-    .two-col { grid-template-columns: 1fr; }
-    .run-detail-grid { grid-template-columns: repeat(2,1fr); }
-    .main { padding: 12px; }
-  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg3);color:var(--text);min-height:100vh}
+/* HEADER */
+.hdr{background:var(--bg);border-bottom:1px solid var(--border);padding:13px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:50}
+.logo{font-size:18px;font-weight:600;display:flex;align-items:center;gap:8px}
+.logo-icon{font-size:22px}
+.hdr-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.date-pill{font-size:12px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;color:var(--text2)}
+.refresh-btn{display:flex;align-items:center;gap:5px;font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid var(--border2);background:var(--bg);color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .15s}
+.refresh-btn:hover{background:var(--bg2)}
+/* TABS */
+.tabs{background:var(--bg);border-bottom:1px solid var(--border);padding:0 20px;display:flex;gap:0;overflow-x:auto}
+.tab{padding:12px 18px;font-size:13px;font-weight:500;color:var(--text2);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:color .15s,border-color .15s}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.tab:hover:not(.active){color:var(--text)}
+/* MAIN */
+.main{padding:20px;max-width:1400px;margin:0 auto}
+/* STATUS */
+.status-wrap{text-align:center;padding:60px 20px;color:var(--text2);font-size:14px}
+.spinner{width:22px;height:22px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.err{color:var(--red);background:var(--red-bg);border-radius:var(--rs);padding:14px 18px;font-size:13px;line-height:1.6}
+/* GRID */
+.games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(305px,1fr));gap:14px}
+/* CARD */
+.card{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:pointer;box-shadow:var(--shadow);transition:transform .12s,box-shadow .12s,border-color .12s}
+.card:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,.1);border-color:var(--border2)}
+.card.elite   {border-left:3px solid var(--green)}
+.card.strong  {border-left:3px solid var(--blue)}
+.card.moderate{border-left:3px solid var(--amber)}
+.card-top{background:var(--bg2);padding:8px 13px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+.card-time{font-size:11px;color:var(--text2);font-weight:500;display:flex;align-items:center;gap:4px}
+.rb{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;white-space:nowrap}
+.rb-elite   {background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)}
+.rb-strong  {background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-bd)}
+.rb-moderate{background:var(--amber-bg);color:var(--amber)}
+.rb-lean    {background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+.card-body{padding:12px 13px}
+/* matchup */
+.matchup{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+.team{flex:1;min-width:0}.team.home{text-align:right}
+.team-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.team-rec{font-size:10px;color:var(--text2);margin-top:1px}
+.at-sep{font-size:11px;color:var(--text3);margin:0 7px;flex-shrink:0}
+/* pitchers */
+.pitchers{display:flex;justify-content:space-between;gap:6px;margin-bottom:9px}
+.pitcher{flex:1;min-width:0}.pitcher.home-p{text-align:right}
+.sp-name{font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sp-stats{font-size:10px;color:var(--text2);margin-top:1px}
+.divider{height:1px;background:var(--border);margin:9px 0}
+/* winners */
+.winners{display:flex;gap:5px;margin-bottom:7px}
+.wb{flex:1;border-radius:var(--rs);padding:6px 8px;text-align:center}
+.wb-f5{background:var(--blue-bg);border:1px solid var(--blue-bd)}
+.wb-fg{background:var(--green-bg);border:1px solid var(--green-bd)}
+.wb-lbl{font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+.wb-team{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wb-f5 .wb-team{color:var(--blue)}.wb-fg .wb-team{color:var(--green)}
+/* totals */
+.totals-2{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:7px}
+.tot{background:var(--bg2);border-radius:var(--rs);padding:6px 8px;text-align:center}
+.tot-lbl{font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+.tot-val{font-size:13px;font-weight:600}
+.tot-sub{font-size:9px;margin-top:1px}
+/* run totals */
+.run-box{background:var(--bg2);border-radius:var(--rs);padding:7px 10px;margin-bottom:7px}
+.run-box-lbl{font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+.run-row{display:flex;justify-content:space-between}
+.run-side{}.run-side.home{text-align:right}
+.run-tname{font-size:9px;color:var(--text2);margin-bottom:2px}
+.run-nums{font-size:11px;font-weight:600}
+.run-nums.away{color:var(--blue)}.run-nums.home{color:var(--green)}
+/* weather */
+.wx-line{font-size:10px;color:var(--text2);display:flex;align-items:flex-start;gap:5px;line-height:1.45;margin-bottom:5px}
+.wx-ico{flex-shrink:0;font-size:13px}
+.park-line{font-size:10px;color:var(--text3);margin-bottom:5px}
+.tap-hint{font-size:9px;color:var(--text3);text-align:center;margin-top:4px}
+/* conf */
+.c-high{color:var(--green)}.c-med{color:var(--amber)}.c-low{color:var(--text3)}
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:flex-start;justify-content:center;padding:28px 14px;overflow-y:auto}
+.overlay.open{display:flex}
+.modal{background:var(--bg);border-radius:var(--r);border:1px solid var(--border2);width:100%;max-width:630px;padding:20px;position:relative;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+.modal-close{position:absolute;top:14px;right:16px;background:none;border:none;cursor:pointer;color:var(--text2);font-size:20px;padding:0;line-height:1}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:14px;padding-right:28px}
+.m-hdr{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin:16px 0 8px;display:flex;align-items:center;gap:5px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.m-box{background:var(--bg2);border-radius:var(--rs);padding:10px 12px}
+.m-box-title{font-size:11px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.sr{display:flex;justify-content:space-between;align-items:center;padding:3.5px 0;border-bottom:1px solid var(--border)}
+.sr:last-child{border-bottom:none}
+.sk{font-size:11px;color:var(--text2)}.sv{font-size:11px;font-weight:500}
+.trend-b{font-size:10px;padding:1px 7px;border-radius:20px}
+.t-hot{background:var(--green-bg);color:var(--green)}
+.t-cold{background:var(--red-bg);color:var(--red)}
+.t-neut{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+.bp-g{font-size:12px;font-weight:700;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center}
+.g-A{background:var(--green-bg);color:var(--green)}.g-B{background:var(--blue-bg);color:var(--blue)}
+.g-C{background:var(--amber-bg);color:var(--amber)}.g-D,.g-F{background:var(--red-bg);color:var(--red)}
+/* prob bar */
+.prob-wrap{background:var(--bg2);border-radius:var(--rs);padding:11px 13px;margin-bottom:10px}
+.prob-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:7px}
+.prob-bar-row{display:flex;align-items:center;gap:9px}
+.prob-bg{flex:1;height:7px;border-radius:4px;background:var(--bg3);overflow:hidden;position:relative}
+.pb-a{height:100%;background:var(--blue);border-radius:4px 0 0 4px}
+.pb-h{position:absolute;right:0;top:0;height:100%;background:var(--green);border-radius:0 4px 4px 0}
+.prob-pct{font-size:12px;font-weight:600;min-width:34px}
+.prob-teams{display:flex;justify-content:space-between;font-size:10px;margin-top:5px;color:var(--text2)}
+/* run detail */
+.run-detail{background:var(--bg2);border-radius:var(--rs);padding:10px 13px;margin-bottom:10px}
+.rd-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:8px}
+.rd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;margin-bottom:8px}
+.rdc .rdc-l{font-size:9px;color:var(--text2);margin-bottom:2px}
+.rdc .rdc-v{font-size:18px;font-weight:700}
+.rdc-a{color:var(--blue)}.rdc-h{color:var(--green)}
+.rd-totrow{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.rd-totcell{background:var(--bg);border-radius:var(--rs);padding:6px;text-align:center}
+.rdtc-l{font-size:9px;color:var(--text2);margin-bottom:2px}
+.rdtc-v{font-size:14px;font-weight:600}
+/* wx detail */
+.wx-detail-box{background:var(--bg2);border-radius:var(--rs);padding:10px 13px;margin-bottom:10px}
+.wx-dl{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:6px}
+/* standings */
+.std-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:14px}
+.div-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.div-hdr{background:var(--bg2);padding:9px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px}
+.div-hdr.al{border-left:3px solid var(--blue)}.div-hdr.nl{border-left:3px solid var(--red)}
+.std-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.std-tbl th{font-size:10px;color:var(--text3);font-weight:500;padding:6px 8px;text-align:center;border-bottom:1px solid var(--border)}
+.std-tbl th:first-child{text-align:left;padding-left:14px}
+.std-tbl td{padding:6px 8px;text-align:center;border-bottom:1px solid var(--border);color:var(--text)}
+.std-tbl td:first-child{text-align:left;padding-left:14px;font-weight:500}
+.std-tbl tr:last-child td{border-bottom:none}
+.std-tbl tr.leader td:first-child{color:var(--green);font-weight:700}
+.sk-hot{color:var(--green);font-weight:600}.sk-cold{color:var(--red);font-weight:600}
+.gb-d{color:var(--text3)}
+@media(max-width:600px){.two-col{grid-template-columns:1fr}.rd-grid{grid-template-columns:repeat(2,1fr)}.main{padding:12px}}
 </style>
 </head>
 <body>
 
-<div class="header">
-  <div class="logo"><span>⚾</span> MLB Predictions</div>
-  <div class="header-right">
-    <span class="date-pill" id="date-display"></span>
-    <button class="refresh-btn" onclick="loadAll()">
-      <i class="ti ti-refresh" style="font-size:13px"></i> Refresh
-    </button>
+<div class="hdr">
+  <div class="logo"><span class="logo-icon">⚾</span> MLB Predictions</div>
+  <div class="hdr-right">
+    <span class="date-pill" id="date-pill"></span>
+    <button class="refresh-btn" onclick="loadAll()"><i class="ti ti-refresh" style="font-size:13px"></i> Refresh</button>
   </div>
 </div>
 
-<div class="tab-bar">
+<div class="tabs">
   <button class="tab active" id="tab-today"     onclick="switchTab('today')">Today</button>
   <button class="tab"        id="tab-tomorrow"  onclick="switchTab('tomorrow')">Tomorrow</button>
   <button class="tab"        id="tab-standings" onclick="switchTab('standings')">Standings</button>
@@ -335,8 +188,7 @@
 
 <div class="main" id="main"></div>
 
-<!-- MODAL -->
-<div class="overlay" id="overlay" onclick="closeOverlay(event)">
+<div class="overlay" id="overlay" onclick="closeOut(event)">
   <div class="modal">
     <button class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></button>
     <div id="modal-body"></div>
@@ -344,9 +196,9 @@
 </div>
 
 <script>
-/* ===================================================
-   CONFIG — your Google Sheet ID + GIDs
-   =================================================== */
+/* ─────────────────────────────────────────────
+   CONFIG
+───────────────────────────────────────────── */
 const SHEET_ID = '18akScsNGlflTQ8MM2iLZ8fi9rKW8cE7zPPh4bKsSdkk';
 const GIDS = {
   schedule:    577339871,
@@ -359,832 +211,691 @@ const GIDS = {
   advanced:    1867140111,
 };
 
-/* ===================================================
+/* ─────────────────────────────────────────────
+   PARK COORDINATES + ORIENTATIONS
+   homeDir = compass bearing (°) toward home plate FROM center field
+   (used to describe wind direction relative to the field)
+───────────────────────────────────────────── */
+const PARKS = {
+  ATL:{ lat:33.8908, lon:-84.4678, homeDir:55,  name:'Truist Park',           roof:false },
+  PHI:{ lat:39.9057, lon:-75.1665, homeDir:60,  name:'Citizens Bank Park',    roof:false },
+  NYY:{ lat:40.8296, lon:-73.9262, homeDir:315, name:'Yankee Stadium',        roof:false },
+  TOR:{ lat:43.6414, lon:-79.3894, homeDir:0,   name:'Rogers Centre',         roof:true  },
+  DET:{ lat:42.3390, lon:-83.0485, homeDir:205, name:'Comerica Park',         roof:false },
+  MIA:{ lat:25.7781, lon:-80.2197, homeDir:60,  name:'loanDepot Park',        roof:true  },
+  HOU:{ lat:29.7573, lon:-95.3555, homeDir:30,  name:'Minute Maid Park',      roof:true  },
+  MIN:{ lat:44.9817, lon:-93.2782, homeDir:100, name:'Target Field',          roof:false },
+  STL:{ lat:38.6226, lon:-90.1928, homeDir:40,  name:'Busch Stadium',         roof:false },
+  TEX:{ lat:32.7512, lon:-97.0832, homeDir:30,  name:'Globe Life Field',      roof:true  },
+  COL:{ lat:39.7559, lon:-104.994, homeDir:35,  name:'Coors Field',           roof:false },
+  ARI:{ lat:33.4453, lon:-112.067, homeDir:15,  name:'Chase Field',           roof:true  },
+  LAD:{ lat:34.0739, lon:-118.240, homeDir:20,  name:'Dodger Stadium',        roof:false },
+  SD: { lat:32.7073, lon:-117.157, homeDir:290, name:'Petco Park',            roof:false },
+  CHC:{ lat:41.9484, lon:-87.6553, homeDir:185, name:'Wrigley Field',         roof:false },
+  BAL:{ lat:39.2838, lon:-76.6218, homeDir:335, name:'Camden Yards',          roof:false },
+  TB: { lat:27.7683, lon:-82.6534, homeDir:30,  name:'Tropicana Field',       roof:true  },
+  CLE:{ lat:41.4962, lon:-81.6852, homeDir:35,  name:'Progressive Field',     roof:false },
+  SF: { lat:37.7786, lon:-122.389, homeDir:35,  name:'Oracle Park',           roof:false },
+  ATH:{ lat:38.5803, lon:-121.499, homeDir:30,  name:'Sutter Health Park',    roof:false },
+  LAA:{ lat:33.8003, lon:-117.883, homeDir:30,  name:'Angel Stadium',         roof:false },
+  BOS:{ lat:42.3467, lon:-71.0972, homeDir:95,  name:'Fenway Park',           roof:false },
+  KC: { lat:39.0517, lon:-94.4803, homeDir:40,  name:'Kauffman Stadium',      roof:false },
+  CIN:{ lat:39.0979, lon:-84.5082, homeDir:35,  name:'Great American Ball Park', roof:false },
+  PIT:{ lat:40.4469, lon:-80.0057, homeDir:100, name:'PNC Park',              roof:false },
+  WSH:{ lat:38.8730, lon:-77.0074, homeDir:50,  name:'Nationals Park',        roof:false },
+  NYM:{ lat:40.7571, lon:-73.8458, homeDir:145, name:'Citi Field',            roof:false },
+  SEA:{ lat:47.5914, lon:-122.332, homeDir:55,  name:'T-Mobile Park',         roof:true  },
+  MIL:{ lat:43.0280, lon:-87.9712, homeDir:30,  name:'American Family Field', roof:true  },
+  CWS:{ lat:41.8300, lon:-87.6338, homeDir:10,  name:'Guaranteed Rate Field', roof:false },
+};
+
+/* Weather code → description */
+const WX_CODE = {
+  0:'Clear',1:'Mainly Clear',2:'Partly Cloudy',3:'Overcast',
+  45:'Foggy',48:'Icy Fog',
+  51:'Light Drizzle',53:'Drizzle',55:'Heavy Drizzle',
+  61:'Light Rain',63:'Rain',65:'Heavy Rain',
+  71:'Light Snow',73:'Snow',75:'Heavy Snow',
+  80:'Light Showers',81:'Showers',82:'Heavy Showers',
+  95:'Thunderstorms',96:'Thunderstorms',99:'Thunderstorms'
+};
+const WX_ICON = {
+  0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',
+  51:'🌦️',53:'🌦️',55:'🌧️',61:'🌦️',63:'🌧️',65:'🌧️',
+  71:'🌨️',73:'🌨️',75:'❄️',80:'🌦️',81:'🌧️',82:'⛈️',
+  95:'⛈️',96:'⛈️',99:'⛈️'
+};
+
+/* Convert met. wind direction (where wind comes FROM) to field-relative description */
+function windToField(windFromDeg, parkHomeDir) {
+  // windFromDeg = direction wind is coming FROM (meteorological)
+  // parkHomeDir = bearing FROM CF toward home plate
+  // We want to say wind is blowing "in/out" and toward which field zone
+  const cfDir = (parkHomeDir + 180) % 360; // bearing from home plate toward CF
+  // angle of wind blowing toward, relative to CF direction
+  const windToDeg = (windFromDeg + 180) % 360;
+  let diff = ((windToDeg - cfDir) % 360 + 360) % 360;
+
+  // In vs out
+  let inOut;
+  if (diff > 315 || diff <= 45)  inOut = 'out';
+  else if (diff > 135 && diff <= 225) inOut = 'in';
+  else inOut = 'across';
+
+  // Field zone
+  let zone;
+  if (diff > 315 || diff <= 45)  zone = 'to center';
+  else if (diff > 45 && diff <= 90)  zone = 'out to right-center';
+  else if (diff > 90 && diff <= 135) zone = 'out to right';
+  else if (diff > 135 && diff <= 180) zone = 'in from right';
+  else if (diff > 180 && diff <= 225) zone = 'in from left';
+  else if (diff > 225 && diff <= 270) zone = 'out to left';
+  else zone = 'out to left-center';
+
+  if (inOut === 'across') {
+    zone = diff > 45 && diff <= 135 ? 'blowing right to left' : 'blowing left to right';
+  }
+  return zone;
+}
+
+/* ─────────────────────────────────────────────
    GLOBALS
-   =================================================== */
-let DATA       = {};   // parsed sheet data
-let WEATHER    = {};   // ESPN weather keyed by home abbr
-let currentTab = 'today';
-let todayGames = [];
-let tmrwGames  = [];
+───────────────────────────────────────────── */
+let DATA={}, WEATHER={}, currentTab='today', todayGames=[], tmrwGames=[];
 
-/* ===================================================
-   DATE
-   =================================================== */
-const TODAY_STR = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
-document.getElementById('date-display').textContent = TODAY_STR;
+const now = new Date();
+document.getElementById('date-pill').textContent = now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
 
-/* ===================================================
+/* ─────────────────────────────────────────────
    CSV FETCH + PARSE
-   =================================================== */
-async function fetchCSV(gid) {
-  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
-  const resp = await fetch(url);
-  if (!resp.ok) throw new Error(`Failed to fetch GID ${gid}: ${resp.status}`);
-  return parseCSV(await resp.text());
+───────────────────────────────────────────── */
+async function fetchCSV(gid){
+  const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
+  const r=await fetch(url);
+  if(!r.ok) throw new Error(`HTTP ${r.status} fetching gid=${gid}`);
+  return parseCSV(await r.text());
+}
+function parseCSV(txt){
+  return txt.split('\n').map(line=>{
+    const out=[];let cur='',inQ=false;
+    for(const c of line){
+      if(c==='"'){inQ=!inQ;}
+      else if(c===','&&!inQ){out.push(cur.trim());cur='';}
+      else cur+=c;
+    }
+    out.push(cur.trim());
+    return out;
+  }).filter(r=>r.some(c=>c));
+}
+function csvToObjects(rows){
+  // find header row — skip emoji title rows
+  let hi=0;
+  for(let i=0;i<Math.min(rows.length,6);i++){
+    const f=(rows[i][0]||'');
+    if(/[\u{1F300}-\u{1FFFF}]/u.test(f)||f.startsWith('📅')||f.startsWith('📊')||f.startsWith('⚾')||f.startsWith('🔥')||f.startsWith('🏟')||f.startsWith('📈')||f.startsWith('🎰')) continue;
+    if(rows[i].every(c=>!c)) continue;
+    hi=i; break;
+  }
+  const headers=rows[hi].map(h=>h.replace(/[^\w\s/%().⭐🔥❄️➡📈📉-]/g,'').trim());
+  return rows.slice(hi+1).filter(r=>r.some(c=>c)).map(row=>{
+    const o={};
+    headers.forEach((h,i)=>{o[h]=(row[i]||'').trim();});
+    return o;
+  });
 }
 
-function parseCSV(text) {
-  const lines = text.split('\n');
-  const rows = [];
-  for (const line of lines) {
-    if (line.trim()) rows.push(splitLine(line));
-  }
-  return rows;
-}
-
-function splitLine(line) {
-  const out = []; let cur = ''; let inQ = false;
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i];
-    if (c === '"') { inQ = !inQ; }
-    else if (c === ',' && !inQ) { out.push(cur.trim()); cur = ''; }
-    else { cur += c; }
-  }
-  out.push(cur.trim());
-  return out;
-}
-
-function csvToObjects(rows) {
-  // Find actual header row (first row where first cell doesn't look like a title/section header)
-  let headerIdx = 0;
-  for (let i = 0; i < Math.min(rows.length, 5); i++) {
-    const first = (rows[i][0] || '').toLowerCase();
-    // Skip emoji-laden title rows or section headers
-    if (first.includes('📅') || first.includes('📊') || first.includes('⚾') ||
-        first.includes('🔥') || first.includes('🏟️') || first.includes('📈') ||
-        first.includes('🎰') || first.match(/^[^\w]/)) continue;
-    // Skip totally blank rows
-    if (rows[i].every(c => !c)) continue;
-    headerIdx = i;
-    break;
-  }
-  const headers = rows[headerIdx].map(h => h.replace(/[^\w\s/%]/g, '').trim());
-  const objects = [];
-  for (let i = headerIdx + 1; i < rows.length; i++) {
-    const row = rows[i];
-    if (row.every(c => !c)) continue;
-    const obj = {};
-    headers.forEach((h, idx) => { obj[h] = (row[idx] || '').trim(); });
-    objects.push(obj);
-  }
-  return objects;
-}
-
-/* ===================================================
-   LOAD ALL DATA
-   =================================================== */
-async function loadAll() {
-  showLoading();
-  try {
-    const [sched, preds, totals, pitchers, bullpen, parkWx, teamStats, advanced] = await Promise.all([
-      fetchCSV(GIDS.schedule),
-      fetchCSV(GIDS.predictions),
-      fetchCSV(GIDS.teamTotals),
-      fetchCSV(GIDS.pitchers),
-      fetchCSV(GIDS.bullpen),
-      fetchCSV(GIDS.parkWeather),
-      fetchCSV(GIDS.teamStats),
-      fetchCSV(GIDS.advanced),
+/* ─────────────────────────────────────────────
+   LOAD ALL
+───────────────────────────────────────────── */
+async function loadAll(){
+  setMain(`<div class="status-wrap"><span class="spinner"></span>Loading from Google Sheets…</div>`);
+  try{
+    const [sched,preds,totals,pitchers,bullpen,parkWx,teamStats,advanced]=await Promise.all([
+      fetchCSV(GIDS.schedule),fetchCSV(GIDS.predictions),fetchCSV(GIDS.teamTotals),
+      fetchCSV(GIDS.pitchers),fetchCSV(GIDS.bullpen),fetchCSV(GIDS.parkWeather),
+      fetchCSV(GIDS.teamStats),fetchCSV(GIDS.advanced),
     ]);
     DATA.schedule   = processSchedule(sched);
-    DATA.predictions = csvToObjects(preds);
+    DATA.predictions= csvToObjects(preds);
     DATA.totals     = csvToObjects(totals);
     DATA.pitchers   = csvToObjects(pitchers);
     DATA.bullpen    = csvToObjects(bullpen);
-    DATA.parkWeather = csvToObjects(parkWx);
+    DATA.parkWx     = csvToObjects(parkWx);
     DATA.teamStats  = csvToObjects(teamStats);
     DATA.advanced   = processAdvanced(advanced);
-
     buildGames();
-    fetchESPNWeather(); // async, re-renders cards when done
     renderTab(currentTab);
-  } catch(e) {
-    document.getElementById('main').innerHTML =
-      `<div class="status-bar"><div class="error-msg">
-        <strong>Could not load data.</strong><br>
-        Make sure your Google Sheet is shared as "Anyone with the link can view."<br>
-        <small style="opacity:.7">${e.message}</small>
-      </div></div>`;
+    fetchWeatherAll(); // async — re-renders cards when done
+  }catch(e){
+    setMain(`<div class="status-wrap"><div class="err"><strong>Could not load data.</strong><br>Make sure your sheet is shared as "Anyone with the link can view."<br><small style="opacity:.7">${e.message}</small></div></div>`);
   }
 }
 
-function showLoading() {
-  document.getElementById('main').innerHTML =
-    `<div class="status-bar"><span class="spinner"></span>Loading data from Google Sheets…</div>`;
-}
-
-/* ===================================================
-   PROCESS SCHEDULE — split today/tomorrow blocks
-   =================================================== */
-function processSchedule(rows) {
-  const all = [];
-  let section = null;
-  for (const row of rows) {
-    const first = (row[0] || '').trim();
-    if (first.includes('TODAY')) { section = 'today'; continue; }
-    if (first.includes('TOMORROW')) { section = 'tomorrow'; continue; }
-    if (!first || first.includes('Time') || first.includes('📅')) continue;
-    // Data row: Time, Day, Away Team, (vs), Home Team, Venue, Away SP, Away ERA, Away WHIP, Home SP, Home ERA, Home WHIP, ...
-    if (section && row.length >= 5 && row[0]) {
-      all.push({ _day: section, raw: row });
-    }
+/* ─────────────────────────────────────────────
+   PROCESS SCHEDULE
+───────────────────────────────────────────── */
+function processSchedule(rows){
+  const all=[];let section=null;
+  for(const row of rows){
+    const f=(row[0]||'').trim();
+    if(f.includes('TODAY')){section='today';continue;}
+    if(f.includes('TOMORROW')){section='tomorrow';continue;}
+    if(!f||f.includes('Time')||f.startsWith('📅')) continue;
+    if(section&&row[0]&&row[2]) all.push({_day:section,raw:row});
   }
   return all;
 }
 
-function processAdvanced(rows) {
-  // Advanced sheet has multiple sections; parse each by looking for section headers
-  const result = { spForm: {}, teamForm: {}, h2h: {} };
-  let section = null;
-  let headers = [];
-
-  for (const row of rows) {
-    const first = (row[0] || '').trim();
-    if (first.includes('SECTION 1') || first.includes('STARTING PITCHER')) { section = 'sp'; headers = []; continue; }
-    if (first.includes('SECTION 2') || first.includes('TEAM FORM'))  { section = 'team'; headers = []; continue; }
-    if (first.includes('SECTION 3') || first.includes('HEAD-TO-HEAD')) { section = 'h2h';  headers = []; continue; }
-    if (!first || row.every(c => !c)) continue;
-
-    // Detect header rows (contains known header words)
-    const fl = first.toLowerCase();
-    if (fl === 'pitcher' || fl === 'team' || fl === 'matchup') {
-      headers = row.map(h => h.trim());
-      continue;
-    }
-
-    if (!headers.length) continue;
-
-    const obj = {};
-    headers.forEach((h, i) => { obj[h] = (row[i] || '').trim(); });
-
-    if (section === 'sp'   && obj['Pitcher'])  result.spForm[obj['Pitcher']]  = obj;
-    if (section === 'team' && obj['Team'])     result.teamForm[obj['Abbr'] || obj['Team']] = obj;
-    if (section === 'h2h'  && obj['Matchup'])  result.h2h[obj['Matchup']]    = obj;
+/* ─────────────────────────────────────────────
+   PROCESS ADVANCED (multi-section sheet)
+───────────────────────────────────────────── */
+function processAdvanced(rows){
+  const res={spForm:{},teamForm:{},h2h:{}};
+  let section=null,headers=[];
+  for(const row of rows){
+    const f=(row[0]||'').trim();
+    if(f.includes('SECTION 1')||f.includes('STARTING PITCHER')){section='sp';headers=[];continue;}
+    if(f.includes('SECTION 2')||f.includes('TEAM FORM')){section='team';headers=[];continue;}
+    if(f.includes('SECTION 3')||f.includes('HEAD-TO-HEAD')){section='h2h';headers=[];continue;}
+    if(!f||row.every(c=>!c)) continue;
+    const fl=f.toLowerCase();
+    if(fl==='pitcher'||fl==='team'||fl==='matchup'){headers=row.map(h=>h.trim());continue;}
+    if(!headers.length) continue;
+    const obj={};headers.forEach((h,i)=>{obj[h]=(row[i]||'').trim();});
+    if(section==='sp'  &&obj['Pitcher']) res.spForm[obj['Pitcher']]=obj;
+    if(section==='team'&&obj['Abbr'])    res.teamForm[obj['Abbr']]=obj;
+    if(section==='team'&&obj['Team']&&!obj['Abbr']) res.teamForm[obj['Team']]=obj;
+    if(section==='h2h' &&obj['Matchup']) res.h2h[obj['Matchup']]=obj;
   }
-  return result;
+  return res;
 }
 
-/* ===================================================
-   BUILD GAME OBJECTS from parsed sheets
-   =================================================== */
-function buildGames() {
-  todayGames = [];
-  tmrwGames  = [];
+/* ─────────────────────────────────────────────
+   BUILD GAME OBJECTS
+───────────────────────────────────────────── */
+function buildGames(){
+  todayGames=[];tmrwGames=[];
+  for(const entry of DATA.schedule){
+    const r=entry.raw;
+    // cols: Time, Day, Away, (vs), Home, Venue, AwaysSP, AwayERA, AwayWHIP, HomeSP, HomeERA, HomeWHIP ...
+    const [time,,awayTeam,,homeTeam,venue,awaySP,awayERA,awayWHIP,homeSP,homeERA,homeWHIP]=r;
+    if(!awayTeam||!homeTeam) continue;
+    const awayAbbr=abbr(awayTeam), homeAbbr=abbr(homeTeam);
 
-  for (const entry of DATA.schedule) {
-    const r = entry.raw;
-    // Schedule columns: Time, Day, Away Team, (vs literal), Home Team, Venue, Away SP, Away ERA, Away WHIP, Home SP, Home ERA, Home WHIP, Vegas O/U, Vegas ML, Proj Total, Away Win%, Home Win%, Edge
-    const [time, day, awayTeam,, homeTeam, venue, awaySP, awayERA, awayWHIP, homeSP, homeERA, homeWHIP] = r;
-    if (!awayTeam || !homeTeam) continue;
+    const pred = DATA.predictions.find(p=>rowMatch(p,awayTeam,homeTeam));
+    const tot  = DATA.totals.find(t=>rowMatch(t,awayTeam,homeTeam));
+    const aTS  = DATA.teamStats.find(t=>t['Team']===awayTeam||t['Abbr']===awayAbbr)||{};
+    const hTS  = DATA.teamStats.find(t=>t['Team']===homeTeam||t['Abbr']===homeAbbr)||{};
+    const pk   = DATA.parkWx.find(p=>p['Team']===homeTeam)||{};
+    const aBP  = DATA.bullpen.find(b=>b['Team']===awayTeam)||{};
+    const hBP  = DATA.bullpen.find(b=>b['Team']===homeTeam)||{};
+    const aPit = DATA.pitchers.find(p=>p['Pitcher']===awaySP)||{};
+    const hPit = DATA.pitchers.find(p=>p['Pitcher']===homeSP)||{};
 
-    const awayAbbr = teamAbbr(awayTeam);
-    const homeAbbr = teamAbbr(homeTeam);
-    const matchupKey = `${awayTeam}  @  ${homeTeam}`;
-
-    // Lookup prediction row
-    const pred = DATA.predictions.find(p => rowMatch(p, awayTeam, homeTeam));
-    // Lookup totals row
-    const tot  = DATA.totals.find(t => rowMatch(t, awayTeam, homeTeam));
-    // Team stats
-    const aTS  = DATA.teamStats.find(t => t['Team'] === awayTeam || t['Abbr'] === awayAbbr) || {};
-    const hTS  = DATA.teamStats.find(t => t['Team'] === homeTeam  || t['Abbr'] === homeAbbr) || {};
-    // Park/weather
-    const pk   = DATA.parkWeather.find(p => p['Team'] === homeTeam) || {};
-    // Bullpen
-    const aBP  = DATA.bullpen.find(b => b['Team'] === awayTeam) || {};
-    const hBP  = DATA.bullpen.find(b => b['Team'] === homeTeam)  || {};
-    // SP pitcher stats
-    const aPit = DATA.pitchers.find(p => p['Pitcher'] === awaySP) || {};
-    const hPit = DATA.pitchers.find(p => p['Pitcher'] === homeSP)  || {};
-
-    const g = {
-      time, away: awayTeam, home: homeTeam, venue: venue || pk['Stadium'] || '',
+    const g={
+      time, away:awayTeam, home:homeTeam,
+      venue: venue||pk['Stadium']||'',
       awayAbbr, homeAbbr,
-      awaySP: awaySP || 'TBD', awayERA: awayERA || '—', awayWHIP: awayWHIP || '—',
-      homeSP: homeSP || 'TBD', homeERA: homeERA || '—', homeWHIP: homeWHIP || '—',
-      // predictions
-      f5Pick:   col(pred, 'F5 Pick', 'f5Pick') || '—',
-      f5Conf:   col(pred, 'F5 Conf') || '—',
-      f5Total:  col(pred, 'F5 Total') || col(tot, '⚡ F5 Tot', 'F5 Tot') || '—',
-      fgPick:   col(pred, 'FG Pick') || '—',
-      fgConf:   col(pred, 'FG Conf') || '—',
-      fgTotal:  col(pred, 'FG Total') || col(tot, '🏆 FG Tot', 'FG Tot') || '—',
-      rating:   col(pred, 'Rating') || '—',
-      awayF5pct: parseF(col(pred, 'Away F5%')),
-      homeF5pct: parseF(col(pred, 'Home F5%')),
-      awayFGpct: parseF(col(pred, 'Away FG%')),
-      homeFGpct: parseF(col(pred, 'Home FG%')),
-      f5OvUn:   col(pred, 'F5 O/U') || '—',
-      fgOvUn:   col(pred, 'FG O/U') || '—',
-      // team run totals
-      awayF5runs: col(tot, '⚡ Away F5', 'Away F5') || '—',
-      homeF5runs: col(tot, '⚡ Home F5', 'Home F5') || '—',
-      awayFGruns: col(tot, '🏆 Away FG', 'Away FG') || '—',
-      homeFGruns: col(tot, '🏆 Home FG', 'Home FG') || '—',
-      // team stats
-      awayRec: aTS['W'] && aTS['L'] ? `${aTS['W']}-${aTS['L']}` : '',
-      homeRec: hTS['W'] && hTS['L'] ? `${hTS['W']}-${hTS['L']}` : '',
-      aTS, hTS, aBP, hBP, aPit, hPit,
-      // park
-      park: pk['Stadium'] || venue || '',
-      parkFactor: pk['Park Factor'] || '—',
-      roof: pk['Roof'] || '—',
-      altitude: pk['Alt (ft)'] || '',
+      awaySP:awaySP||'TBD', awayERA:awayERA||'—', awayWHIP:awayWHIP||'—',
+      homeSP:homeSP||'TBD', homeERA:homeERA||'—', homeWHIP:homeWHIP||'—',
+      f5Pick:  col(pred,'F5 Pick')||'—',
+      f5Conf:  col(pred,'F5 Conf')||'—',
+      f5Total: col(pred,'F5 Total')||col(tot,'F5 Tot')||'—',
+      fgPick:  col(pred,'FG Pick')||'—',
+      fgConf:  col(pred,'FG Conf')||'—',
+      fgTotal: col(pred,'FG Total')||col(tot,'FG Tot')||'—',
+      rating:  col(pred,'Rating')||'—',
+      awayF5pct: pf(col(pred,'Away F5%')),
+      homeF5pct: pf(col(pred,'Home F5%')),
+      awayFGpct: pf(col(pred,'Away FG%')),
+      homeFGpct: pf(col(pred,'Home FG%')),
+      // team run totals — try multiple column name variants
+      awayF5runs: col(tot,'Away F5')||'—',
+      homeF5runs: col(tot,'Home F5')||'—',
+      awayFGruns: col(tot,'Away FG')||'—',
+      homeFGruns: col(tot,'Home FG')||'—',
+      awayRec: aTS['W']&&aTS['L']?`${aTS['W']}-${aTS['L']}`:'',
+      homeRec: hTS['W']&&hTS['L']?`${hTS['W']}-${hTS['L']}`:'',
+      aTS,hTS,aBP,hBP,aPit,hPit,
+      park: pk['Stadium']||venue||'',
+      parkFactor: pk['Park Factor']||'—',
+      roof: pk['Roof']||'',
+      altitude: pk['Alt (ft)']||'',
     };
-
-    if (entry._day === 'today')    todayGames.push(g);
-    else if (entry._day === 'tomorrow') tmrwGames.push(g);
+    if(entry._day==='today')     todayGames.push(g);
+    else if(entry._day==='tomorrow') tmrwGames.push(g);
   }
 }
 
 /* helpers */
-function col(obj, ...keys) {
-  if (!obj) return '';
-  for (const k of keys) {
-    const found = Object.keys(obj).find(ok => ok.toLowerCase().replace(/[^a-z0-9]/g,'').includes(k.toLowerCase().replace(/[^a-z0-9]/g,'')));
-    if (found && obj[found]) return obj[found];
+function col(obj,...keys){
+  if(!obj) return '';
+  for(const k of keys){
+    const norm=s=>s.toLowerCase().replace(/[^a-z0-9]/g,'');
+    const nk=norm(k);
+    const found=Object.keys(obj).find(ok=>norm(ok).includes(nk)||nk.includes(norm(ok)));
+    if(found&&obj[found]) return obj[found];
   }
   return '';
 }
-function rowMatch(row, away, home) {
-  const m = Object.values(row).join(' ').toLowerCase();
-  const aLast = away.split(' ').pop().toLowerCase();
-  const hLast = home.split(' ').pop().toLowerCase();
-  return m.includes(aLast) && m.includes(hLast);
+function rowMatch(row,away,home){
+  const m=Object.values(row).join(' ').toLowerCase();
+  return m.includes(away.split(' ').pop().toLowerCase())&&m.includes(home.split(' ').pop().toLowerCase());
 }
-function parseF(str) {
-  if (!str) return null;
-  return parseFloat(str.replace('%','')) || null;
-}
-function teamAbbr(name) {
-  const MAP = {
-    'Pittsburgh Pirates':'PIT','Atlanta Braves':'ATL','Chicago White Sox':'CWS',
-    'Philadelphia Phillies':'PHI','Boston Red Sox':'BOS','New York Yankees':'NYY',
-    'Baltimore Orioles':'BAL','Toronto Blue Jays':'TOR','Seattle Mariners':'SEA',
-    'Detroit Tigers':'DET','Tampa Bay Rays':'TB','Miami Marlins':'MIA',
-    'Athletics':'ATH','Houston Astros':'HOU','Kansas City Royals':'KC',
-    'Minnesota Twins':'MIN','Cincinnati Reds':'CIN','St. Louis Cardinals':'STL',
-    'Cleveland Guardians':'CLE','Texas Rangers':'TEX','Milwaukee Brewers':'MIL',
-    'Colorado Rockies':'COL','Washington Nationals':'WSH','Arizona Diamondbacks':'ARI',
-    'Los Angeles Angels':'LAA','Los Angeles Dodgers':'LAD','New York Mets':'NYM',
-    'San Diego Padres':'SD','San Francisco Giants':'SF','Chicago Cubs':'CHC'
-  };
-  return MAP[name] || name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,3);
-}
-function shortName(name) {
-  const MAP = {
-    'Pittsburgh Pirates':'Pittsburgh','Atlanta Braves':'Atlanta',
-    'Chicago White Sox':'Chi. White Sox','Philadelphia Phillies':'Philadelphia',
-    'Boston Red Sox':'Boston','New York Yankees':'NY Yankees',
-    'Baltimore Orioles':'Baltimore','Toronto Blue Jays':'Toronto',
-    'Seattle Mariners':'Seattle','Detroit Tigers':'Detroit',
-    'Tampa Bay Rays':'Tampa Bay','Miami Marlins':'Miami',
-    'Athletics':'Athletics','Houston Astros':'Houston',
-    'Kansas City Royals':'Kansas City','Minnesota Twins':'Minnesota',
-    'Cincinnati Reds':'Cincinnati','St. Louis Cardinals':'St. Louis',
-    'Cleveland Guardians':'Cleveland','Texas Rangers':'Texas',
-    'Milwaukee Brewers':'Milwaukee','Colorado Rockies':'Colorado',
-    'Washington Nationals':'Washington','Arizona Diamondbacks':'Arizona',
-    'Los Angeles Angels':'LA Angels','Los Angeles Dodgers':'LA Dodgers',
-    'New York Mets':'NY Mets','San Diego Padres':'San Diego',
-    'San Francisco Giants':'SF Giants','Chicago Cubs':'Chi. Cubs'
-  };
-  return MAP[name] || name;
-}
+function pf(s){ return s?parseFloat(s.replace('%',''))||null:null; }
 
-/* ===================================================
-   ESPN WEATHER
-   =================================================== */
-const ESPN_ABBR = {
-  OAK:'ATH',ATH:'ATH',WSH:'WSH',CWS:'CWS',TB:'TB',KC:'KC',SF:'SF',NYY:'NYY',NYM:'NYM',
-  LAD:'LAD',LAA:'LAA',ARI:'ARI',ATL:'ATL',BAL:'BAL',BOS:'BOS',CHC:'CHC',CIN:'CIN',
-  CLE:'CLE',COL:'COL',DET:'DET',HOU:'HOU',MIA:'MIA',MIL:'MIL',MIN:'MIN',PHI:'PHI',
-  PIT:'PIT',SD:'SD',SEA:'SEA',STL:'STL',TEX:'TEX',TOR:'TOR'
+const ABBR_MAP={
+  'Pittsburgh Pirates':'PIT','Atlanta Braves':'ATL','Chicago White Sox':'CWS',
+  'Philadelphia Phillies':'PHI','Boston Red Sox':'BOS','New York Yankees':'NYY',
+  'Baltimore Orioles':'BAL','Toronto Blue Jays':'TOR','Seattle Mariners':'SEA',
+  'Detroit Tigers':'DET','Tampa Bay Rays':'TB','Miami Marlins':'MIA',
+  'Athletics':'ATH','Houston Astros':'HOU','Kansas City Royals':'KC',
+  'Minnesota Twins':'MIN','Cincinnati Reds':'CIN','St. Louis Cardinals':'STL',
+  'Cleveland Guardians':'CLE','Texas Rangers':'TEX','Milwaukee Brewers':'MIL',
+  'Colorado Rockies':'COL','Washington Nationals':'WSH','Arizona Diamondbacks':'ARI',
+  'Los Angeles Angels':'LAA','Los Angeles Dodgers':'LAD','New York Mets':'NYM',
+  'San Diego Padres':'SD','San Francisco Giants':'SF','Chicago Cubs':'CHC'
 };
+const SHORT_MAP={
+  'Pittsburgh Pirates':'Pittsburgh','Atlanta Braves':'Atlanta','Chicago White Sox':'Chi. White Sox',
+  'Philadelphia Phillies':'Philadelphia','Boston Red Sox':'Boston','New York Yankees':'NY Yankees',
+  'Baltimore Orioles':'Baltimore','Toronto Blue Jays':'Toronto','Seattle Mariners':'Seattle',
+  'Detroit Tigers':'Detroit','Tampa Bay Rays':'Tampa Bay','Miami Marlins':'Miami',
+  'Athletics':'Athletics','Houston Astros':'Houston','Kansas City Royals':'Kansas City',
+  'Minnesota Twins':'Minnesota','Cincinnati Reds':'Cincinnati','St. Louis Cardinals':'St. Louis',
+  'Cleveland Guardians':'Cleveland','Texas Rangers':'Texas','Milwaukee Brewers':'Milwaukee',
+  'Colorado Rockies':'Colorado','Washington Nationals':'Washington','Arizona Diamondbacks':'Arizona',
+  'Los Angeles Angels':'LA Angels','Los Angeles Dodgers':'LA Dodgers','New York Mets':'NY Mets',
+  'San Diego Padres':'San Diego','San Francisco Giants':'SF Giants','Chicago Cubs':'Chi. Cubs'
+};
+function abbr(n){ return ABBR_MAP[n]||n.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,3); }
+function sh(n){ return SHORT_MAP[n]||n; }
 
-async function fetchESPNWeather() {
-  try {
-    const d = new Date();
-    const ds = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
-    const url = `https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=${ds}`;
-    const resp = await fetch(url);
-    if (!resp.ok) return;
-    const json = await resp.json();
-    for (const ev of (json.events || [])) {
-      for (const comp of (ev.competitions || [])) {
-        const homeTeam = (comp.competitors || []).find(c => c.homeAway === 'home');
-        if (!homeTeam) continue;
-        const espnAbbr = homeTeam.team?.abbreviation || '';
-        const ourAbbr  = ESPN_ABBR[espnAbbr] || espnAbbr;
-        const wx = comp.weather;
-        const venue = comp.venue || {};
-        if (venue.indoor) {
-          WEATHER[ourAbbr] = { dome: true };
-        } else if (wx) {
-          WEATHER[ourAbbr] = {
-            dome: false,
-            temp: wx.temperature != null ? Math.round(wx.temperature) + '°' : null,
-            cond: wx.displayValue || null,
-            wind: buildWindStr(wx),
-            precip: wx.precipitation != null ? Math.round(wx.precipitation) + '%' : null,
-          };
-        }
-      }
-    }
-    // Re-render current games tab so weather updates
-    if (currentTab === 'today' || currentTab === 'tomorrow') renderTab(currentTab);
-  } catch(e) {
-    // Silent fail — weather is bonus info
-    console.warn('ESPN weather unavailable', e);
+/* ─────────────────────────────────────────────
+   OPEN-METEO WEATHER (CORS-safe, no key)
+───────────────────────────────────────────── */
+async function fetchWeatherAll(){
+  // Collect unique home parks from today + tomorrow
+  const homes=new Set([...todayGames,...tmrwGames].map(g=>g.homeAbbr));
+  const toFetch=[...homes].filter(a=>PARKS[a]&&!PARKS[a].roof);
+
+  if(!toFetch.length){ rerenderCards(); return; }
+
+  // Batch: Open-Meteo supports multiple lat/lon in one call (pipe-separated)
+  const lats=toFetch.map(a=>PARKS[a].lat).join(',');
+  const lons=toFetch.map(a=>PARKS[a].lon).join(',');
+  const url=`https://api.open-meteo.com/v1/forecast`+
+    `?latitude=${lats}&longitude=${lons}`+
+    `&current=temperature_2m,precipitation_probability,weather_code,wind_speed_10m,wind_direction_10m`+
+    `&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=1`;
+
+  try{
+    const resp=await fetch(url);
+    if(!resp.ok) throw new Error(`Open-Meteo ${resp.status}`);
+    const json=await resp.json();
+
+    // Response is array when multiple locations, single object when one
+    const results=Array.isArray(json)?json:[json];
+
+    results.forEach((loc,i)=>{
+      const a=toFetch[i];
+      if(!loc||!loc.current) return;
+      const c=loc.current;
+      const code=c.weather_code??c.weathercode??0;
+      const windDeg=c.wind_direction_10m??c.winddirection??0;
+      const windSpd=c.wind_speed_10m??c.windspeed??0;
+      const park=PARKS[a];
+      const windZone=windSpd>3?windToField(windDeg,park.homeDir):null;
+      WEATHER[a]={
+        temp: Math.round(c.temperature_2m??c.temperature??0),
+        code,
+        cond: WX_CODE[code]||'Clear',
+        icon: WX_ICON[code]||'🌤️',
+        wind: Math.round(windSpd),
+        windDir: windZone,
+        precip: Math.round(c.precipitation_probability??0),
+      };
+    });
+    rerenderCards();
+  }catch(e){
+    console.warn('Open-Meteo weather failed:',e);
+    // leave WEATHER empty — cards show "unavailable"
   }
 }
 
-function buildWindStr(wx) {
-  if (!wx) return null;
-  const parts = [];
-  if (wx.windSpeed)     parts.push(wx.windSpeed + ' mph');
-  if (wx.displayValue && wx.displayValue.toLowerCase().includes('wind')) return wx.displayValue;
-  if (wx.wind?.speed)   parts.push(wx.wind.speed + ' mph');
-  if (wx.wind?.direction) parts.push(wx.wind.direction);
-  return parts.join(' ') || null;
+function wxLine(homeAbbr){
+  const park=PARKS[homeAbbr];
+  if(!park||park.roof){
+    return`<div class="wx-line"><span class="wx-ico">🏟️</span><span>Dome — weather not a factor</span></div>`;
+  }
+  const wx=WEATHER[homeAbbr];
+  if(!wx){
+    return`<div class="wx-line"><span class="wx-ico" style="opacity:.4">⏳</span><span style="opacity:.5">Loading weather…</span></div>`;
+  }
+  const parts=[`${wx.temp}°`,wx.cond];
+  if(wx.wind>3) parts.push(`Wind ${wx.wind} mph${wx.windDir?' '+wx.windDir:''}`);
+  parts.push(`${wx.precip}% precip`);
+  return`<div class="wx-line"><span class="wx-ico">${wx.icon}</span><span>${parts.join(' · ')}</span></div>`;
 }
 
-function wxHTML(homeAbbr, roof) {
-  // Dome check
-  const isDome = (roof || '').toLowerCase().includes('dome') ||
-                 (roof || '').toLowerCase().includes('retract') ||
-                 (roof || '').toLowerCase().includes('indoor');
-  const wx = WEATHER[homeAbbr];
-  if (isDome && !wx) {
-    return `<div class="wx-line"><span class="wx-ico">🏟️</span><span>Dome — weather not a factor</span></div>`;
-  }
-  if (!wx) {
-    return `<div class="wx-line"><span class="wx-ico" style="font-size:11px;opacity:.5">⏳</span><span style="opacity:.6">Fetching ESPN weather…</span></div>`;
-  }
-  if (wx.dome) {
-    return `<div class="wx-line"><span class="wx-ico">🏟️</span><span>Dome — weather not a factor</span></div>`;
-  }
-  const icon = wxIcon(wx.cond);
-  const parts = [];
-  if (wx.temp)   parts.push(wx.temp);
-  if (wx.cond)   parts.push(wx.cond);
-  if (wx.wind)   parts.push('Wind ' + wx.wind);
-  if (wx.precip) parts.push(wx.precip + ' precip');
-  const str = parts.join(' · ') || 'Weather data unavailable';
-  return `<div class="wx-line"><span class="wx-ico">${icon}</span><span>${str}</span></div>`;
+function wxFull(homeAbbr){
+  const park=PARKS[homeAbbr];
+  if(!park||park.roof) return '🏟️ Dome — weather not a factor';
+  const wx=WEATHER[homeAbbr];
+  if(!wx) return '⏳ Weather loading…';
+  const parts=[`${wx.temp}°`,wx.cond];
+  if(wx.wind>3) parts.push(`Wind ${wx.wind} mph${wx.windDir?' '+wx.windDir:''}`);
+  parts.push(`${wx.precip}% precip`);
+  return wx.icon+' '+parts.join(' · ');
 }
 
-function wxIcon(c) {
-  if (!c) return '🌤️';
-  const l = c.toLowerCase();
-  if (l.includes('clear') || l.includes('sunny')) return '☀️';
-  if (l.includes('partly') || l.includes('partial')) return '⛅';
-  if (l.includes('cloud') || l.includes('overcast')) return '☁️';
-  if (l.includes('rain') || l.includes('shower') || l.includes('drizzle')) return '🌧️';
-  if (l.includes('storm') || l.includes('thunder')) return '⛈️';
-  if (l.includes('fog') || l.includes('haze')) return '🌫️';
-  if (l.includes('snow')) return '❄️';
-  return '🌤️';
+function rerenderCards(){
+  if(currentTab==='today'||currentTab==='tomorrow') renderTab(currentTab);
 }
 
-/* ===================================================
+/* ─────────────────────────────────────────────
    RENDER HELPERS
-   =================================================== */
-function ratingClass(r) {
-  if (!r) return 'lean';
-  const l = r.toLowerCase();
-  if (l.includes('elite'))    return 'elite';
-  if (l.includes('strong'))   return 'strong';
-  if (l.includes('moderate')) return 'moderate';
+───────────────────────────────────────────── */
+function rcls(r){
+  if(!r) return 'lean';
+  const l=r.toLowerCase();
+  if(l.includes('elite'))    return 'elite';
+  if(l.includes('strong'))   return 'strong';
+  if(l.includes('moderate')) return 'moderate';
   return 'lean';
 }
-function ratingBadge(r) {
-  const rc = ratingClass(r);
-  const labels = { elite:'⭐⭐⭐ Elite', strong:'⭐⭐ Strong', moderate:'⭐ Moderate', lean:'📊 Lean' };
-  return `<span class="rating-badge rb-${rc}">${labels[rc]}</span>`;
+function rbadge(r){
+  const c=rcls(r);
+  const lbl={elite:'⭐⭐⭐ Elite',strong:'⭐⭐ Strong',moderate:'⭐ Moderate',lean:'📊 Lean'};
+  return`<span class="rb rb-${c}">${lbl[c]}</span>`;
 }
-function confClass(c) {
-  if (!c) return 'c-low';
-  const l = c.toLowerCase();
-  if (l.includes('high')) return 'c-high';
-  if (l.includes('med'))  return 'c-med';
+function ccls(c){
+  if(!c) return 'c-low';
+  const l=c.toLowerCase();
+  if(l.includes('high')) return 'c-high';
+  if(l.includes('med'))  return 'c-med';
   return 'c-low';
 }
-function confLabel(c) {
-  if (!c) return '—';
-  const l = c.toLowerCase();
-  if (l.includes('high')) return '🟢 High';
-  if (l.includes('med'))  return '🟡 Med';
+function clbl(c){
+  if(!c) return '—';
+  const l=c.toLowerCase();
+  if(l.includes('high')) return '🟢 High';
+  if(l.includes('med'))  return '🟡 Med';
   return '🔴 Low';
 }
-function trendClass(t) {
-  if (!t) return 't-neut';
-  if (t.includes('Hot') || t.includes('🔥')) return 't-hot';
-  if (t.includes('Cold') || t.includes('❄')) return 't-cold';
+function trcls(t){
+  if(!t) return 't-neut';
+  if(t.includes('Hot')||t.includes('🔥')) return 't-hot';
+  if(t.includes('Cold')||t.includes('❄')) return 't-cold';
   return 't-neut';
 }
-function gradeClass(g) {
-  if (!g) return '';
-  const l = g.trim().toUpperCase().replace(/[^A-F]/g,'')[0];
-  return l ? `g-${l}` : '';
+function gcls(g){
+  if(!g) return '';
+  const l=g.trim().toUpperCase().replace(/[^A-F]/g,'')[0];
+  return l?`g-${l}`:'';
 }
+function sr(k,v){ return`<div class="sr"><span class="sk">${k}</span><span class="sv">${v}</span></div>`; }
+function setMain(h){ document.getElementById('main').innerHTML=h; }
 
-/* ===================================================
-   BUILD GAME CARD
-   =================================================== */
-function buildCard(g, idx, day) {
-  const rc = ratingClass(g.rating);
-  return `
-  <div class="card ${rc}" onclick="openModal(${idx},'${day}')" tabindex="0" role="button" aria-label="${g.away} at ${g.home}">
+/* ─────────────────────────────────────────────
+   BUILD CARD HTML
+───────────────────────────────────────────── */
+function buildCard(g,idx,day){
+  const rc=rcls(g.rating);
+  const pk=PARKS[g.homeAbbr];
+  const roof=pk?.roof?'Dome':(g.roof||'Open');
+  const pf=g.parkFactor||'—';
+
+  return`<div class="card ${rc}" onclick="openModal(${idx},'${day}')" tabindex="0" role="button" aria-label="${g.away} at ${g.home}">
     <div class="card-top">
       <span class="card-time"><i class="ti ti-clock" style="font-size:10px"></i> ${g.time}</span>
-      ${ratingBadge(g.rating)}
+      ${rbadge(g.rating)}
     </div>
     <div class="card-body">
-      <!-- Matchup -->
       <div class="matchup">
-        <div class="team away">
-          <div class="team-name">${shortName(g.away)}</div>
-          <div class="team-rec">${g.awayRec}</div>
-        </div>
+        <div class="team away"><div class="team-name">${sh(g.away)}</div><div class="team-rec">${g.awayRec}</div></div>
         <span class="at-sep">@</span>
-        <div class="team home">
-          <div class="team-name">${shortName(g.home)}</div>
-          <div class="team-rec">${g.homeRec}</div>
-        </div>
+        <div class="team home"><div class="team-name">${sh(g.home)}</div><div class="team-rec">${g.homeRec}</div></div>
       </div>
-      <!-- Pitchers -->
       <div class="pitchers">
-        <div class="pitcher">
-          <div class="sp-name">${g.awaySP}</div>
-          <div class="sp-stats">ERA ${g.awayERA} · WHIP ${g.awayWHIP}</div>
-        </div>
-        <div class="pitcher home-p">
-          <div class="sp-name">${g.homeSP}</div>
-          <div class="sp-stats">ERA ${g.homeERA} · WHIP ${g.homeWHIP}</div>
-        </div>
+        <div class="pitcher"><div class="sp-name">${g.awaySP}</div><div class="sp-stats">ERA ${g.awayERA} · WHIP ${g.awayWHIP}</div></div>
+        <div class="pitcher home-p"><div class="sp-name">${g.homeSP}</div><div class="sp-stats">ERA ${g.homeERA} · WHIP ${g.homeWHIP}</div></div>
       </div>
       <div class="divider"></div>
-      <!-- Winner picks -->
       <div class="winners">
-        <div class="wb wb-f5">
-          <div class="wb-lbl">F5 Winner</div>
-          <div class="wb-team">${shortName(g.f5Pick)}</div>
-        </div>
-        <div class="wb wb-fg">
-          <div class="wb-lbl">Full Game</div>
-          <div class="wb-team">${shortName(g.fgPick)}</div>
+        <div class="wb wb-f5"><div class="wb-lbl">F5 Winner</div><div class="wb-team">${sh(g.f5Pick)}</div></div>
+        <div class="wb wb-fg"><div class="wb-lbl">Full Game</div><div class="wb-team">${sh(g.fgPick)}</div></div>
+      </div>
+      <div class="totals-2">
+        <div class="tot"><div class="tot-lbl">F5 Total</div><div class="tot-val">${g.f5Total}</div><div class="tot-sub ${ccls(g.f5Conf)}">${clbl(g.f5Conf)}</div></div>
+        <div class="tot"><div class="tot-lbl">Game Total</div><div class="tot-val">${g.fgTotal}</div><div class="tot-sub ${ccls(g.fgConf)}">${clbl(g.fgConf)}</div></div>
+      </div>
+      <div class="run-box">
+        <div class="run-box-lbl">Projected Runs</div>
+        <div class="run-row">
+          <div class="run-side away"><div class="run-tname">${sh(g.away)}</div><div class="run-nums away">F5: ${g.awayF5runs} &nbsp;·&nbsp; FG: ${g.awayFGruns}</div></div>
+          <div class="run-side home"><div class="run-tname">${sh(g.home)}</div><div class="run-nums home">F5: ${g.homeF5runs} &nbsp;·&nbsp; FG: ${g.homeFGruns}</div></div>
         </div>
       </div>
-      <!-- Totals -->
-      <div class="totals-grid">
-        <div class="tot">
-          <div class="tot-lbl">F5 Total</div>
-          <div class="tot-val">${g.f5Total}</div>
-          <div class="tot-sub ${confClass(g.f5Conf)}">${confLabel(g.f5Conf)}</div>
-        </div>
-        <div class="tot">
-          <div class="tot-lbl">Game Total</div>
-          <div class="tot-val">${g.fgTotal}</div>
-          <div class="tot-sub ${confClass(g.fgConf)}">${confLabel(g.fgConf)}</div>
-        </div>
-      </div>
-      <!-- Team run totals -->
-      <div class="run-totals">
-        <div class="run-totals-lbl">Projected Runs</div>
-        <div class="run-totals-row">
-          <div class="run-team away">
-            <div class="run-tname">${shortName(g.away)}</div>
-            <div class="run-nums away">F5: ${g.awayF5runs} &nbsp;·&nbsp; FG: ${g.awayFGruns}</div>
-          </div>
-          <div class="run-team home">
-            <div class="run-tname">${shortName(g.home)}</div>
-            <div class="run-nums home">F5: ${g.homeF5runs} &nbsp;·&nbsp; FG: ${g.homeFGruns}</div>
-          </div>
-        </div>
-      </div>
-      <!-- Park -->
-      <div class="park-line">${g.park} · ${g.parkFactor} · ${g.roof}</div>
-      <!-- Weather -->
-      ${wxHTML(g.homeAbbr, g.roof)}
+      <div class="park-line">${g.park||g.venue} · ${pf} · ${roof}</div>
+      ${wxLine(g.homeAbbr)}
       <div class="tap-hint"><i class="ti ti-chevrons-down" style="font-size:9px"></i> Tap for full breakdown</div>
     </div>
   </div>`;
 }
 
-/* ===================================================
+/* ─────────────────────────────────────────────
    RENDER TAB
-   =================================================== */
-function renderTab(tab) {
-  const main = document.getElementById('main');
-  if (tab === 'today') {
-    if (!todayGames.length) { main.innerHTML = '<div class="status-bar">No games found for today.</div>'; return; }
-    main.innerHTML = todayGames.map((g, i) => buildCard(g, i, 'today')).join('');
-    main.className = 'main';
-    main.style.display = '';
-    // wrap in grid
-    main.innerHTML = `<div class="games-grid">${main.innerHTML}</div>`;
-  } else if (tab === 'tomorrow') {
-    if (!tmrwGames.length) { main.innerHTML = '<div class="status-bar">No games found for tomorrow.</div>'; return; }
-    main.innerHTML = `<div class="games-grid">${tmrwGames.map((g, i) => buildCard(g, i, 'tomorrow')).join('')}</div>`;
-  } else if (tab === 'standings') {
+───────────────────────────────────────────── */
+function renderTab(tab){
+  if(tab==='today'){
+    if(!todayGames.length){setMain('<div class="status-wrap">No games found for today.</div>');return;}
+    setMain(`<div class="games-grid">${todayGames.map((g,i)=>buildCard(g,i,'today')).join('')}</div>`);
+  } else if(tab==='tomorrow'){
+    if(!tmrwGames.length){setMain('<div class="status-wrap">No games found for tomorrow.</div>');return;}
+    setMain(`<div class="games-grid">${tmrwGames.map((g,i)=>buildCard(g,i,'tomorrow')).join('')}</div>`);
+  } else {
     renderStandings();
   }
 }
-
-function switchTab(tab) {
-  currentTab = tab;
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('tab-' + tab).classList.add('active');
-  if (!Object.keys(DATA).length) return;
+function switchTab(tab){
+  currentTab=tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  if(!Object.keys(DATA).length) return;
   renderTab(tab);
 }
 
-/* ===================================================
-   STANDINGS — built from Team Stats sheet
-   =================================================== */
-const DIVISIONS = {
-  'AL East':    ['New York Yankees','Boston Red Sox','Toronto Blue Jays','Baltimore Orioles','Tampa Bay Rays'],
-  'AL Central': ['Cleveland Guardians','Chicago White Sox','Kansas City Royals','Minnesota Twins','Detroit Tigers'],
-  'AL West':    ['Houston Astros','Los Angeles Angels','Texas Rangers','Seattle Mariners','Athletics'],
-  'NL East':    ['Atlanta Braves','Philadelphia Phillies','New York Mets','Miami Marlins','Washington Nationals'],
-  'NL Central': ['Milwaukee Brewers','Chicago Cubs','St. Louis Cardinals','Pittsburgh Pirates','Cincinnati Reds'],
-  'NL West':    ['Los Angeles Dodgers','San Diego Padres','Arizona Diamondbacks','San Francisco Giants','Colorado Rockies'],
+/* ─────────────────────────────────────────────
+   STANDINGS
+───────────────────────────────────────────── */
+const DIVS={
+  'AL East':   ['New York Yankees','Boston Red Sox','Toronto Blue Jays','Baltimore Orioles','Tampa Bay Rays'],
+  'AL Central':['Cleveland Guardians','Chicago White Sox','Kansas City Royals','Minnesota Twins','Detroit Tigers'],
+  'AL West':   ['Houston Astros','Los Angeles Angels','Texas Rangers','Seattle Mariners','Athletics'],
+  'NL East':   ['Atlanta Braves','Philadelphia Phillies','New York Mets','Miami Marlins','Washington Nationals'],
+  'NL Central':['Milwaukee Brewers','Chicago Cubs','St. Louis Cardinals','Pittsburgh Pirates','Cincinnati Reds'],
+  'NL West':   ['Los Angeles Dodgers','San Diego Padres','Arizona Diamondbacks','San Francisco Giants','Colorado Rockies'],
 };
+function renderStandings(){
+  if(!DATA.teamStats?.length){setMain('<div class="status-wrap">Standings not loaded yet.</div>');return;}
+  const tsMap={};
+  for(const t of DATA.teamStats) if(t['Team']) tsMap[t['Team']]=t;
 
-function renderStandings() {
-  if (!DATA.teamStats || !DATA.teamStats.length) {
-    document.getElementById('main').innerHTML = '<div class="status-bar">Standings data not loaded yet.</div>';
-    return;
-  }
-  // Build lookup map by team name
-  const tsMap = {};
-  for (const t of DATA.teamStats) {
-    if (t['Team']) tsMap[t['Team']] = t;
-  }
-  const formMap = {};
-  if (DATA.advanced && DATA.advanced.teamForm) {
-    for (const [k, v] of Object.entries(DATA.advanced.teamForm)) {
-      // key might be abbr or team name
-      formMap[k] = v;
-    }
-  }
-
-  let html = '<div class="standings-grid">';
-  for (const [divName, teams] of Object.entries(DIVISIONS)) {
-    const isAL = divName.startsWith('AL');
-    // Sort by winning pct descending
-    const sorted = [...teams].sort((a, b) => {
-      const ta = tsMap[a] || {}; const tb = tsMap[b] || {};
-      const wa = +(ta['W']||0), la = +(ta['L']||0);
-      const wb = +(tb['W']||0), lb = +(tb['L']||0);
-      const pa = (wa+la) ? wa/(wa+la) : 0;
-      const pb = (wb+lb) ? wb/(wb+lb) : 0;
-      return pb - pa;
+  let html='<div class="std-grid">';
+  for(const [div,teams] of Object.entries(DIVS)){
+    const isAL=div.startsWith('AL');
+    const sorted=[...teams].sort((a,b)=>{
+      const ta=tsMap[a]||{},tb=tsMap[b]||{};
+      const wa=+(ta['W']||0),la=+(ta['L']||0),wb=+(tb['W']||0),lb=+(tb['L']||0);
+      return(wb/(wb+lb||1))-(wa/(wa+la||1));
     });
-    const leader = tsMap[sorted[0]] || {};
-    const lw = +(leader['W']||0), ll = +(leader['L']||0);
-
-    html += `<div class="div-card">
-      <div class="div-hdr ${isAL?'al':'nl'}">${isAL?'🔵':'🔴'} ${divName}</div>
-      <table class="std-tbl">
-        <thead><tr><th>Team</th><th>W</th><th>L</th><th>PCT</th><th>GB</th><th>L10</th><th>Str</th></tr></thead>
-        <tbody>`;
-
-    sorted.forEach((teamName, i) => {
-      const t = tsMap[teamName] || {};
-      const w = +(t['W']||0), l = +(t['L']||0);
-      const pct = (w+l) ? (w/(w+l)).toFixed(3).replace(/^0/, '') : '.000';
-      // GB
-      let gbStr = '—';
-      if (i > 0) {
-        const gbVal = ((lw - w) + (l - ll)) / 2;
-        gbStr = gbVal % 1 === 0 ? gbVal.toFixed(0) : gbVal.toFixed(1);
-      }
-      // Form — look in advanced teamForm by abbr
-      const abbr = teamAbbr(teamName);
-      const form = DATA.advanced?.teamForm?.[abbr] || DATA.advanced?.teamForm?.[teamName] || {};
-      const l10w = form['L10 W'] || form['L10W'] || '—';
-      const l10l = form['L10 L'] || form['L10L'] || '—';
-      const l10 = (l10w !== '—' && l10l !== '—') ? `${l10w}-${l10l}` : '—';
-      const streak = form['Streak'] || '—';
-      const streakNum = parseInt((streak||'').replace(/[WL]/,'')) || 0;
-      const streakClass = streak.startsWith('W') ? 'streak-hot' : (streak.startsWith('L') && streakNum >= 2 ? 'streak-cold' : '');
-
-      html += `<tr${i===0?' class="leader"':''}>
-        <td>${shortName(teamName)}</td>
-        <td>${w}</td><td>${l}</td>
-        <td>${pct}</td>
-        <td class="gb-dash">${gbStr}</td>
-        <td>${l10}</td>
-        <td class="${streakClass}">${streak}</td>
-      </tr>`;
+    const ldr=tsMap[sorted[0]]||{};
+    const lw=+(ldr['W']||0),ll=+(ldr['L']||0);
+    html+=`<div class="div-card"><div class="div-hdr ${isAL?'al':'nl'}">${isAL?'🔵':'🔴'} ${div}</div>
+    <table class="std-tbl"><thead><tr><th>Team</th><th>W</th><th>L</th><th>PCT</th><th>GB</th><th>L10</th><th>Str</th></tr></thead><tbody>`;
+    sorted.forEach((tn,i)=>{
+      const t=tsMap[tn]||{};
+      const w=+(t['W']||0),l=+(t['L']||0);
+      const pct=(w+l)?(w/(w+l)).toFixed(3).replace(/^0/,''):'.000';
+      const gbVal=i===0?'—':(((lw-w)+(l-ll))/2).toFixed(1).replace('.0','');
+      const a=abbr(tn);
+      const f=DATA.advanced?.teamForm?.[a]||DATA.advanced?.teamForm?.[tn]||{};
+      const l10w=f['L10 W']||'—', l10l=f['L10 L']||'—';
+      const l10=(l10w!=='—'&&l10l!=='—')?`${l10w}-${l10l}`:'—';
+      const streak=f['Streak']||'—';
+      const snum=parseInt(streak.replace(/[WL]/,''))||0;
+      const scls=streak.startsWith('W')?'sk-hot':(streak.startsWith('L')&&snum>=2?'sk-cold':'');
+      html+=`<tr${i===0?' class="leader"':''}><td>${sh(tn)}</td><td>${w}</td><td>${l}</td><td>${pct}</td><td class="gb-d">${gbVal}</td><td>${l10}</td><td class="${scls}">${streak}</td></tr>`;
     });
-
-    html += '</tbody></table></div>';
+    html+='</tbody></table></div>';
   }
-  html += '</div>';
-  document.getElementById('main').innerHTML = html;
+  html+='</div>';
+  setMain(html);
 }
 
-/* ===================================================
+/* ─────────────────────────────────────────────
    MODAL
-   =================================================== */
-function openModal(idx, day) {
-  const g = day === 'today' ? todayGames[idx] : tmrwGames[idx];
-  if (!g) return;
+───────────────────────────────────────────── */
+function openModal(idx,day){
+  const g=day==='today'?todayGames[idx]:tmrwGames[idx];
+  if(!g) return;
 
-  // Win probability from FG%
-  const awayFGpct = g.awayFGpct || (g.awayFGruns && g.homeFGruns ?
-    Math.round(parseFloat(g.awayFGruns) / (parseFloat(g.awayFGruns) + parseFloat(g.homeFGruns)) * 100) : 50);
-  const homeFGpct = 100 - awayFGpct;
-
-  // Advanced SP form
-  const aSPF = DATA.advanced?.spForm?.[g.awaySP] || {};
-  const hSPF = DATA.advanced?.spForm?.[g.homeSP]  || {};
-
-  // Team form
-  const aForm = DATA.advanced?.teamForm?.[g.awayAbbr] || DATA.advanced?.teamForm?.[g.away] || {};
-  const hForm = DATA.advanced?.teamForm?.[g.homeAbbr] || DATA.advanced?.teamForm?.[g.home] || {};
-
-  // H2H
-  const h2hKey = Object.keys(DATA.advanced?.h2h || {}).find(k => {
-    const kl = k.toLowerCase();
-    return kl.includes(g.away.split(' ').pop().toLowerCase()) && kl.includes(g.home.split(' ').pop().toLowerCase());
+  const awayP=g.awayFGpct||(g.awayFGruns&&g.homeFGruns?Math.round(+g.awayFGruns/(+g.awayFGruns+ +g.homeFGruns)*100):50);
+  const homeP=100-awayP;
+  const aSPF=DATA.advanced?.spForm?.[g.awaySP]||{};
+  const hSPF=DATA.advanced?.spForm?.[g.homeSP]||{};
+  const aForm=DATA.advanced?.teamForm?.[g.awayAbbr]||DATA.advanced?.teamForm?.[g.away]||{};
+  const hForm=DATA.advanced?.teamForm?.[g.homeAbbr]||DATA.advanced?.teamForm?.[g.home]||{};
+  const h2hKey=Object.keys(DATA.advanced?.h2h||{}).find(k=>{
+    const kl=k.toLowerCase();
+    return kl.includes(g.away.split(' ').pop().toLowerCase())&&kl.includes(g.home.split(' ').pop().toLowerCase());
   });
-  const h2h = h2hKey ? DATA.advanced.h2h[h2hKey] : {};
+  const h2h=h2hKey?DATA.advanced.h2h[h2hKey]:{};
+  const aBP=g.aBP||{},hBP=g.hBP||{};
+  const aBPg=(g.aBP?.['Grade']||'').trim().charAt(0);
+  const hBPg=(g.hBP?.['Grade']||'').trim().charAt(0);
+  const pk=PARKS[g.homeAbbr];
+  const roof=pk?.roof?'Dome':(g.roof||'Open');
 
-  // Weather full text
-  const isDome = (g.roof||'').toLowerCase().includes('dome') || (g.roof||'').toLowerCase().includes('retract');
-  const wx = WEATHER[g.homeAbbr];
-  let wxFull = '';
-  if (isDome && !wx) wxFull = '🏟️ Dome — weather not a factor';
-  else if (!wx) wxFull = '⏳ Loading weather from ESPN…';
-  else if (wx.dome) wxFull = '🏟️ Dome — weather not a factor';
-  else {
-    const parts = [];
-    if (wx.temp)   parts.push(wx.temp);
-    if (wx.cond)   parts.push(wx.cond);
-    if (wx.wind)   parts.push('Wind ' + wx.wind);
-    if (wx.precip) parts.push(wx.precip + ' precip');
-    wxFull = (wxIcon(wx.cond) + ' ' + (parts.join(' · ') || 'Unavailable'));
-  }
+  let h=`<div class="modal-title">⚾ ${g.away} <span style="color:var(--text2);font-weight:400">@</span> ${g.home}</div>`;
 
-  // Bullpen
-  const aBP = g.aBP || {}; const hBP = g.hBP || {};
-  const aBPgrade = aBP['Grade'] || aBP['BP Grade'] || '';
-  const hBPgrade = hBP['Grade'] || hBP['BP Grade'] || '';
-
-  let html = `<div class="modal-title">⚾ ${g.away} <span style="color:var(--text2);font-weight:400">@</span> ${g.home}</div>`;
-
-  // Probability bar
-  html += `<div class="prob-wrap">
+  // Win prob
+  h+=`<div class="prob-wrap">
     <div class="prob-lbl">Full Game Win Probability</div>
     <div class="prob-bar-row">
-      <span class="prob-pct" style="color:var(--blue)">${awayFGpct}%</span>
-      <div class="prob-bar-bg">
-        <div class="pb-away" style="width:${awayFGpct}%"></div>
-        <div class="pb-home" style="width:${homeFGpct}%"></div>
-      </div>
-      <span class="prob-pct" style="color:var(--green);text-align:right">${homeFGpct}%</span>
+      <span class="prob-pct" style="color:var(--blue)">${awayP}%</span>
+      <div class="prob-bg"><div class="pb-a" style="width:${awayP}%"></div><div class="pb-h" style="width:${homeP}%"></div></div>
+      <span class="prob-pct" style="color:var(--green);text-align:right">${homeP}%</span>
     </div>
     <div class="prob-teams">
-      <span style="color:var(--blue);font-weight:600">${shortName(g.away)}</span>
+      <span style="color:var(--blue);font-weight:600">${sh(g.away)}</span>
       <span>Proj ${g.awayFGruns} – ${g.homeFGruns} runs</span>
-      <span style="color:var(--green);font-weight:600">${shortName(g.home)}</span>
+      <span style="color:var(--green);font-weight:600">${sh(g.home)}</span>
     </div>
   </div>`;
 
-  // Run totals detail
-  html += `<div class="run-detail">
-    <div class="run-detail-lbl">Projected Run Totals</div>
-    <div class="run-detail-grid">
-      <div class="run-detail-cell"><div class="rdc-lbl">${shortName(g.away)} F5</div><div class="rdc-val rdc-away">${g.awayF5runs}</div></div>
-      <div class="run-detail-cell"><div class="rdc-lbl">${shortName(g.away)} FG</div><div class="rdc-val rdc-away">${g.awayFGruns}</div></div>
-      <div class="run-detail-cell"><div class="rdc-lbl">${shortName(g.home)} F5</div><div class="rdc-val rdc-home">${g.homeF5runs}</div></div>
-      <div class="run-detail-cell"><div class="rdc-lbl">${shortName(g.home)} FG</div><div class="rdc-val rdc-home">${g.homeFGruns}</div></div>
+  // Run totals
+  h+=`<div class="run-detail">
+    <div class="rd-lbl">Projected Run Totals</div>
+    <div class="rd-grid">
+      <div class="rdc"><div class="rdc-l">${sh(g.away)} F5</div><div class="rdc-v rdc-a">${g.awayF5runs}</div></div>
+      <div class="rdc"><div class="rdc-l">${sh(g.away)} FG</div><div class="rdc-v rdc-a">${g.awayFGruns}</div></div>
+      <div class="rdc"><div class="rdc-l">${sh(g.home)} F5</div><div class="rdc-v rdc-h">${g.homeF5runs}</div></div>
+      <div class="rdc"><div class="rdc-l">${sh(g.home)} FG</div><div class="rdc-v rdc-h">${g.homeFGruns}</div></div>
     </div>
-    <div class="run-total-row">
-      <div class="run-total-cell">
-        <div class="rtc-lbl">F5 Total</div>
-        <div class="rtc-val">${g.f5Total} <span style="font-size:10px" class="${confClass(g.f5Conf)}">${confLabel(g.f5Conf)}</span></div>
-      </div>
-      <div class="run-total-cell">
-        <div class="rtc-lbl">Game Total</div>
-        <div class="rtc-val">${g.fgTotal} <span style="font-size:10px" class="${confClass(g.fgConf)}">${confLabel(g.fgConf)}</span></div>
-      </div>
+    <div class="rd-totrow">
+      <div class="rd-totcell"><div class="rdtc-l">F5 Total</div><div class="rdtc-v">${g.f5Total} <span style="font-size:10px" class="${ccls(g.f5Conf)}">${clbl(g.f5Conf)}</span></div></div>
+      <div class="rd-totcell"><div class="rdtc-l">Game Total</div><div class="rdtc-v">${g.fgTotal} <span style="font-size:10px" class="${ccls(g.fgConf)}">${clbl(g.fgConf)}</span></div></div>
     </div>
   </div>`;
 
   // Park + weather
-  html += `<div class="wx-detail">
-    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:6px">Park &amp; Weather</div>
-    <div style="font-size:12px;font-weight:500;margin-bottom:5px">${g.park} <span style="color:var(--text2);font-weight:400">· ${g.parkFactor} · ${g.roof}${g.altitude?' · '+g.altitude+' ft':''}</span></div>
-    <div style="font-size:12px;color:var(--text2)">${wxFull}</div>
+  h+=`<div class="wx-detail-box">
+    <div class="wx-dl">Park &amp; Weather</div>
+    <div style="font-size:12px;font-weight:500;margin-bottom:5px">${g.park||g.venue} <span style="color:var(--text2);font-weight:400">· ${g.parkFactor} · ${roof}${g.altitude?' · '+g.altitude+' ft':''}</span></div>
+    <div style="font-size:12px;color:var(--text2)">${wxFull(g.homeAbbr)}</div>
   </div>`;
 
   // Team form
-  html += `<div class="m-sec-hdr"><i class="ti ti-chart-line"></i> Team Form (Last 10)</div>
+  h+=`<div class="m-hdr"><i class="ti ti-chart-line"></i> Team Form (Last 10)</div>
   <div class="two-col">
-    <div class="m-box">
-      <div class="m-box-title">${shortName(g.away)}</div>
-      ${sr('L10', aForm['L10 W']&&aForm['L10 L'] ? aForm['L10 W']+'-'+aForm['L10 L'] : '—')}
-      ${sr('Trend', `<span class="trend-b ${trendClass(aForm['Trend']||'')}">${aForm['Trend']||'—'}</span>`)}
-      ${sr('Streak', aForm['Streak']||'—')}
-      ${sr('Season', g.awayRec||'—')}
-      ${sr('ERA', g.aTS?.['ERA']||g.aTS?.['Team ERA']||'—')}
-      ${sr('OPS', g.aTS?.['OPS']||'—')}
-      ${sr('H2H vs opp', aForm['H2H Record']||'—')}
+    <div class="m-box"><div class="m-box-title">${sh(g.away)}</div>
+      ${sr('L10',aForm['L10 W']&&aForm['L10 L']?aForm['L10 W']+'-'+aForm['L10 L']:'—')}
+      ${sr('Trend',`<span class="trend-b ${trcls(aForm['Trend']||'')}">${aForm['Trend']||'—'}</span>`)}
+      ${sr('Streak',aForm['Streak']||'—')}
+      ${sr('Season',g.awayRec||'—')}
+      ${sr('ERA',g.aTS?.['ERA']||g.aTS?.['Team ERA']||'—')}
+      ${sr('OPS',g.aTS?.['OPS']||'—')}
     </div>
-    <div class="m-box">
-      <div class="m-box-title">${shortName(g.home)}</div>
-      ${sr('L10', hForm['L10 W']&&hForm['L10 L'] ? hForm['L10 W']+'-'+hForm['L10 L'] : '—')}
-      ${sr('Trend', `<span class="trend-b ${trendClass(hForm['Trend']||'')}">${hForm['Trend']||'—'}</span>`)}
-      ${sr('Streak', hForm['Streak']||'—')}
-      ${sr('Season', g.homeRec||'—')}
-      ${sr('ERA', g.hTS?.['ERA']||g.hTS?.['Team ERA']||'—')}
-      ${sr('OPS', g.hTS?.['OPS']||'—')}
-      ${sr('H2H vs opp', hForm['H2H Record']||'—')}
+    <div class="m-box"><div class="m-box-title">${sh(g.home)}</div>
+      ${sr('L10',hForm['L10 W']&&hForm['L10 L']?hForm['L10 W']+'-'+hForm['L10 L']:'—')}
+      ${sr('Trend',`<span class="trend-b ${trcls(hForm['Trend']||'')}">${hForm['Trend']||'—'}</span>`)}
+      ${sr('Streak',hForm['Streak']||'—')}
+      ${sr('Season',g.homeRec||'—')}
+      ${sr('ERA',g.hTS?.['ERA']||g.hTS?.['Team ERA']||'—')}
+      ${sr('OPS',g.hTS?.['OPS']||'—')}
     </div>
   </div>`;
 
-  // Starting pitchers
-  html += `<div class="m-sec-hdr"><i class="ti ti-baseball"></i> Starting Pitchers</div>
+  // SP
+  h+=`<div class="m-hdr"><i class="ti ti-baseball"></i> Starting Pitchers</div>
   <div class="two-col">
-    <div class="m-box">
-      <div class="m-box-title">${g.awaySP}</div>
-      ${sr('ERA', g.awayERA)}
-      ${sr('WHIP', g.awayWHIP)}
-      ${sr('L3 ERA', aSPF['L3 ERA']||aSPF['L3ERA']||'—')}
-      ${sr('L3 WHIP', aSPF['L3 WHIP']||aSPF['L3WHIP']||'—')}
-      ${sr('Trend', aSPF['Trend']||'—')}
-      ${sr('K/9', g.aPit?.['K/9']||'—')}
-      ${sr('BB/9', g.aPit?.['BB/9']||'—')}
+    <div class="m-box"><div class="m-box-title">${g.awaySP}</div>
+      ${sr('ERA',g.awayERA)} ${sr('WHIP',g.awayWHIP)}
+      ${sr('L3 ERA',aSPF['L3 ERA']||aSPF['L3ERA']||'—')}
+      ${sr('L3 WHIP',aSPF['L3 WHIP']||aSPF['L3WHIP']||'—')}
+      ${sr('Trend',aSPF['Trend']||'—')}
+      ${sr('K/9',g.aPit?.['K/9']||'—')} ${sr('BB/9',g.aPit?.['BB/9']||'—')}
     </div>
-    <div class="m-box">
-      <div class="m-box-title">${g.homeSP}</div>
-      ${sr('ERA', g.homeERA)}
-      ${sr('WHIP', g.homeWHIP)}
-      ${sr('L3 ERA', hSPF['L3 ERA']||hSPF['L3ERA']||'—')}
-      ${sr('L3 WHIP', hSPF['L3 WHIP']||hSPF['L3WHIP']||'—')}
-      ${sr('Trend', hSPF['Trend']||'—')}
-      ${sr('K/9', g.hPit?.['K/9']||'—')}
-      ${sr('BB/9', g.hPit?.['BB/9']||'—')}
+    <div class="m-box"><div class="m-box-title">${g.homeSP}</div>
+      ${sr('ERA',g.homeERA)} ${sr('WHIP',g.homeWHIP)}
+      ${sr('L3 ERA',hSPF['L3 ERA']||hSPF['L3ERA']||'—')}
+      ${sr('L3 WHIP',hSPF['L3 WHIP']||hSPF['L3WHIP']||'—')}
+      ${sr('Trend',hSPF['Trend']||'—')}
+      ${sr('K/9',g.hPit?.['K/9']||'—')} ${sr('BB/9',g.hPit?.['BB/9']||'—')}
     </div>
   </div>`;
 
   // Bullpen
-  const aBPcl = gradeClass(aBPgrade); const hBPcl = gradeClass(hBPgrade);
-  html += `<div class="m-sec-hdr"><i class="ti ti-flame"></i> Bullpen</div>
+  h+=`<div class="m-hdr"><i class="ti ti-flame"></i> Bullpen</div>
   <div class="two-col">
-    <div class="m-box">
-      <div class="m-box-title">${shortName(g.away)} <span class="bp-grade ${aBPcl}">${aBPgrade.charAt(0)||'—'}</span></div>
-      ${sr('BP ERA', aBP['BP ERA']||'—')}
-      ${sr('K/9', aBP['K/9']||'—')}
-      ${sr('Saves', aBP['Saves']||'—')}
-      ${sr('Save%', aBP['Save%']||'—')}
-      ${sr('Closer', aBP['Closer']||'—')}
-      ${sr('Setup 1', aBP['Setup 1']||'—')}
-      ${sr('Setup 2', aBP['Setup 2']||'—')}
+    <div class="m-box"><div class="m-box-title">${sh(g.away)} <span class="bp-g ${gcls(aBPg)}">${aBPg||'—'}</span></div>
+      ${sr('BP ERA',g.aBP?.['BP ERA']||'—')} ${sr('K/9',g.aBP?.['K/9']||'—')}
+      ${sr('Saves',g.aBP?.['Saves']||'—')} ${sr('Save%',g.aBP?.['Save%']||'—')}
+      ${sr('Closer',g.aBP?.['Closer']||'—')}
+      ${sr('Setup 1',g.aBP?.['Setup 1']||'—')} ${sr('Setup 2',g.aBP?.['Setup 2']||'—')}
     </div>
-    <div class="m-box">
-      <div class="m-box-title">${shortName(g.home)} <span class="bp-grade ${hBPcl}">${hBPgrade.charAt(0)||'—'}</span></div>
-      ${sr('BP ERA', hBP['BP ERA']||'—')}
-      ${sr('K/9', hBP['K/9']||'—')}
-      ${sr('Saves', hBP['Saves']||'—')}
-      ${sr('Save%', hBP['Save%']||'—')}
-      ${sr('Closer', hBP['Closer']||'—')}
-      ${sr('Setup 1', hBP['Setup 1']||'—')}
-      ${sr('Setup 2', hBP['Setup 2']||'—')}
+    <div class="m-box"><div class="m-box-title">${sh(g.home)} <span class="bp-g ${gcls(hBPg)}">${hBPg||'—'}</span></div>
+      ${sr('BP ERA',g.hBP?.['BP ERA']||'—')} ${sr('K/9',g.hBP?.['K/9']||'—')}
+      ${sr('Saves',g.hBP?.['Saves']||'—')} ${sr('Save%',g.hBP?.['Save%']||'—')}
+      ${sr('Closer',g.hBP?.['Closer']||'—')}
+      ${sr('Setup 1',g.hBP?.['Setup 1']||'—')} ${sr('Setup 2',g.hBP?.['Setup 2']||'—')}
     </div>
   </div>`;
 
   // H2H
-  if (Object.keys(h2h).length) {
-    html += `<div class="m-sec-hdr"><i class="ti ti-vs"></i> 2026 Head-to-Head</div>
+  if(Object.keys(h2h).length){
+    h+=`<div class="m-hdr"><i class="ti ti-vs"></i> 2026 Head-to-Head</div>
     <div class="m-box">
-      ${sr('Series', h2h['Series Leader']||'—')}
-      ${sr('Away record', h2h['Away Record']||'—')}
-      ${sr('Home record', h2h['Home Record']||'—')}
-      ${sr('Games played', h2h['Notes']||h2h['Away W']!=null ? ((+h2h['Away W']||0)+(+h2h['Away L']||0)+(+h2h['Home W']||0)+(+h2h['Home L']||0))/2+'games played':'—')}
+      ${sr('Series Leader',h2h['Series Leader']||'—')}
+      ${sr('Away Record',h2h['Away Record']||'—')}
+      ${sr('Home Record',h2h['Home Record']||'—')}
+      ${sr('Notes',h2h['Notes']||'—')}
     </div>`;
   }
 
-  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-body').innerHTML=h;
   document.getElementById('overlay').classList.add('open');
 }
 
-function sr(label, value) {
-  return `<div class="sr"><span class="sk">${label}</span><span class="sv">${value}</span></div>`;
-}
-function closeModal()  { document.getElementById('overlay').classList.remove('open'); }
-function closeOverlay(e) { if (e.target === document.getElementById('overlay')) closeModal(); }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+function closeModal(){ document.getElementById('overlay').classList.remove('open'); }
+function closeOut(e){ if(e.target===document.getElementById('overlay')) closeModal(); }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
 
-/* ===================================================
-   KICK OFF
-   =================================================== */
+/* ─────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────── */
 loadAll();
 </script>
 </body>
