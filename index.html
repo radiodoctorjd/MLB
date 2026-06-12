@@ -351,6 +351,45 @@ function csvToObjects(rows){
 }
 
 /* ─────────────────────────────────────────────
+   BULLPEN CSV PARSER
+   The Bullpen sheet has a specific structure:
+   - emoji title row
+   - "SECTION 1 — TEAM BULLPEN SUMMARY" section label
+   - actual header row: Team, BP ERA, BP WHIP, Saves, Holds, Blown Saves, Save%, K/9, ...
+   - data rows
+   - then a second section with pitcher-level data
+   We specifically look for the header row containing "BP ERA"
+───────────────────────────────────────────── */
+function parseBullpenCSV(rows){
+  // Find the header row that contains "BP ERA" (the team summary header)
+  let hi = -1;
+  for(let i = 0; i < rows.length; i++){
+    if(rows[i].some(c => c.trim() === 'BP ERA' || c.trim() === 'Team')){
+      // Make sure this looks like a real header (has multiple columns)
+      const nonEmpty = rows[i].filter(c => c.trim());
+      if(nonEmpty.length >= 3){ hi = i; break; }
+    }
+  }
+  if(hi < 0) return csvToObjects(rows); // fallback
+
+  const headers = rows[hi].map(h => h.trim());
+  const results = [];
+  for(let i = hi + 1; i < rows.length; i++){
+    const row = rows[i];
+    if(!row.some(c => c.trim())) continue; // skip empty rows
+    // Stop if we hit another section header (non-data row with only 1 cell populated)
+    const nonEmpty = row.filter(c => c.trim());
+    if(nonEmpty.length === 1 && !headers.includes(row[0].trim())) break;
+    // Stop if we hit a second header row (e.g. pitcher-level section)
+    if(row[0].trim() === 'Pitcher' || row[0].trim() === 'SECTION') break;
+    const o = {};
+    headers.forEach((h, i) => { o[h] = (row[i] || '').trim(); });
+    if(o['Team']) results.push(o);
+  }
+  return results;
+}
+
+/* ─────────────────────────────────────────────
    LOAD ALL
 ───────────────────────────────────────────── */
 async function loadAll(){
@@ -365,7 +404,8 @@ async function loadAll(){
     DATA.predictions= csvToObjects(preds);
     DATA.totals     = csvToObjects(totals);
     DATA.pitchers   = csvToObjects(pitchers);
-    DATA.bullpen    = csvToObjects(bullpen);
+    DATA.bullpen    = parseBullpenCSV(bullpen);
+    console.log('Bullpen rows parsed:', DATA.bullpen.length, DATA.bullpen[0] || 'EMPTY');
     DATA.parkWx     = csvToObjects(parkWx);
     DATA.teamStats  = csvToObjects(teamStats);
     DATA.advanced   = processAdvanced(advanced);
@@ -433,8 +473,8 @@ function buildGames(){
     const aTS  = DATA.teamStats.find(t=>t['Team']===awayTeam||t['Abbr']===awayAbbr)||{};
     const hTS  = DATA.teamStats.find(t=>t['Team']===homeTeam||t['Abbr']===homeAbbr)||{};
     const pk   = DATA.parkWx.find(p=>p['Team']===homeTeam)||{};
-    const aBP  = DATA.bullpen.find(b=>b['Team']===awayTeam)||{};
-    const hBP  = DATA.bullpen.find(b=>b['Team']===homeTeam)||{};
+    const aBP  = DATA.bullpen.find(b=>b['Team']&&(b['Team']===awayTeam||awayTeam.includes(b['Team'])||b['Team'].includes(awayTeam)))||{};
+    const hBP  = DATA.bullpen.find(b=>b['Team']&&(b['Team']===homeTeam||homeTeam.includes(b['Team'])||b['Team'].includes(homeTeam)))||{};
     const aPit = DATA.pitchers.find(p=>p['Pitcher']===awaySP)||{};
     const hPit = DATA.pitchers.find(p=>p['Pitcher']===homeSP)||{};
 
