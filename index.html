@@ -361,30 +361,49 @@ function csvToObjects(rows){
    We specifically look for the header row containing "BP ERA"
 ───────────────────────────────────────────── */
 function parseBullpenCSV(rows){
-  // Find the header row that contains "BP ERA" (the team summary header)
+  // The bullpen sheet header is split across TWO rows due to a merged cell in Google Sheets:
+  // Row 0: emoji title — skip
+  // Row 1: ["Team","BP ERA","Saves","Holds","Blown"]
+  // Row 2: ["Saves,Save%,K/9,BB/9,HR/9,BP IP,Closer,Setup 1,Setup 2,Grade"]  ← single packed cell
+  // Row 3+: data rows
+  //
+  // Strategy: find the row with "Team" and "BP ERA", then merge the next row's
+  // comma-packed string to build the full header list.
+
   let hi = -1;
   for(let i = 0; i < rows.length; i++){
-    if(rows[i].some(c => c.trim() === 'BP ERA' || c.trim() === 'Team')){
-      // Make sure this looks like a real header (has multiple columns)
-      const nonEmpty = rows[i].filter(c => c.trim());
-      if(nonEmpty.length >= 3){ hi = i; break; }
-    }
+    if(rows[i][0]==='Team' && rows[i][1]==='BP ERA'){ hi = i; break; }
   }
-  if(hi < 0) return csvToObjects(rows); // fallback
+  if(hi < 0) return [];
 
-  const headers = rows[hi].map(h => h.trim());
+  // Build header: take row hi, then extend with the packed string in row hi+1
+  const headerPart1 = rows[hi]; // ["Team","BP ERA","Saves","Holds","Blown"]
+  const headerPart2 = (rows[hi+1]||[])[0]||''; // "Saves,Save%,K/9,BB/9,HR/9,BP IP,Closer,Setup 1,Setup 2,Grade"
+  const extraCols = headerPart2.split(',').map(c=>c.trim()).filter(Boolean);
+  // Full headers: part1 cols, then the extra cols (they continue after "Blown")
+  const headers = [...headerPart1, ...extraCols];
+  // "Blown" + "Saves" are actually "Blown Saves" — fix that
+  // headers will be: Team, BP ERA, Saves, Holds, Blown, Saves, Save%, K/9, ...
+  // The "Saves" after "Blown" should merge into "Blown Saves"
+  // Let's just relabel index 4 (Blown) + index 5 (Saves) → "Blown Saves", then shift
+  // Actually simpler: just define the full known header manually since we know the structure
+  const BULLPEN_HEADERS = [
+    'Team','BP ERA','Saves','Holds','Blown Saves','Save%','K/9','BB/9','HR/9','BP IP','Closer','Setup 1','Setup 2','Grade'
+  ];
+
+  const dataStart = hi + 2; // skip both header rows
   const results = [];
-  for(let i = hi + 1; i < rows.length; i++){
+  for(let i = dataStart; i < rows.length; i++){
     const row = rows[i];
-    if(!row.some(c => c.trim())) continue; // skip empty rows
-    // Stop if we hit another section header (non-data row with only 1 cell populated)
-    const nonEmpty = row.filter(c => c.trim());
-    if(nonEmpty.length === 1 && !headers.includes(row[0].trim())) break;
-    // Stop if we hit a second header row (e.g. pitcher-level section)
-    if(row[0].trim() === 'Pitcher' || row[0].trim() === 'SECTION') break;
+    if(!row.some(c=>c.trim())) continue;
+    // Stop at next section (row with only 1 cell or a "Pitcher" header)
+    if(row[0]==='Pitcher') break;
+    const nonEmpty = row.filter(c=>c.trim());
+    if(nonEmpty.length === 1) break;
+    if(!row[0].trim()) continue; // skip rows with no team name
     const o = {};
-    headers.forEach((h, i) => { o[h] = (row[i] || '').trim(); });
-    if(o['Team']) results.push(o);
+    BULLPEN_HEADERS.forEach((h,i)=>{ o[h]=(row[i]||'').trim(); });
+    results.push(o);
   }
   return results;
 }
