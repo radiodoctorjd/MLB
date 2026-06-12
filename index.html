@@ -328,12 +328,18 @@ function parseCSV(txt){
   }).filter(r=>r.some(c=>c));
 }
 function csvToObjects(rows){
-  // find header row — skip emoji title rows
+  // find header row — skip emoji title rows, empty rows, and section-header rows
+  // A valid header row must have at least 2 non-empty cells (real column headers)
   let hi=0;
-  for(let i=0;i<Math.min(rows.length,6);i++){
+  for(let i=0;i<Math.min(rows.length,10);i++){
     const f=(rows[i][0]||'');
+    // Skip emoji-prefixed title rows
     if(/[\u{1F300}-\u{1FFFF}]/u.test(f)||f.startsWith('📅')||f.startsWith('📊')||f.startsWith('⚾')||f.startsWith('🔥')||f.startsWith('🏟')||f.startsWith('📈')||f.startsWith('🎰')) continue;
+    // Skip fully empty rows
     if(rows[i].every(c=>!c)) continue;
+    // Skip section-header rows — rows where only the first cell has content (like "SECTION 1 — ...")
+    const nonEmpty = rows[i].filter(c=>c.trim());
+    if(nonEmpty.length < 2) continue;
     hi=i; break;
   }
   const headers=rows[hi].map(h=>h.replace(/[^\w\s/%().⭐🔥❄️➡📈📉-]/g,'').trim());
@@ -483,6 +489,14 @@ function rowMatch(row,away,home){
   return m.includes(away.split(' ').pop().toLowerCase())&&m.includes(home.split(' ').pop().toLowerCase());
 }
 function pf(s){ return s?parseFloat(s.replace('%',''))||null:null; }
+// Clean K/9 values that Google Sheets may export as percentage-formatted decimals (e.g. "959.00%" → "9.59")
+function cleanK9(s){
+  if(!s||s==='—') return '—';
+  // If value ends with % and is large (>20), it's a decimal stored as percent: divide by 100
+  const m=s.match(/^([\d.]+)%$/);
+  if(m){ const v=parseFloat(m[1]); return v>20?(v/100).toFixed(2):s; }
+  return s;
+}
 
 const ABBR_MAP={
   'Pittsburgh Pirates':'PIT','Atlanta Braves':'ATL','Chicago White Sox':'CWS',
@@ -861,13 +875,13 @@ function openModal(idx,day){
   h+=`<div class="m-hdr"><i class="ti ti-flame"></i> Bullpen</div>
   <div class="two-col">
     <div class="m-box"><div class="m-box-title">${sh(g.away)} <span class="bp-g ${gcls(aBPg)}">${aBPg||'—'}</span></div>
-      ${sr('BP ERA',g.aBP?.['BP ERA']||'—')} ${sr('K/9',g.aBP?.['K/9']||'—')}
+      ${sr('BP ERA',g.aBP?.['BP ERA']||'—')} ${sr('K/9',cleanK9(g.aBP?.['K/9'])||'—')}
       ${sr('Saves',g.aBP?.['Saves']||'—')} ${sr('Save%',g.aBP?.['Save%']||'—')}
       ${sr('Closer',g.aBP?.['Closer']||'—')}
       ${sr('Setup 1',g.aBP?.['Setup 1']||'—')} ${sr('Setup 2',g.aBP?.['Setup 2']||'—')}
     </div>
     <div class="m-box"><div class="m-box-title">${sh(g.home)} <span class="bp-g ${gcls(hBPg)}">${hBPg||'—'}</span></div>
-      ${sr('BP ERA',g.hBP?.['BP ERA']||'—')} ${sr('K/9',g.hBP?.['K/9']||'—')}
+      ${sr('BP ERA',g.hBP?.['BP ERA']||'—')} ${sr('K/9',cleanK9(g.hBP?.['K/9'])||'—')}
       ${sr('Saves',g.hBP?.['Saves']||'—')} ${sr('Save%',g.hBP?.['Save%']||'—')}
       ${sr('Closer',g.hBP?.['Closer']||'—')}
       ${sr('Setup 1',g.hBP?.['Setup 1']||'—')} ${sr('Setup 2',g.hBP?.['Setup 2']||'—')}
