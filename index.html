@@ -406,6 +406,8 @@ async function loadAll(){
     DATA.pitchers   = csvToObjects(pitchers);
     DATA.bullpen    = parseBullpenCSV(bullpen);
     console.log('Bullpen rows parsed:', DATA.bullpen.length, DATA.bullpen[0] || 'EMPTY');
+    console.log('Bullpen raw first 10 rows:');
+    bullpen.slice(0,10).forEach((r,i)=>console.log(`  Row ${i}:`, JSON.stringify(r.slice(0,6))));
     DATA.parkWx     = csvToObjects(parkWx);
     DATA.teamStats  = csvToObjects(teamStats);
     DATA.advanced   = processAdvanced(advanced);
