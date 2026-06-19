@@ -378,6 +378,30 @@ function parseBullpenCSV(rows){
   return csvToObjects(rows);
 }
 
+async function loadAll(){
+  setMain(`<div class="status-wrap"><span class="spinner"></span>Loading from Google Sheets…</div>`);
+  try{
+    const [sched,preds,totals,pitchers,bullpen,parkWx,teamStats,advanced]=await Promise.all([
+      fetchCSV(GIDS.schedule),fetchCSV(GIDS.predictions),fetchCSV(GIDS.teamTotals),
+      fetchCSV(GIDS.pitchers),fetchCSV(GIDS.bullpen),fetchCSV(GIDS.parkWeather),
+      fetchCSV(GIDS.teamStats),fetchCSV(GIDS.advanced),
+    ]);
+    DATA.schedule   = processSchedule(sched);
+    DATA.predictions= csvToObjects(preds);
+    DATA.totals     = csvToObjects(totals);
+    DATA.pitchers   = csvToObjects(pitchers);
+    DATA.bullpen    = parseBullpenCSV(bullpen);
+    DATA.parkWx     = csvToObjects(parkWx);
+    DATA.teamStats  = csvToObjects(teamStats);
+    DATA.advanced   = processAdvanced(advanced);
+    buildGames();
+    renderTab(currentTab);
+    fetchWeatherAll();
+  }catch(e){
+    setMain(`<div class="status-wrap"><div class="err"><strong>Could not load data.</strong><br>Make sure your sheet is shared as \"Anyone with the link can view.\"<br><small style="opacity:.7">${e.message}</small></div></div>`);
+  }
+}
+
 function processSchedule(rows){
   const all=[];let section=null;
   for(const row of rows){
