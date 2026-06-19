@@ -372,83 +372,12 @@ function csvToObjects(rows){
    We specifically look for the header row containing "BP ERA"
 ───────────────────────────────────────────── */
 function parseBullpenCSV(rows){
-  // The bullpen sheet header is split across TWO rows due to a merged cell in Google Sheets:
-  // Row 0: emoji title — skip
-  // Row 1: ["Team","BP ERA","Saves","Holds","Blown"]
-  // Row 2: ["Saves,Save%,K/9,BB/9,HR/9,BP IP,Closer,Setup 1,Setup 2,Grade"]  ← single packed cell
-  // Row 3+: data rows
-  //
-  // Strategy: find the row with "Team" and "BP ERA", then merge the next row's
-  // comma-packed string to build the full header list.
-
-  let hi = -1;
-  for(let i = 0; i < rows.length; i++){
-    if(rows[i][0]==='Team' && rows[i][1]==='BP ERA'){ hi = i; break; }
-  }
-  if(hi < 0) return [];
-
-  // Build header: take row hi, then extend with the packed string in row hi+1
-  const headerPart1 = rows[hi]; // ["Team","BP ERA","Saves","Holds","Blown"]
-  const headerPart2 = (rows[hi+1]||[])[0]||''; // "Saves,Save%,K/9,BB/9,HR/9,BP IP,Closer,Setup 1,Setup 2,Grade"
-  const extraCols = headerPart2.split(',').map(c=>c.trim()).filter(Boolean);
-  // Full headers: part1 cols, then the extra cols (they continue after "Blown")
-  const headers = [...headerPart1, ...extraCols];
-  // "Blown" + "Saves" are actually "Blown Saves" — fix that
-  // headers will be: Team, BP ERA, Saves, Holds, Blown, Saves, Save%, K/9, ...
-  // The "Saves" after "Blown" should merge into "Blown Saves"
-  // Let's just relabel index 4 (Blown) + index 5 (Saves) → "Blown Saves", then shift
-  // Actually simpler: just define the full known header manually since we know the structure
-  const BULLPEN_HEADERS = [
-    'Team','BP ERA','Saves','Holds','Blown Saves','Save%','K/9','BB/9','HR/9','BP IP','Closer','Setup 1','Setup 2','Grade'
-  ];
-
-  const dataStart = hi + 2; // skip both header rows
-  const results = [];
-  for(let i = dataStart; i < rows.length; i++){
-    const row = rows[i];
-    if(!row.some(c=>c.trim())) continue;
-    // Stop at next section (row with only 1 cell or a "Pitcher" header)
-    if(row[0]==='Pitcher') break;
-    const nonEmpty = row.filter(c=>c.trim());
-    if(nonEmpty.length === 1) break;
-    if(!row[0].trim()) continue; // skip rows with no team name
-    const o = {};
-    BULLPEN_HEADERS.forEach((h,i)=>{ o[h]=(row[i]||'').trim(); });
-    results.push(o);
-  }
-  return results;
+  // Bullpen sheet header is now parsed correctly by RFC4180 parseCSV:
+  // "Blown\nSaves" comes through as "Blown Saves" in a single cell.
+  // No special two-row merging needed — delegate to csvToObjects.
+  return csvToObjects(rows);
 }
 
-/* ─────────────────────────────────────────────
-   LOAD ALL
-───────────────────────────────────────────── */
-async function loadAll(){
-  setMain(`<div class="status-wrap"><span class="spinner"></span>Loading from Google Sheets…</div>`);
-  try{
-    const [sched,preds,totals,pitchers,bullpen,parkWx,teamStats,advanced]=await Promise.all([
-      fetchCSV(GIDS.schedule),fetchCSV(GIDS.predictions),fetchCSV(GIDS.teamTotals),
-      fetchCSV(GIDS.pitchers),fetchCSV(GIDS.bullpen),fetchCSV(GIDS.parkWeather),
-      fetchCSV(GIDS.teamStats),fetchCSV(GIDS.advanced),
-    ]);
-    DATA.schedule   = processSchedule(sched);
-    DATA.predictions= csvToObjects(preds);
-    DATA.totals     = csvToObjects(totals);
-    DATA.pitchers   = csvToObjects(pitchers);
-    DATA.bullpen    = parseBullpenCSV(bullpen);
-    DATA.parkWx     = csvToObjects(parkWx);
-    DATA.teamStats  = csvToObjects(teamStats);
-    DATA.advanced   = processAdvanced(advanced);
-    buildGames();
-    renderTab(currentTab);
-    fetchWeatherAll(); // async — re-renders cards when done
-  }catch(e){
-    setMain(`<div class="status-wrap"><div class="err"><strong>Could not load data.</strong><br>Make sure your sheet is shared as "Anyone with the link can view."<br><small style="opacity:.7">${e.message}</small></div></div>`);
-  }
-}
-
-/* ─────────────────────────────────────────────
-   PROCESS SCHEDULE
-───────────────────────────────────────────── */
 function processSchedule(rows){
   const all=[];let section=null;
   for(const row of rows){
