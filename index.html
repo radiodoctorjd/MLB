@@ -510,7 +510,7 @@ function buildGames(){
     const homeSpName = homeSP.replace(/\s*\(.*$/, '').trim();
     const aPit = DATA.pitchers.find(p=>p['Pitcher']===awaySpName)||{};
     const hPit = DATA.pitchers.find(p=>p['Pitcher']===homeSpName)||{};
-    if(!window._pitDbg){window._pitDbg=true;console.log('awaySP raw:',awaySP,'awaySpName:',awaySpName);console.log('aPit keys:',Object.keys(aPit));console.log('aPit T value:',aPit['T']);console.log('pitchers count:',DATA.pitchers.length);if(DATA.pitchers[0]) console.log('first pitcher keys:',Object.keys(DATA.pitchers[0]));}
+
 
     const g={
       time, away:awayTeam, home:homeTeam,
