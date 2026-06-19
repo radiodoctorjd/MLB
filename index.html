@@ -316,16 +316,27 @@ async function fetchCSV(gid){
   return parseCSV(await r.text());
 }
 function parseCSV(txt){
-  return txt.split('\n').map(line=>{
-    const out=[];let cur='',inQ=false;
-    for(const c of line){
-      if(c==='"'){inQ=!inQ;}
-      else if(c===','&&!inQ){out.push(cur.trim());cur='';}
-      else cur+=c;
+  // Full RFC-4180 parser: handles quoted fields with embedded newlines and commas.
+  const rows=[];
+  let cur='', inQ=false, row=[];
+  for(let i=0;i<txt.length;i++){
+    const c=txt[i];
+    if(c==='"'){
+      if(inQ&&txt[i+1]==='"'){cur+='"';i++;}  // escaped quote
+      else inQ=!inQ;
+    } else if(c===','&&!inQ){
+      row.push(cur.replace(/\n/g,' ').trim()); cur='';  // collapse embedded newlines to space
+    } else if((c==='\n'||c==='\r')&&!inQ){
+      if(c==='\r'&&txt[i+1]==='\n') i++;  // skip \r in \r\n
+      row.push(cur.replace(/\n/g,' ').trim()); cur='';
+      if(row.some(c=>c)) rows.push(row);
+      row=[];
+    } else {
+      cur+=c;
     }
-    out.push(cur.trim());
-    return out;
-  }).filter(r=>r.some(c=>c));
+  }
+  if(cur||row.length){row.push(cur.replace(/\n/g,' ').trim());if(row.some(c=>c))rows.push(row);}
+  return rows;
 }
 function csvToObjects(rows){
   // find header row — skip emoji title rows, empty rows, and section-header rows
@@ -342,7 +353,7 @@ function csvToObjects(rows){
     if(nonEmpty.length < 2) continue;
     hi=i; break;
   }
-  const headers=rows[hi].map(h=>h.replace(/[^\w\s/%().⭐🔥❄️➡📈📉-]/g,'').trim());
+  const headers=rows[hi].map(h=>h.replace(/\n/g,' ').replace(/[^\w\s/%().⭐🔥❄️➡📈📉-]/g,'').trim());
   return rows.slice(hi+1).filter(r=>r.some(c=>c)).map(row=>{
     const o={};
     headers.forEach((h,i)=>{o[h]=(row[i]||'').trim();});
@@ -544,11 +555,20 @@ function buildGames(){
 /* helpers */
 function col(obj,...keys){
   if(!obj) return '';
+  const norm=s=>s.toLowerCase().replace(/[^a-z0-9]/g,'');
   for(const k of keys){
-    const norm=s=>s.toLowerCase().replace(/[^a-z0-9]/g,'');
     const nk=norm(k);
-    const found=Object.keys(obj).find(ok=>norm(ok).includes(nk)||nk.includes(norm(ok)));
-    if(found&&obj[found]) return obj[found];
+    // 1. Exact normalized match (fastest, most reliable)
+    const exact=Object.keys(obj).find(ok=>norm(ok)===nk);
+    if(exact&&obj[exact]) return obj[exact];
+    // 2. Prefix match — key starts with search term (e.g. 'Away ERA' matches 'awayera')
+    const prefix=Object.keys(obj).find(ok=>norm(ok).startsWith(nk)&&nk.length>=4);
+    if(prefix&&obj[prefix]) return obj[prefix];
+    // 3. Substring match — only when search term is ≥5 chars to avoid false positives
+    if(nk.length>=5){
+      const sub=Object.keys(obj).find(ok=>norm(ok).includes(nk)||nk.includes(norm(ok)));
+      if(sub&&obj[sub]) return obj[sub];
+    }
   }
   return '';
 }
