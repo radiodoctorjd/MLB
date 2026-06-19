@@ -508,7 +508,7 @@ function buildGames(){
     // Strip it for pitcher stats lookup
     const awaySpName = awaySP.replace(/\s*\(.*$/, '').trim();
     const homeSpName = homeSP.replace(/\s*\(.*$/, '').trim();
-    aPit = DATA.pitchers.find(p=>p['Pitcher']===awaySpName)||{};
+    const aPit = DATA.pitchers.find(p=>p['Pitcher']===awaySpName)||{};
     const hPit = DATA.pitchers.find(p=>p['Pitcher']===homeSpName)||{};
 
     const g={
