@@ -958,7 +958,7 @@ function openModal(idx,day){
     :`${g.homeERA} <span style="font-size:9px;color:var(--text3)">(season)</span>`;
   h+=`<div class="m-hdr"><i class="ti ti-baseball"></i> Starting Pitchers</div>
   <div class="two-col">
-    <div class="m-box"><div class="m-box-title">${g.awaySP}</div>
+    <div class="m-box"><div class="m-box-title">${g.awaySP}${col(g.aPit,'T','Hand','hand')?` <span style="font-size:11px;font-weight:400;color:var(--text3)">(${col(g.aPit,'T','Hand','hand')=='L'?'LHP':'RHP'})</span>`:''}</div>
       ${sr('ERA used',awayEraLbl)}
       ${sr('xFIP',g.awayXFIP)} ${sr('GB%',g.awayGB)}
       ${sr('WHIP',g.awayWHIP)}
@@ -966,7 +966,7 @@ function openModal(idx,day){
       ${sr('Trend',aSPF['Trend']||'—')}
       ${sr('K/9',g.aPit?.['K/9']||'—')} ${sr('BB/9',g.aPit?.['BB/9']||'—')}
     </div>
-    <div class="m-box"><div class="m-box-title">${g.homeSP}</div>
+    <div class="m-box"><div class="m-box-title">${g.homeSP}${col(g.hPit,'T','Hand','hand')?` <span style="font-size:11px;font-weight:400;color:var(--text3)">(${col(g.hPit,'T','Hand','hand')=='L'?'LHP':'RHP'})</span>`:''}</div>
       ${sr('ERA used',homeEraLbl)}
       ${sr('xFIP',g.homeXFIP)} ${sr('GB%',g.homeGB)}
       ${sr('WHIP',g.homeWHIP)}
