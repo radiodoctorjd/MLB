@@ -525,6 +525,16 @@ function buildGames(){
       parkFactor: pk['Park Factor']||'—',
       roof: pk['Roof']||'',
       altitude: pk['Alt (ft)']||'',
+      awayGB:      col(aPit,'GB%')||'—',
+      homeGB:      col(hPit,'GB%')||'—',
+      awayXFIP:    col(aPit,'xFIP')||'—',
+      homeXFIP:    col(hPit,'xFIP')||'—',
+      awayAwayERA: col(aPit,'Away ERA','AwayERA')||'—',
+      homeHomeERA: col(hPit,'Home ERA','HomeERA')||'—',
+      awayOpsVsR:  col(aTS,'OPS vs R','OPSvsR')||'—',
+      awayOpsVsL:  col(aTS,'OPS vs L','OPSvsL')||'—',
+      homeOpsVsR:  col(hTS,'OPS vs R','OPSvsR')||'—',
+      homeOpsVsL:  col(hTS,'OPS vs L','OPSvsL')||'—',
     };
     if(entry._day==='today')     todayGames.push(g);
     else if(entry._day==='tomorrow') tmrwGames.push(g);
@@ -587,55 +597,57 @@ function sh(n){ return SHORT_MAP[n]||n; }
    OPEN-METEO WEATHER (CORS-safe, no key)
 ───────────────────────────────────────────── */
 async function fetchWeatherAll(){
-  // Collect unique home parks from today + tomorrow
-  const homes=new Set([...todayGames,...tmrwGames].map(g=>g.homeAbbr));
-  const toFetch=[...homes].filter(a=>PARKS[a]&&!PARKS[a].roof);
-
-  if(!toFetch.length){ rerenderCards(); return; }
-
-  // Batch: Open-Meteo supports multiple lat/lon in one call (pipe-separated)
+  const gameTimeMap={};
+  const today=new Date();
+  const todayStr=today.toISOString().slice(0,10);
+  const tomorrowStr=new Date(today.getTime()+86400000).toISOString().slice(0,10);
+  for(const g of [...todayGames,...tmrwGames]){
+    if(!g.homeAbbr||!PARKS[g.homeAbbr]||PARKS[g.homeAbbr].roof) continue;
+    let gameHour=19;
+    if(g.time&&g.time!=='\u2014'){
+      const m=g.time.trim().match(/(\d+):(\d+)\s*(AM|PM)/i);
+      if(m){let h=parseInt(m[1]);const pm=m[3].toUpperCase()==='PM';if(pm&&h!==12)h+=12;if(!pm&&h===12)h=0;gameHour=h;}
+    }
+    const dateStr=todayGames.includes(g)?todayStr:tomorrowStr;
+    if(!gameTimeMap[g.homeAbbr]) gameTimeMap[g.homeAbbr]={dateStr,gameHour};
+  }
+  const toFetch=Object.keys(gameTimeMap);
+  if(!toFetch.length){rerenderCards();return;}
   const lats=toFetch.map(a=>PARKS[a].lat).join(',');
   const lons=toFetch.map(a=>PARKS[a].lon).join(',');
-  const url=`https://api.open-meteo.com/v1/forecast`+
-    `?latitude=${lats}&longitude=${lons}`+
-    `&current=temperature_2m,precipitation_probability,weather_code,wind_speed_10m,wind_direction_10m`+
-    `&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=1`;
-
+  const url=`https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}`
+    +`&hourly=temperature_2m,precipitation_probability,weather_code,wind_speed_10m,wind_direction_10m`
+    +`&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=2`;
   try{
     const resp=await fetch(url);
     if(!resp.ok) throw new Error(`Open-Meteo ${resp.status}`);
     const json=await resp.json();
-
-    // Response is array when multiple locations, single object when one
     const results=Array.isArray(json)?json:[json];
-
     results.forEach((loc,i)=>{
       const a=toFetch[i];
-      if(!loc||!loc.current) return;
-      const c=loc.current;
-      const code=c.weather_code??c.weathercode??0;
-      const windDeg=c.wind_direction_10m??c.winddirection??0;
-      const windSpd=c.wind_speed_10m??c.windspeed??0;
-      const park=PARKS[a];
-      const windZone=windSpd>3?windToField(windDeg,park.homeDir):null;
+      if(!loc?.hourly?.time) return;
+      const {dateStr,gameHour}=gameTimeMap[a];
+      const times=loc.hourly.time;
+      let hi=times.findIndex(t=>t&&t.startsWith(dateStr)&&parseInt(t.slice(11,13),10)===gameHour);
+      if(hi===-1){const ds=times.findIndex(t=>t&&t.startsWith(dateStr));hi=ds!==-1?Math.min(ds+gameHour,times.length-1):0;}
+      hi=Math.max(0,Math.min(hi,times.length-1));
+      const h=loc.hourly;
+      const code=h.weather_code?.[hi]??0;
+      const windDeg=h.wind_direction_10m?.[hi]??0;
+      const windSpd=h.wind_speed_10m?.[hi]??0;
+      const windZone=windSpd>3?windToField(windDeg,PARKS[a].homeDir):null;
       WEATHER[a]={
-        temp: Math.round(c.temperature_2m??c.temperature??0),
-        code,
-        cond: WX_CODE[code]||'Clear',
-        icon: WX_ICON[code]||'🌤️',
-        wind: Math.round(windSpd),
-        windDir: windZone,
-        precip: Math.round(c.precipitation_probability??0),
+        temp:Math.round(h.temperature_2m?.[hi]??70),code,
+        cond:WX_CODE[code]||'Clear',icon:WX_ICON[code]||'🌤️',
+        wind:Math.round(windSpd),windDir:windZone,
+        precip:Math.round(h.precipitation_probability?.[hi]??0),
       };
     });
     rerenderCards();
-  }catch(e){
-    console.warn('Open-Meteo weather failed:',e);
-    // leave WEATHER empty — cards show "unavailable"
-  }
+  }catch(e){console.warn('Open-Meteo weather failed:',e);}
 }
 
-function wxLine(homeAbbr){
+function wxLine(homeAbbr,gameTime){
   const park=PARKS[homeAbbr];
   if(!park||park.roof){
     return`<div class="wx-line"><span class="wx-ico">🏟️</span><span>Dome — weather not a factor</span></div>`;
@@ -647,7 +659,8 @@ function wxLine(homeAbbr){
   const parts=[`${wx.temp}°`,wx.cond];
   if(wx.wind>3) parts.push(`Wind ${wx.wind} mph${wx.windDir?' '+wx.windDir:''}`);
   parts.push(`${wx.precip}% precip`);
-  return`<div class="wx-line"><span class="wx-ico">${wx.icon}</span><span>${parts.join(' · ')}</span></div>`;
+  const tl=gameTime&&gameTime!=='—'?` <span style="font-size:9px;opacity:.55">@ ${gameTime}</span>`:'';
+  return`<div class="wx-line"><span class="wx-ico">${wx.icon}</span><span>${parts.join(' · ')}${tl}</span></div>`;
 }
 
 function wxFull(homeAbbr){
@@ -735,8 +748,12 @@ function buildCard(g,idx,day){
       </div>
       <div class="divider"></div>
       <div class="winners">
-        <div class="wb wb-f5"><div class="wb-lbl">F5 Winner</div><div class="wb-team">${sh(g.f5Pick)}</div></div>
-        <div class="wb wb-fg"><div class="wb-lbl">Full Game</div><div class="wb-team">${sh(g.fgPick)}</div></div>
+        <div class="wb wb-f5"><div class="wb-lbl">F5 Winner</div><div class="wb-team">${sh(g.f5Pick)}</div>
+          ${g.awayF5pct&&g.homeF5pct?`<div style="font-size:9px;color:var(--text2);margin-top:2px">${g.f5Pick===g.away?g.awayF5pct:g.homeF5pct}% win prob</div>`:''}
+        </div>
+        <div class="wb wb-fg"><div class="wb-lbl">Full Game</div><div class="wb-team">${sh(g.fgPick)}</div>
+          ${g.awayFGpct&&g.homeFGpct?`<div style="font-size:9px;color:var(--text2);margin-top:2px">${g.fgPick===g.away?g.awayFGpct:g.homeFGpct}% win prob</div>`:''}
+        </div>
       </div>
       <div class="totals-2">
         <div class="tot"><div class="tot-lbl">F5 Total</div><div class="tot-val">${g.f5Total}</div><div class="tot-sub ${ccls(g.f5Conf)}">${clbl(g.f5Conf)}</div></div>
@@ -750,7 +767,7 @@ function buildCard(g,idx,day){
         </div>
       </div>
       <div class="park-line">${g.park||g.venue} · ${pf} · ${roof}</div>
-      ${wxLine(g.homeAbbr)}
+      ${wxLine(g.homeAbbr,g.time)}
       <div class="tap-hint"><i class="ti ti-chevrons-down" style="font-size:9px"></i> Tap for full breakdown</div>
     </div>
   </div>`;
@@ -884,7 +901,7 @@ function openModal(idx,day){
 
   // Park + weather
   h+=`<div class="wx-detail-box">
-    <div class="wx-dl">Park &amp; Weather</div>
+    <div class="wx-dl">Park &amp; Weather${g.time&&g.time!=='—'?` <span style="font-size:10px;font-weight:400;color:var(--text3)">· forecast @ ${g.time}</span>`:''}</div>
     <div style="font-size:12px;font-weight:500;margin-bottom:5px">${g.park||g.venue} <span style="color:var(--text2);font-weight:400">· ${g.parkFactor} · ${roof}${g.altitude?' · '+g.altitude+' ft':''}</span></div>
     <div style="font-size:12px;color:var(--text2)">${wxFull(g.homeAbbr)}</div>
   </div>`;
@@ -899,6 +916,7 @@ function openModal(idx,day){
       ${sr('Season',g.awayRec||'—')}
       ${sr('ERA',g.aTS?.['ERA']||g.aTS?.['Team ERA']||'—')}
       ${sr('OPS',g.aTS?.['OPS']||'—')}
+      ${sr('OPS vs R',g.awayOpsVsR)} ${sr('OPS vs L',g.awayOpsVsL)}
     </div>
     <div class="m-box"><div class="m-box-title">${sh(g.home)}</div>
       ${sr('L10',hForm['L10 W']&&hForm['L10 L']?hForm['L10 W']+'-'+hForm['L10 L']:'—')}
@@ -907,27 +925,36 @@ function openModal(idx,day){
       ${sr('Season',g.homeRec||'—')}
       ${sr('ERA',g.hTS?.['ERA']||g.hTS?.['Team ERA']||'—')}
       ${sr('OPS',g.hTS?.['OPS']||'—')}
+      ${sr('OPS vs R',g.homeOpsVsR)} ${sr('OPS vs L',g.homeOpsVsL)}
     </div>
   </div>`;
 
   // SP
+  const awayEraLbl=g.awayAwayERA&&g.awayAwayERA!=='—'
+    ?`${g.awayAwayERA} <span style="font-size:9px;color:var(--text3)">(away split)</span>`
+    :`${g.awayERA} <span style="font-size:9px;color:var(--text3)">(season)</span>`;
+  const homeEraLbl=g.homeHomeERA&&g.homeHomeERA!=='—'
+    ?`${g.homeHomeERA} <span style="font-size:9px;color:var(--text3)">(home split)</span>`
+    :`${g.homeERA} <span style="font-size:9px;color:var(--text3)">(season)</span>`;
   h+=`<div class="m-hdr"><i class="ti ti-baseball"></i> Starting Pitchers</div>
   <div class="two-col">
     <div class="m-box"><div class="m-box-title">${g.awaySP}</div>
-      ${sr('ERA',g.awayERA)} ${sr('WHIP',g.awayWHIP)}
+      ${sr('ERA used',awayEraLbl)}
+      ${sr('xFIP',g.awayXFIP)} ${sr('GB%',g.awayGB)}
+      ${sr('WHIP',g.awayWHIP)}
       ${sr('L3 ERA',aSPF['L3 ERA']||aSPF['L3ERA']||'—')}
-      ${sr('L3 WHIP',aSPF['L3 WHIP']||aSPF['L3WHIP']||'—')}
       ${sr('Trend',aSPF['Trend']||'—')}
       ${sr('K/9',g.aPit?.['K/9']||'—')} ${sr('BB/9',g.aPit?.['BB/9']||'—')}
     </div>
     <div class="m-box"><div class="m-box-title">${g.homeSP}</div>
-      ${sr('ERA',g.homeERA)} ${sr('WHIP',g.homeWHIP)}
+      ${sr('ERA used',homeEraLbl)}
+      ${sr('xFIP',g.homeXFIP)} ${sr('GB%',g.homeGB)}
+      ${sr('WHIP',g.homeWHIP)}
       ${sr('L3 ERA',hSPF['L3 ERA']||hSPF['L3ERA']||'—')}
-      ${sr('L3 WHIP',hSPF['L3 WHIP']||hSPF['L3WHIP']||'—')}
       ${sr('Trend',hSPF['Trend']||'—')}
       ${sr('K/9',g.hPit?.['K/9']||'—')} ${sr('BB/9',g.hPit?.['BB/9']||'—')}
     </div>
-  </div>`;
+  </div>`
 
   // Bullpen
   h+=`<div class="m-hdr"><i class="ti ti-flame"></i> Bullpen</div>
