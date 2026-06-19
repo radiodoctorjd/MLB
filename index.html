@@ -504,7 +504,7 @@ function buildGames(){
     const pk   = DATA.parkWx.find(p=>p['Team']===homeTeam)||{};
     const aBP  = DATA.bullpen.find(b=>b['Team']&&(b['Team']===awayTeam||awayTeam.includes(b['Team'])||b['Team'].includes(awayTeam)))||{};
     const hBP  = DATA.bullpen.find(b=>b['Team']&&(b['Team']===homeTeam||homeTeam.includes(b['Team'])||b['Team'].includes(homeTeam)))||{};
-    const // SP name in schedule includes ERA annotation e.g. 'Kevin Gausman (3.41 away ERA)'
+    // SP name in schedule includes ERA annotation e.g. 'Kevin Gausman (3.41 away ERA)'
     // Strip it for pitcher stats lookup
     const awaySpName = awaySP.replace(/\s*\(.*$/, '').trim();
     const homeSpName = homeSP.replace(/\s*\(.*$/, '').trim();
