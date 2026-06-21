@@ -916,23 +916,35 @@ function openModal(idx,day){
   const homeEraLbl=g.homeHomeERA&&g.homeHomeERA!=='—'
     ?`${g.homeHomeERA} <span style="font-size:9px;color:var(--text3)">(home split)</span>`
     :`${g.homeERA} <span style="font-size:9px;color:var(--text3)">(season)</span>`;
+  const awayWL=(g.aPit&&g.aPit['W']!==''&&g.aPit['L']!=='')
+    ?`${g.aPit['W']}-${g.aPit['L']}`:'--';
+  const homeWL=(g.hPit&&g.hPit['W']!==''&&g.hPit['L']!=='')
+    ?`${g.hPit['W']}-${g.hPit['L']}`:'--';
   h+=`<div class="m-hdr"><i class="ti ti-baseball"></i> Starting Pitchers</div>
   <div class="two-col">
     <div class="m-box"><div class="m-box-title">${g.awaySP}${g.awayHand?` <span style="font-size:11px;font-weight:400">(${g.awayHand==='L'?'LHP':'RHP'})</span>`:''}</div>
+      ${sr('W/L',awayWL)}
       ${sr('ERA used',awayEraLbl)}
-      ${sr('xFIP',g.awayXFIP)} ${sr('GB%',g.awayGB)}
-      ${sr('WHIP',g.awayWHIP)}
+      ${sr('ERA',g.awayERA)}
       ${sr('L3 ERA',aSPF['L3 ERA']||aSPF['L3ERA']||'—')}
+      ${sr('WHIP',g.awayWHIP)}
+      ${sr('L3 WHIP',aSPF['L3 WHIP']||aSPF['L3WHIP']||'—')}
+      ${sr('FIP',col(g.aPit,'FIP')||'—')} ${sr('xFIP',g.awayXFIP)}
+      ${sr('GB%',g.awayGB)}
       ${sr('Trend',aSPF['Trend']||'—')}
-      ${sr('K/9',g.aPit?.['K/9']||'—')} ${sr('BB/9',g.aPit?.['BB/9']||'—')}
+      ${sr('K/9',col(g.aPit,'K/9')||'—')} ${sr('BB/9',col(g.aPit,'BB/9')||'—')}
     </div>
     <div class="m-box"><div class="m-box-title">${g.homeSP}${g.homeHand?` <span style="font-size:11px;font-weight:400">(${g.homeHand==='L'?'LHP':'RHP'})</span>`:''}</div>
+      ${sr('W/L',homeWL)}
       ${sr('ERA used',homeEraLbl)}
-      ${sr('xFIP',g.homeXFIP)} ${sr('GB%',g.homeGB)}
-      ${sr('WHIP',g.homeWHIP)}
+      ${sr('ERA',g.homeERA)}
       ${sr('L3 ERA',hSPF['L3 ERA']||hSPF['L3ERA']||'—')}
+      ${sr('WHIP',g.homeWHIP)}
+      ${sr('L3 WHIP',hSPF['L3 WHIP']||hSPF['L3WHIP']||'—')}
+      ${sr('FIP',col(g.hPit,'FIP')||'—')} ${sr('xFIP',g.homeXFIP)}
+      ${sr('GB%',g.homeGB)}
       ${sr('Trend',hSPF['Trend']||'—')}
-      ${sr('K/9',g.hPit?.['K/9']||'—')} ${sr('BB/9',g.hPit?.['BB/9']||'—')}
+      ${sr('K/9',col(g.hPit,'K/9')||'—')} ${sr('BB/9',col(g.hPit,'BB/9')||'—')}
     </div>
   </div>`
 
