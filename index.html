@@ -718,9 +718,9 @@ function buildCard(g,idx,day){
     </div>
     <div class="card-body">
       <div class="matchup">
-        <div class="team away"><div class="team-name">${sh(g.away)}</div><div class="team-rec">${g.awayRec}</div></div>
+        <div class="team away"><div class="team-name">${sh(g.away)}</div><div class="team-rec">${g.awayRec}${g.awayHomeRec?` <span style="font-size:9px;opacity:.7">H:${g.awayHomeRec}</span>`:''}${g.awayAwayRec?` <span style="font-size:9px;opacity:.7">A:${g.awayAwayRec}</span>`:''}</div></div>
         <span class="at-sep">@</span>
-        <div class="team home"><div class="team-name">${sh(g.home)}</div><div class="team-rec">${g.homeRec}</div></div>
+        <div class="team home"><div class="team-name">${sh(g.home)}</div><div class="team-rec">${g.homeRec}${g.homeHomeRec?` <span style="font-size:9px;opacity:.7">H:${g.homeHomeRec}</span>`:''}${g.homeAwayRec?` <span style="font-size:9px;opacity:.7">A:${g.homeAwayRec}</span>`:''}</div></div>
       </div>
       <div class="pitchers">
         <div class="pitcher"><div class="sp-name">${g.awaySP}${g.awayHand?` <span style="font-weight:400">(${g.awayHand==='L'?'LHP':'RHP'})</span>`:''}</div><div class="sp-stats">ERA ${g.awayERA} · WHIP ${g.awayWHIP}</div></div>
@@ -893,7 +893,8 @@ function openModal(idx,day){
       ${sr('L10',aForm['L10 W']&&aForm['L10 L']?aForm['L10 W']+'-'+aForm['L10 L']:'—')}
       ${sr('Trend',`<span class="trend-b ${trcls(aForm['Trend']||'')}">${aForm['Trend']||'—'}</span>`)}
       ${sr('Streak',aForm['Streak']||'—')}
-      ${sr('Season',g.awayRec||'—')}
+      ${sr('Overall',g.awayRec||'—')}
+      ${sr('Home',g.awayHomeRec||'—')} ${sr('Away',g.awayAwayRec||'—')}
       ${sr('ERA',g.aTS?.['ERA']||g.aTS?.['Team ERA']||'—')}
       ${sr('OPS',g.aTS?.['OPS']||'—')}
       ${sr('OPS vs R',g.awayOpsVsR)} ${sr('OPS vs L',g.awayOpsVsL)}
@@ -902,7 +903,8 @@ function openModal(idx,day){
       ${sr('L10',hForm['L10 W']&&hForm['L10 L']?hForm['L10 W']+'-'+hForm['L10 L']:'—')}
       ${sr('Trend',`<span class="trend-b ${trcls(hForm['Trend']||'')}">${hForm['Trend']||'—'}</span>`)}
       ${sr('Streak',hForm['Streak']||'—')}
-      ${sr('Season',g.homeRec||'—')}
+      ${sr('Overall',g.homeRec||'—')}
+      ${sr('Home',g.homeHomeRec||'—')} ${sr('Away',g.homeAwayRec||'—')}
       ${sr('ERA',g.hTS?.['ERA']||g.hTS?.['Team ERA']||'—')}
       ${sr('OPS',g.hTS?.['OPS']||'—')}
       ${sr('OPS vs R',g.homeOpsVsR)} ${sr('OPS vs L',g.homeOpsVsL)}
