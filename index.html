@@ -910,12 +910,9 @@ function openModal(idx,day){
   </div>`;
 
   // SP
-  const awayEraLbl=g.awayAwayERA&&g.awayAwayERA!=='—'
-    ?`${g.awayAwayERA} <span style="font-size:9px;color:var(--text3)">(away split)</span>`
-    :`${g.awayERA} <span style="font-size:9px;color:var(--text3)">(season)</span>`;
-  const homeEraLbl=g.homeHomeERA&&g.homeHomeERA!=='—'
-    ?`${g.homeHomeERA} <span style="font-size:9px;color:var(--text3)">(home split)</span>`
-    :`${g.homeERA} <span style="font-size:9px;color:var(--text3)">(season)</span>`;
+  // Split ERAs shown for reference only — not used in calculation
+  const awayEraLbl=g.awayAwayERA&&g.awayAwayERA!=='—'?g.awayAwayERA:'—';
+  const homeEraLbl=g.homeHomeERA&&g.homeHomeERA!=='—'?g.homeHomeERA:'—';
   const awayWL=(g.aPit&&g.aPit['W']!==''&&g.aPit['L']!=='')
     ?`${g.aPit['W']}-${g.aPit['L']}`:'--';
   const homeWL=(g.hPit&&g.hPit['W']!==''&&g.hPit['L']!=='')
@@ -924,7 +921,7 @@ function openModal(idx,day){
   <div class="two-col">
     <div class="m-box"><div class="m-box-title">${g.awaySP}${g.awayHand?` <span style="font-size:11px;font-weight:400">(${g.awayHand==='L'?'LHP':'RHP'})</span>`:''}</div>
       ${sr('W/L',awayWL)}
-      ${sr('ERA used',awayEraLbl)}
+      ${sr('Away ERA (split)',awayEraLbl)}
       ${sr('ERA',g.awayERA)}
       ${sr('L3 ERA',aSPF['L3 ERA']||aSPF['L3ERA']||'—')}
       ${sr('WHIP',g.awayWHIP)}
@@ -936,7 +933,7 @@ function openModal(idx,day){
     </div>
     <div class="m-box"><div class="m-box-title">${g.homeSP}${g.homeHand?` <span style="font-size:11px;font-weight:400">(${g.homeHand==='L'?'LHP':'RHP'})</span>`:''}</div>
       ${sr('W/L',homeWL)}
-      ${sr('ERA used',homeEraLbl)}
+      ${sr('Home ERA (split)',homeEraLbl)}
       ${sr('ERA',g.homeERA)}
       ${sr('L3 ERA',hSPF['L3 ERA']||hSPF['L3ERA']||'—')}
       ${sr('WHIP',g.homeWHIP)}
