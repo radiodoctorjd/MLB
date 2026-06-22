@@ -722,9 +722,9 @@ function buildCard(g,idx,day){
     </div>
     <div class="card-body">
       <div class="matchup">
-        <div class="team away"><div class="team-name">${sh(g.away)}</div><div class="team-rec">${g.awayRec}${g.awayHomeRec?` <span style="font-size:9px;opacity:.7">H:${g.awayHomeRec}</span>`:''}${g.awayAwayRec?` <span style="font-size:9px;opacity:.7">A:${g.awayAwayRec}</span>`:''}</div></div>
+        <div class="team away"><div class="team-name">${sh(g.away)}</div><div class="team-rec">${g.awayRec}</div></div>
         <span class="at-sep">@</span>
-        <div class="team home"><div class="team-name">${sh(g.home)}</div><div class="team-rec">${g.homeRec}${g.homeHomeRec?` <span style="font-size:9px;opacity:.7">H:${g.homeHomeRec}</span>`:''}${g.homeAwayRec?` <span style="font-size:9px;opacity:.7">A:${g.homeAwayRec}</span>`:''}</div></div>
+        <div class="team home"><div class="team-name">${sh(g.home)}</div><div class="team-rec">${g.homeRec}</div></div>
       </div>
       <div class="pitchers">
         <div class="pitcher"><div class="sp-name">${g.awaySP}${g.awayHand?` <span style="font-weight:400">(${g.awayHand==='L'?'LHP':'RHP'})</span>`:''}</div><div class="sp-stats">ERA ${g.awayERA} · WHIP ${g.awayWHIP}</div></div>
