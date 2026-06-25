@@ -581,6 +581,7 @@ function sh(n){ return SHORT_MAP[n]||n; }
    OPEN-METEO WEATHER (CORS-safe, no key)
 ───────────────────────────────────────────── */
 async function fetchWeatherAll(){
+  // Key WEATHER by "ABR:yyyy-mm-dd" so today/tomorrow get separate hourly slots
   const gameTimeMap={};
   const today=new Date();
   const todayStr=today.toISOString().slice(0,10);
@@ -588,14 +589,17 @@ async function fetchWeatherAll(){
   for(const g of [...todayGames,...tmrwGames]){
     if(!g.homeAbbr||!PARKS[g.homeAbbr]||PARKS[g.homeAbbr].roof) continue;
     let gameHour=19;
-    if(g.time&&g.time!=='\u2014'){
-      const m=g.time.trim().match(/(\d+):(\d+)\s*(AM|PM)/i);
-      if(m){let h=parseInt(m[1]);const pm=m[3].toUpperCase()==='PM';if(pm&&h!==12)h+=12;if(!pm&&h===12)h=0;gameHour=h;}
+    if(g.time&&g.time!=='—'){
+      const mtch=g.time.trim().match(/(\d+):(\d+)\s*(AM|PM)/i);
+      if(mtch){let h=parseInt(mtch[1]);const pm=mtch[3].toUpperCase()==='PM';if(pm&&h!==12)h+=12;if(!pm&&h===12)h=0;gameHour=h;}
     }
     const dateStr=todayGames.includes(g)?todayStr:tomorrowStr;
-    if(!gameTimeMap[g.homeAbbr]) gameTimeMap[g.homeAbbr]={dateStr,gameHour};
+    const key=g.homeAbbr+':'+dateStr;
+    if(!gameTimeMap[key]) gameTimeMap[key]={abbr:g.homeAbbr,dateStr,gameHour};
   }
-  const toFetch=Object.keys(gameTimeMap);
+  const parkSet={};
+  Object.values(gameTimeMap).forEach(({abbr})=>{ parkSet[abbr]=true; });
+  const toFetch=Object.keys(parkSet);
   if(!toFetch.length){rerenderCards();return;}
   const lats=toFetch.map(a=>PARKS[a].lat).join(',');
   const lons=toFetch.map(a=>PARKS[a].lon).join(',');
@@ -607,10 +611,11 @@ async function fetchWeatherAll(){
     if(!resp.ok) throw new Error(`Open-Meteo ${resp.status}`);
     const json=await resp.json();
     const results=Array.isArray(json)?json:[json];
-    results.forEach((loc,i)=>{
-      const a=toFetch[i];
+    const locMap={};
+    results.forEach((loc,i)=>{ locMap[toFetch[i]]=loc; });
+    Object.entries(gameTimeMap).forEach(([key,{abbr,dateStr,gameHour}])=>{
+      const loc=locMap[abbr];
       if(!loc?.hourly?.time) return;
-      const {dateStr,gameHour}=gameTimeMap[a];
       const times=loc.hourly.time;
       let hi=times.findIndex(t=>t&&t.startsWith(dateStr)&&parseInt(t.slice(11,13),10)===gameHour);
       if(hi===-1){const ds=times.findIndex(t=>t&&t.startsWith(dateStr));hi=ds!==-1?Math.min(ds+gameHour,times.length-1):0;}
@@ -619,8 +624,8 @@ async function fetchWeatherAll(){
       const code=h.weather_code?.[hi]??0;
       const windDeg=h.wind_direction_10m?.[hi]??0;
       const windSpd=h.wind_speed_10m?.[hi]??0;
-      const windZone=windSpd>3?windToField(windDeg,PARKS[a].homeDir):null;
-      WEATHER[a]={
+      const windZone=windSpd>3?windToField(windDeg,PARKS[abbr].homeDir):null;
+      WEATHER[key]={
         temp:Math.round(h.temperature_2m?.[hi]??70),code,
         cond:WX_CODE[code]||'Clear',icon:WX_ICON[code]||'🌤️',
         wind:Math.round(windSpd),windDir:windZone,
@@ -630,13 +635,14 @@ async function fetchWeatherAll(){
     rerenderCards();
   }catch(e){console.warn('Open-Meteo weather failed:',e);}
 }
-
-function wxLine(homeAbbr,gameTime){
+function wxLine(homeAbbr,gameTime,day){
   const park=PARKS[homeAbbr];
   if(!park||park.roof){
     return`<div class="wx-line"><span class="wx-ico">🏟️</span><span>Dome — weather not a factor</span></div>`;
   }
-  const wx=WEATHER[homeAbbr];
+  const _td=new Date().toISOString().slice(0,10);
+  const _tm=new Date(Date.now()+86400000).toISOString().slice(0,10);
+  const wx=WEATHER[homeAbbr+':'+(day==='tomorrow'?_tm:_td)]||WEATHER[homeAbbr];
   if(!wx){
     return`<div class="wx-line"><span class="wx-ico" style="opacity:.4">⏳</span><span style="opacity:.5">Loading weather…</span></div>`;
   }
@@ -647,10 +653,12 @@ function wxLine(homeAbbr,gameTime){
   return`<div class="wx-line"><span class="wx-ico">${wx.icon}</span><span>${parts.join(' · ')}${tl}</span></div>`;
 }
 
-function wxFull(homeAbbr){
+function wxFull(homeAbbr,day){
   const park=PARKS[homeAbbr];
   if(!park||park.roof) return '🏟️ Dome — weather not a factor';
-  const wx=WEATHER[homeAbbr];
+  const _td2=new Date().toISOString().slice(0,10);
+  const _tm2=new Date(Date.now()+86400000).toISOString().slice(0,10);
+  const wx=WEATHER[homeAbbr+':'+(day==='tomorrow'?_tm2:_td2)]||WEATHER[homeAbbr];
   if(!wx) return '⏳ Weather loading…';
   const parts=[`${wx.temp}°`,wx.cond];
   if(wx.wind>3) parts.push(`Wind ${wx.wind} mph${wx.windDir?' '+wx.windDir:''}`);
@@ -751,7 +759,7 @@ function buildCard(g,idx,day){
         </div>
       </div>
       <div class="park-line">${g.park||g.venue} · ${pf} · ${roof}</div>
-      ${wxLine(g.homeAbbr,g.time)}
+      ${wxLine(g.homeAbbr,g.time,g._day)}
       <div class="tap-hint"><i class="ti ti-chevrons-down" style="font-size:9px"></i> Tap for full breakdown</div>
     </div>
   </div>`;
@@ -887,7 +895,7 @@ function openModal(idx,day){
   h+=`<div class="wx-detail-box">
     <div class="wx-dl">Park &amp; Weather${g.time&&g.time!=='—'?` <span style="font-size:10px;font-weight:400;color:var(--text3)">· forecast @ ${g.time}</span>`:''}</div>
     <div style="font-size:12px;font-weight:500;margin-bottom:5px">${g.park||g.venue} <span style="color:var(--text2);font-weight:400">· ${g.parkFactor} · ${roof}${g.altitude?' · '+g.altitude+' ft':''}</span></div>
-    <div style="font-size:12px;color:var(--text2)">${wxFull(g.homeAbbr)}</div>
+    <div style="font-size:12px;color:var(--text2)">${wxFull(g.homeAbbr,g._day)}</div>
   </div>`;
 
   // Team form
