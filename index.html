@@ -80,6 +80,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg3);color:var(--text);mi
 .pitcher{flex:1;min-width:0}.pitcher.home-p{text-align:right}
 .sp-name{font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sp-stats{font-size:10px;color:var(--text2);margin-top:1px}
+.pick-changed{font-size:9px;background:#fff3cd;color:#856404;border:1px solid #ffc107;border-radius:4px;padding:1px 5px;margin-left:4px;white-space:nowrap}
 .divider{height:1px;background:var(--border);margin:9px 0}
 /* winners */
 .winners{display:flex;gap:5px;margin-bottom:7px}
@@ -209,6 +210,7 @@ const GIDS = {
   parkWeather: 866267891,
   teamStats:   1418505229,
   advanced:    1867140111,
+  yesterday:   0,  // ← paste the GID for the '📋 Yesterday' tab here after first refresh
 };
 
 /* ─────────────────────────────────────────────
@@ -381,10 +383,11 @@ function parseBullpenCSV(rows){
 async function loadAll(){
   setMain(`<div class="status-wrap"><span class="spinner"></span>Loading from Google Sheets…</div>`);
   try{
-    const [sched,preds,totals,pitchers,bullpen,parkWx,teamStats,advanced]=await Promise.all([
+    const ystPromise=GIDS.yesterday?fetchCSV(GIDS.yesterday).catch(()=>[]):Promise.resolve([]);
+    const [sched,preds,totals,pitchers,bullpen,parkWx,teamStats,advanced,yst]=await Promise.all([
       fetchCSV(GIDS.schedule),fetchCSV(GIDS.predictions),fetchCSV(GIDS.teamTotals),
       fetchCSV(GIDS.pitchers),fetchCSV(GIDS.bullpen),fetchCSV(GIDS.parkWeather),
-      fetchCSV(GIDS.teamStats),fetchCSV(GIDS.advanced),
+      fetchCSV(GIDS.teamStats),fetchCSV(GIDS.advanced),ystPromise,
     ]);
     DATA.schedule   = processSchedule(sched);
     DATA.predictions= csvToObjects(preds);
@@ -394,6 +397,7 @@ async function loadAll(){
     DATA.parkWx     = csvToObjects(parkWx);
     DATA.teamStats  = csvToObjects(teamStats);
     DATA.advanced   = processAdvanced(advanced);
+    DATA.yesterday  = csvToObjects(yst);
     buildGames();
     renderTab(currentTab);
     fetchWeatherAll();
@@ -452,6 +456,7 @@ function buildGames(){
 
     const pred = DATA.predictions.find(p=>rowMatch(p,awayTeam,homeTeam));
     const tot  = DATA.totals.find(t=>rowMatch(t,awayTeam,homeTeam));
+    const ystPred = DATA.yesterday?.find(p=>rowMatch(p,awayTeam,homeTeam));
     const aTS  = DATA.teamStats.find(t=>t['Team']===awayTeam||t['Abbr']===awayAbbr)||{};
     const hTS  = DATA.teamStats.find(t=>t['Team']===homeTeam||t['Abbr']===homeAbbr)||{};
     const pk   = DATA.parkWx.find(p=>p['Team']===homeTeam)||{};
@@ -472,7 +477,9 @@ function buildGames(){
       awayAbbr, homeAbbr,
       awaySP:awaySP||'TBD', awayERA:awayERA||'—', awayWHIP:awayWHIP||'—',
       homeSP:homeSP||'TBD', homeERA:homeERA||'—', homeWHIP:homeWHIP||'—',
-      f5Pick:  col(pred,'F5 Pick')||'—',
+      f5Pick:    col(pred,'F5 Pick')||'—',
+      ystF5Pick: col(ystPred,'F5 Pick')||'',
+      ystFgPick: col(ystPred,'FG Pick')||'',
       f5Conf:  col(pred,'F5 Conf')||'—',
       f5Total: col(pred,'F5 Total')||col(tot,'F5 Tot')||'—',
       fgPick:  col(pred,'FG Pick')||'—',
@@ -741,10 +748,12 @@ function buildCard(g,idx,day){
       </div>
       <div class="divider"></div>
       <div class="winners">
-        <div class="wb wb-f5"><div class="wb-lbl">F5 Winner</div><div class="wb-team">${sh(g.f5Pick)}</div>
+        <div class="wb wb-f5"><div class="wb-lbl">F5 Winner</div>
+          <div class="wb-team">${sh(g.f5Pick)}${g.ystF5Pick&&g.ystF5Pick!==g.f5Pick?`<span class="pick-changed">was ${sh(g.ystF5Pick)}</span>`:''}</div>
           ${g.awayF5pct&&g.homeF5pct?`<div style="font-size:9px;color:var(--text2);margin-top:2px">${g.f5Pick===g.away?g.awayF5pct:g.homeF5pct}% win prob</div>`:''}
         </div>
-        <div class="wb wb-fg"><div class="wb-lbl">Full Game</div><div class="wb-team">${sh(g.fgPick)}</div>
+        <div class="wb wb-fg"><div class="wb-lbl">Full Game</div>
+          <div class="wb-team">${sh(g.fgPick)}${g.ystFgPick&&g.ystFgPick!==g.fgPick?`<span class="pick-changed">was ${sh(g.ystFgPick)}</span>`:''}</div>
           ${g.awayFGpct&&g.homeFGpct?`<div style="font-size:9px;color:var(--text2);margin-top:2px">${g.fgPick===g.away?g.awayFGpct:g.homeFGpct}% win prob</div>`:''}
         </div>
       </div>
