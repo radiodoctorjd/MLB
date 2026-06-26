@@ -341,6 +341,7 @@ function parseCSV(txt){
   return rows;
 }
 function csvToObjects(rows){
+  if(!rows||!rows.length) return [];
   // find header row — skip emoji title rows, empty rows, and section-header rows
   // A valid header row must have at least 2 non-empty cells (real column headers)
   let hi=0;
@@ -397,7 +398,7 @@ async function loadAll(){
     DATA.parkWx     = csvToObjects(parkWx);
     DATA.teamStats  = csvToObjects(teamStats);
     DATA.advanced   = processAdvanced(advanced);
-    DATA.yesterday  = csvToObjects(yst);
+    DATA.yesterday  = GIDS.yesterday ? csvToObjects(yst) : [];
     buildGames();
     renderTab(currentTab);
     fetchWeatherAll();
@@ -456,7 +457,7 @@ function buildGames(){
 
     const pred = DATA.predictions.find(p=>rowMatch(p,awayTeam,homeTeam));
     const tot  = DATA.totals.find(t=>rowMatch(t,awayTeam,homeTeam));
-    const ystPred = DATA.yesterday?.find(p=>rowMatch(p,awayTeam,homeTeam));
+    const ystPred = DATA.yesterday?.length ? DATA.yesterday.find(p=>rowMatch(p,awayTeam,homeTeam)) : null;
     const aTS  = DATA.teamStats.find(t=>t['Team']===awayTeam||t['Abbr']===awayAbbr)||{};
     const hTS  = DATA.teamStats.find(t=>t['Team']===homeTeam||t['Abbr']===homeAbbr)||{};
     const pk   = DATA.parkWx.find(p=>p['Team']===homeTeam)||{};
