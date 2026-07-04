@@ -589,14 +589,29 @@ function abbr(n){ return ABBR_MAP[n]||n.split(' ').map(w=>w[0]).join('').toUpper
 function sh(n){ return SHORT_MAP[n]||n; }
 
 /* ─────────────────────────────────────────────
+   DATE HELPER — America/New_York LOCAL date
+   FIX: Date.toISOString() returns UTC, which can
+   land on the *next* calendar day in the evening
+   (US Eastern). That mismatched the WEATHER cache
+   keys built from Open-Meteo's timezone=auto (local)
+   response against lookups keyed off UTC dates,
+   so the cache lookup always missed and every card
+   stayed stuck on "Loading weather…". This formats
+   in the same local timezone the schedule uses.
+───────────────────────────────────────────── */
+function localDateStr(d){
+  return new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(d);
+}
+
+/* ─────────────────────────────────────────────
    OPEN-METEO WEATHER (CORS-safe, no key)
 ───────────────────────────────────────────── */
 async function fetchWeatherAll(){
   // Key WEATHER by "ABR:yyyy-mm-dd" so today/tomorrow get separate hourly slots
   const gameTimeMap={};
   const today=new Date();
-  const todayStr=today.toISOString().slice(0,10);
-  const tomorrowStr=new Date(today.getTime()+86400000).toISOString().slice(0,10);
+  const todayStr=localDateStr(today);
+  const tomorrowStr=localDateStr(new Date(today.getTime()+86400000));
   for(const g of [...todayGames,...tmrwGames]){
     if(!g.homeAbbr||!PARKS[g.homeAbbr]||PARKS[g.homeAbbr].roof) continue;
     let gameHour=19;
@@ -651,8 +666,8 @@ function wxLine(homeAbbr,gameTime,day){
   if(!park||park.roof){
     return`<div class="wx-line"><span class="wx-ico">🏟️</span><span>Dome — weather not a factor</span></div>`;
   }
-  const _td=new Date().toISOString().slice(0,10);
-  const _tm=new Date(Date.now()+86400000).toISOString().slice(0,10);
+  const _td=localDateStr(new Date());
+  const _tm=localDateStr(new Date(Date.now()+86400000));
   const wx=WEATHER[homeAbbr+':'+(day==='tomorrow'?_tm:_td)]||WEATHER[homeAbbr];
   if(!wx){
     return`<div class="wx-line"><span class="wx-ico" style="opacity:.4">⏳</span><span style="opacity:.5">Loading weather…</span></div>`;
@@ -667,8 +682,8 @@ function wxLine(homeAbbr,gameTime,day){
 function wxFull(homeAbbr,day){
   const park=PARKS[homeAbbr];
   if(!park||park.roof) return '🏟️ Dome — weather not a factor';
-  const _td2=new Date().toISOString().slice(0,10);
-  const _tm2=new Date(Date.now()+86400000).toISOString().slice(0,10);
+  const _td2=localDateStr(new Date());
+  const _tm2=localDateStr(new Date(Date.now()+86400000));
   const wx=WEATHER[homeAbbr+':'+(day==='tomorrow'?_tm2:_td2)]||WEATHER[homeAbbr];
   if(!wx) return '⏳ Weather loading…';
   const parts=[`${wx.temp}°`,wx.cond];
