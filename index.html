@@ -515,6 +515,8 @@ function buildGames(){
       homeXFIP:    col(hPit,'xFIP')||'—',
       awaySIERA:   col(aPit,'SIERA')||'—',
       homeSIERA:   col(hPit,'SIERA')||'—',
+      awayXERA:    col(aPit,'xERA')||'—',
+      homeXERA:    col(hPit,'xERA')||'—',
       awayAwayERA: col(aPit,'Away ERA','AwayERA')||'—',
       homeHomeERA: col(hPit,'Home ERA','HomeERA')||'—',
       awayOpsVsR:  col(aTS,'OPS vs R','OPSvsR')||'—',
@@ -965,6 +967,7 @@ function openModal(idx,day){
       ${sr('W/L',awayWL)}
       ${sr('Away ERA (split)',awayEraLbl)}
       ${sr('ERA',g.awayERA)}
+      ${sr('xERA',g.awayXERA)}
       ${sr('L3 ERA',aSPF['L3 ERA']||aSPF['L3ERA']||'—')}
       ${sr('WHIP',g.awayWHIP)}
       ${sr('L3 WHIP',aSPF['L3 WHIP']||aSPF['L3WHIP']||'—')}
@@ -978,6 +981,7 @@ function openModal(idx,day){
       ${sr('W/L',homeWL)}
       ${sr('Home ERA (split)',homeEraLbl)}
       ${sr('ERA',g.homeERA)}
+      ${sr('xERA',g.homeXERA)}
       ${sr('L3 ERA',hSPF['L3 ERA']||hSPF['L3ERA']||'—')}
       ${sr('WHIP',g.homeWHIP)}
       ${sr('L3 WHIP',hSPF['L3 WHIP']||hSPF['L3WHIP']||'—')}
