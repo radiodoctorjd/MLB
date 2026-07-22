@@ -40,6 +40,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg3);color:var(--text);mi
 .logo-icon{font-size:22px}
 .hdr-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .date-pill{font-size:12px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;color:var(--text2)}
+.sync-pill{font-size:11px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;color:var(--text3);display:flex;align-items:center;gap:5px;white-space:nowrap}
+.sync-pill.stale{color:var(--amber);border-color:var(--amber-bg);background:var(--amber-bg)}
 .refresh-btn{display:flex;align-items:center;gap:5px;font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid var(--border2);background:var(--bg);color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .15s}
 .refresh-btn:hover{background:var(--bg2)}
 /* TABS */
@@ -178,6 +180,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg3);color:var(--text);mi
   <div class="logo"><span class="logo-icon">⚾</span> MLB Predictions</div>
   <div class="hdr-right">
     <span class="date-pill" id="date-pill"></span>
+    <span class="sync-pill" id="sync-pill" title="When the Google Sheet data was last refreshed"><i class="ti ti-clock" style="font-size:12px"></i> <span id="sync-pill-text">—</span></span>
     <button class="refresh-btn" onclick="loadAll()"><i class="ti ti-refresh" style="font-size:13px"></i> Refresh</button>
   </div>
 </div>
@@ -211,7 +214,8 @@ const GIDS = {
   parkWeather: 866267891,
   teamStats:   1418505229,
   advanced:    1867140111,
-  statcast:    0,  // ← paste the GID for the '🎯 Team Statcast' tab here after running refreshStatcast()
+  statcast:    101370808,
+  meta:        0,  // ← paste the GID for the '⏱️ Meta' tab here after running refreshAllData()
   yesterday:   0,  // ← paste the GID for the '📋 Yesterday' tab here after first refresh
 };
 
@@ -406,9 +410,51 @@ async function loadAll(){
     buildGames();
     renderTab(currentTab);
     fetchWeatherAll();
+    loadSyncStatus(); // separate, non-blocking — never delays the main dashboard
   }catch(e){
     setMain(`<div class="status-wrap"><div class="err"><strong>Could not load data.</strong><br>Make sure your sheet is shared as \"Anyone with the link can view.\"<br><small style="opacity:.7">${e.message}</small></div></div>`);
   }
+}
+
+/* ─────────────────────────────────────────────
+   SYNC STATUS — "Data last refreshed" pill
+   Reads the '⏱️ Meta' tab written by stampLastRefreshed_() in the
+   Apps Script. Failures here are silent (pill just stays at '—')
+   since this is a nice-to-have, not core dashboard functionality.
+───────────────────────────────────────────── */
+async function loadSyncStatus(){
+  const pill=document.getElementById('sync-pill');
+  const text=document.getElementById('sync-pill-text');
+  if(!GIDS.meta){ text.textContent='sync time not configured'; return; }
+  try{
+    const rows=await fetchCSV(GIDS.meta);
+    const meta=csvToObjects(rows);
+    const isoRow=meta.find(r=>r['Key']==='lastRefreshedISO');
+    const dispRow=meta.find(r=>r['Key']==='lastRefreshedDisplay');
+    if(!isoRow||!isoRow['Value']){ text.textContent='unknown'; return; }
+    const refreshedAt=new Date(isoRow['Value']);
+    if(isNaN(refreshedAt.getTime())){ text.textContent=dispRow?.['Value']||'unknown'; return; }
+    text.textContent='Updated '+relativeTime(refreshedAt);
+    pill.title='Data last refreshed: '+(dispRow?.['Value']||refreshedAt.toLocaleString());
+    // Flag as stale if the sheet hasn't refreshed in over 3 hours —
+    // the daily trigger runs once a day, so this mainly catches a
+    // broken/stuck Apps Script trigger rather than normal gaps.
+    const hoursSince=(Date.now()-refreshedAt.getTime())/36e5;
+    pill.classList.toggle('stale', hoursSince>3);
+  }catch(e){
+    text.textContent='sync status unavailable';
+  }
+}
+
+function relativeTime(d){
+  const secs=Math.floor((Date.now()-d.getTime())/1000);
+  if(secs<60) return 'just now';
+  const mins=Math.floor(secs/60);
+  if(mins<60) return mins+'m ago';
+  const hrs=Math.floor(mins/60);
+  if(hrs<24) return hrs+'h ago';
+  const days=Math.floor(hrs/24);
+  return days+'d ago';
 }
 
 function processSchedule(rows){
