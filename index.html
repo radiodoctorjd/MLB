@@ -211,6 +211,7 @@ const GIDS = {
   parkWeather: 866267891,
   teamStats:   1418505229,
   advanced:    1867140111,
+  statcast:    0,  // ← paste the GID for the '🎯 Team Statcast' tab here after running refreshStatcast()
   yesterday:   0,  // ← paste the GID for the '📋 Yesterday' tab here after first refresh
 };
 
@@ -386,10 +387,11 @@ async function loadAll(){
   setMain(`<div class="status-wrap"><span class="spinner"></span>Loading from Google Sheets…</div>`);
   try{
     const ystPromise=GIDS.yesterday?fetchCSV(GIDS.yesterday).catch(()=>[]):Promise.resolve([]);
-    const [sched,preds,totals,pitchers,bullpen,parkWx,teamStats,advanced,yst]=await Promise.all([
+    const statcastPromise=GIDS.statcast?fetchCSV(GIDS.statcast).catch(()=>[]):Promise.resolve([]);
+    const [sched,preds,totals,pitchers,bullpen,parkWx,teamStats,advanced,yst,statcast]=await Promise.all([
       fetchCSV(GIDS.schedule),fetchCSV(GIDS.predictions),fetchCSV(GIDS.teamTotals),
       fetchCSV(GIDS.pitchers),fetchCSV(GIDS.bullpen),fetchCSV(GIDS.parkWeather),
-      fetchCSV(GIDS.teamStats),fetchCSV(GIDS.advanced),ystPromise,
+      fetchCSV(GIDS.teamStats),fetchCSV(GIDS.advanced),ystPromise,statcastPromise,
     ]);
     DATA.schedule   = processSchedule(sched);
     DATA.predictions= csvToObjects(preds);
@@ -400,6 +402,7 @@ async function loadAll(){
     DATA.teamStats  = csvToObjects(teamStats);
     DATA.advanced   = processAdvanced(advanced);
     DATA.yesterday  = GIDS.yesterday ? csvToObjects(yst) : [];
+    DATA.statcast   = indexByAbbr(GIDS.statcast ? csvToObjects(statcast) : []);
     buildGames();
     renderTab(currentTab);
     fetchWeatherAll();
@@ -442,6 +445,16 @@ function processAdvanced(rows){
     if(section==='h2h' &&obj['Matchup']) res.h2h[obj['Matchup']]=obj;
   }
   return res;
+}
+
+/* Statcast tab has the same shape as Team Stats: an emoji title row,
+   then one header row, then 30 team rows. csvToObjects already skips
+   the title row via its emoji-prefix detection, so this just re-keys
+   the resulting objects by Abbr for O(1) lookup per game card. */
+function indexByAbbr(rows){
+  const out={};
+  rows.forEach(r=>{ if(r['Abbr']) out[r['Abbr']]=r; });
+  return out;
 }
 
 /* ─────────────────────────────────────────────
@@ -953,6 +966,42 @@ function openModal(idx,day){
       ${sr('OPS vs R',g.homeOpsVsR)} ${sr('OPS vs L',g.homeOpsVsL)}
     </div>
   </div>`;
+
+  // Team Statcast (Baseball Savant) — only render if the tab is wired up
+  const aSC = DATA.statcast?.[g.awayAbbr];
+  const hSC = DATA.statcast?.[g.homeAbbr];
+  if (aSC || hSC) {
+    const wobaDiffCls = v => {
+      const n = parseFloat(v);
+      if (isNaN(n)) return '';
+      return n > 0.015 ? 'c-high' : n < -0.015 ? 'c-low' : '';
+    };
+    h+=`<div class="m-hdr"><i class="ti ti-target"></i> Team Statcast (Hitting)</div>
+    <div class="two-col">
+      <div class="m-box"><div class="m-box-title">${sh(g.away)}</div>
+        ${sr('Barrel%',aSC?.['Barrel%']||'—')}
+        ${sr('Hard-Hit%',aSC?.['Hard-Hit%']||'—')}
+        ${sr('Avg Exit Velo',aSC?.['Avg EV']?aSC['Avg EV']+' mph':'—')}
+        ${sr('Max Exit Velo',aSC?.['Max EV']?aSC['Max EV']+' mph':'—')}
+        ${sr('xwOBA',aSC?.['xwOBA']||'—')}
+        ${sr('wOBA',aSC?.['wOBA']||'—')}
+        ${sr('wOBA vs xwOBA',`<span class="${wobaDiffCls(aSC?.['wOBA-xwOBA'])}">${aSC?.['wOBA-xwOBA']||'—'}</span>`)}
+        ${sr('xBA / BA',(aSC?.['xBA']||'—')+' / '+(aSC?.['BA']||'—'))}
+        ${sr('xSLG / SLG',(aSC?.['xSLG']||'—')+' / '+(aSC?.['SLG']||'—'))}
+      </div>
+      <div class="m-box"><div class="m-box-title">${sh(g.home)}</div>
+        ${sr('Barrel%',hSC?.['Barrel%']||'—')}
+        ${sr('Hard-Hit%',hSC?.['Hard-Hit%']||'—')}
+        ${sr('Avg Exit Velo',hSC?.['Avg EV']?hSC['Avg EV']+' mph':'—')}
+        ${sr('Max Exit Velo',hSC?.['Max EV']?hSC['Max EV']+' mph':'—')}
+        ${sr('xwOBA',hSC?.['xwOBA']||'—')}
+        ${sr('wOBA',hSC?.['wOBA']||'—')}
+        ${sr('wOBA vs xwOBA',`<span class="${wobaDiffCls(hSC?.['wOBA-xwOBA'])}">${hSC?.['wOBA-xwOBA']||'—'}</span>`)}
+        ${sr('xBA / BA',(hSC?.['xBA']||'—')+' / '+(hSC?.['BA']||'—'))}
+        ${sr('xSLG / SLG',(hSC?.['xSLG']||'—')+' / '+(hSC?.['SLG']||'—'))}
+      </div>
+    </div>`;
+  }
 
   // SP
   // Split ERAs shown for reference only — not used in calculation
