@@ -215,8 +215,8 @@ const GIDS = {
   teamStats:   1418505229,
   advanced:    1867140111,
   statcast:    101370808,
-  meta:        1161579785,  // ← paste the GID for the '⏱️ Meta' tab here after running refreshAllData()
-  yesterday:   51773716,  // ← paste the GID for the '📋 Yesterday' tab here after first refresh
+  meta:        0,  // ← paste the GID for the '⏱️ Meta' tab here after running refreshAllData()
+  yesterday:   0,  // ← paste the GID for the '📋 Yesterday' tab here after first refresh
 };
 
 /* ─────────────────────────────────────────────
@@ -1027,8 +1027,6 @@ function openModal(idx,day){
       <div class="m-box"><div class="m-box-title">${sh(g.away)}</div>
         ${sr('Barrel%',aSC?.['Barrel%']||'—')}
         ${sr('Hard-Hit%',aSC?.['Hard-Hit%']||'—')}
-        ${sr('Avg Exit Velo',aSC?.['Avg EV']?aSC['Avg EV']+' mph':'—')}
-        ${sr('Max Exit Velo',aSC?.['Max EV']?aSC['Max EV']+' mph':'—')}
         ${sr('xwOBA',aSC?.['xwOBA']||'—')}
         ${sr('wOBA',aSC?.['wOBA']||'—')}
         ${sr('wOBA vs xwOBA',`<span class="${wobaDiffCls(aSC?.['wOBA-xwOBA'])}">${aSC?.['wOBA-xwOBA']||'—'}</span>`)}
@@ -1038,8 +1036,6 @@ function openModal(idx,day){
       <div class="m-box"><div class="m-box-title">${sh(g.home)}</div>
         ${sr('Barrel%',hSC?.['Barrel%']||'—')}
         ${sr('Hard-Hit%',hSC?.['Hard-Hit%']||'—')}
-        ${sr('Avg Exit Velo',hSC?.['Avg EV']?hSC['Avg EV']+' mph':'—')}
-        ${sr('Max Exit Velo',hSC?.['Max EV']?hSC['Max EV']+' mph':'—')}
         ${sr('xwOBA',hSC?.['xwOBA']||'—')}
         ${sr('wOBA',hSC?.['wOBA']||'—')}
         ${sr('wOBA vs xwOBA',`<span class="${wobaDiffCls(hSC?.['wOBA-xwOBA'])}">${hSC?.['wOBA-xwOBA']||'—'}</span>`)}
