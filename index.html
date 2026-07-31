@@ -99,6 +99,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg3);color:var(--text);mi
 .tot-lbl{font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
 .tot-val{font-size:13px;font-weight:600}
 .tot-sub{font-size:9px;margin-top:1px}
+/* projected odds */
+.odds-box{background:var(--bg2);border-radius:var(--rs);padding:7px 10px;margin-bottom:7px}
+.odds-box-lbl{font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.odds-tag{font-size:8px;text-transform:none;letter-spacing:0;color:var(--text3);background:var(--bg3);border-radius:8px;padding:1px 6px;font-weight:500}
+.odds-row{display:flex;align-items:center;justify-content:space-between;gap:4px}
+.odds-side{flex:1;min-width:0}.odds-side.home{text-align:right}
+.odds-tname{font-size:9px;color:var(--text2);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.odds-ml{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.odds-ml.ml-fav{color:var(--green)}.odds-ml.ml-dog{color:var(--text)}
+.odds-mid{flex-shrink:0;text-align:center;padding:0 8px}
+.odds-line{font-size:11px;font-weight:600;color:var(--text2)}
 /* run totals */
 .run-box{background:var(--bg2);border-radius:var(--rs);padding:7px 10px;margin-bottom:7px}
 .run-box-lbl{font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
@@ -144,7 +155,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg3);color:var(--text);mi
 .prob-pct{font-size:12px;font-weight:600;min-width:34px}
 .prob-teams{display:flex;justify-content:space-between;font-size:10px;margin-top:5px;color:var(--text2)}
 /* run detail */
-.run-detail{background:var(--bg2);border-radius:var(--rs);padding:10px 13px;margin-bottom:10px}
+.run-detail,.odds-detail-box{background:var(--bg2);border-radius:var(--rs);padding:10px 13px;margin-bottom:10px}
+.rdc-v.ml-fav{color:var(--green)}.rdc-v.ml-dog{color:var(--text)}
 .rd-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:8px}
 .rd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;margin-bottom:8px}
 .rdc .rdc-l{font-size:9px;color:var(--text2);margin-bottom:2px}
@@ -583,6 +595,11 @@ function buildGames(){
       awayOpsVsL:  col(aTS,'OPS vs L','OPSvsL')||'—',
       homeOpsVsR:  col(hTS,'OPS vs R','OPSvsR')||'—',
       homeOpsVsL:  col(hTS,'OPS vs L','OPSvsL')||'—',
+      // Model-projected odds (fair-value, NOT live sportsbook lines)
+      awayML:  col(pred,'Away ML (Proj)','AwayMLProj','Away ML')||'—',
+      homeML:  col(pred,'Home ML (Proj)','HomeMLProj','Home ML')||'—',
+      f5ProjOU: col(pred,'F5 O/U','F5OU')||'—',
+      fgProjOU: col(pred,'FG O/U','FGOU')||'—',
     };
     if(entry._day==='today')     todayGames.push(g);
     else if(entry._day==='tomorrow') tmrwGames.push(g);
@@ -794,6 +811,10 @@ function trcls(t){
   if(t.includes('Cold')||t.includes('❄')) return 't-cold';
   return 't-neut';
 }
+function mlcls(ml){
+  if(!ml||ml==='—') return '';
+  return ml.toString().startsWith('-')?'ml-fav':'ml-dog';
+}
 function gcls(g){
   if(!g) return '';
   const l=g.trim().toUpperCase().replace(/[^A-F]/g,'')[0];
@@ -840,6 +861,14 @@ function buildCard(g,idx,day){
       <div class="totals-2">
         <div class="tot"><div class="tot-lbl">F5 Total</div><div class="tot-val">${g.f5Total}</div><div class="tot-sub ${ccls(g.f5Conf)}">${clbl(g.f5Conf)}</div></div>
         <div class="tot"><div class="tot-lbl">Game Total</div><div class="tot-val">${g.fgTotal}</div><div class="tot-sub ${ccls(g.fgConf)}">${clbl(g.fgConf)}</div></div>
+      </div>
+      <div class="odds-box">
+        <div class="odds-box-lbl">Projected Odds <span class="odds-tag">model-derived</span></div>
+        <div class="odds-row">
+          <div class="odds-side"><div class="odds-tname">${sh(g.away)}</div><div class="odds-ml ${mlcls(g.awayML)}">${g.awayML}</div></div>
+          <div class="odds-mid"><div class="odds-tname">Total</div><div class="odds-line">${g.fgProjOU!=='—'?g.fgProjOU:g.fgTotal}</div></div>
+          <div class="odds-side home"><div class="odds-tname">${sh(g.home)}</div><div class="odds-ml ${mlcls(g.homeML)}">${g.homeML}</div></div>
+        </div>
       </div>
       <div class="run-box">
         <div class="run-box-lbl">Projected Runs</div>
@@ -978,6 +1007,19 @@ function openModal(idx,day){
     <div class="rd-totrow">
       <div class="rd-totcell"><div class="rdtc-l">F5 Total</div><div class="rdtc-v">${g.f5Total} <span style="font-size:10px" class="${ccls(g.f5Conf)}">${clbl(g.f5Conf)}</span></div></div>
       <div class="rd-totcell"><div class="rdtc-l">Game Total</div><div class="rdtc-v">${g.fgTotal} <span style="font-size:10px" class="${ccls(g.fgConf)}">${clbl(g.fgConf)}</span></div></div>
+    </div>
+  </div>`;
+
+  // Projected odds (model-derived fair value — not live sportsbook lines)
+  h+=`<div class="odds-detail-box">
+    <div class="rd-lbl">Projected Odds <span style="font-size:10px;font-weight:400;color:var(--text3)">· model fair value, not a live sportsbook line</span></div>
+    <div class="rd-grid" style="grid-template-columns:1fr 1fr">
+      <div class="rdc"><div class="rdc-l">${sh(g.away)} ML</div><div class="rdc-v ${mlcls(g.awayML)}">${g.awayML}</div></div>
+      <div class="rdc"><div class="rdc-l">${sh(g.home)} ML</div><div class="rdc-v ${mlcls(g.homeML)}">${g.homeML}</div></div>
+    </div>
+    <div class="rd-totrow">
+      <div class="rd-totcell"><div class="rdtc-l">F5 Line</div><div class="rdtc-v" style="font-size:12px">${g.f5ProjOU!=='—'?g.f5ProjOU:g.f5Total}</div></div>
+      <div class="rd-totcell"><div class="rdtc-l">Game Line</div><div class="rdtc-v" style="font-size:12px">${g.fgProjOU!=='—'?g.fgProjOU:g.fgTotal}</div></div>
     </div>
   </div>`;
 
