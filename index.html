@@ -83,7 +83,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg3);color:var(--text);mi
 .pitcher{flex:1;min-width:0}.pitcher.home-p{text-align:right}
 .sp-name{font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sp-stats{font-size:10px;color:var(--text2);margin-top:1px}
-.pick-changed{font-size:9px;background:#fff3cd;color:#856404;border:1px solid #ffc107;border-radius:4px;padding:1px 5px;margin-left:4px;white-space:nowrap}
+.pick-changed{display:block;font-size:9px;background:#fff3cd;color:#856404;border:1px solid #ffc107;border-radius:4px;padding:1px 5px;margin:3px auto 0;white-space:nowrap;width:fit-content}
 .divider{height:1px;background:var(--border);margin:9px 0}
 /* winners */
 .winners{display:flex;gap:5px;margin-bottom:7px}
@@ -850,11 +850,13 @@ function buildCard(g,idx,day){
       <div class="divider"></div>
       <div class="winners">
         <div class="wb wb-f5"><div class="wb-lbl">F5 Winner</div>
-          <div class="wb-team">${sh(g.f5Pick)}${g.ystF5Pick&&g.ystF5Pick!==g.f5Pick?`<span class="pick-changed">was ${sh(g.ystF5Pick)}</span>`:''}</div>
+          <div class="wb-team">${sh(g.f5Pick)}</div>
+          ${g.ystF5Pick&&g.ystF5Pick!==g.f5Pick?`<span class="pick-changed">was ${sh(g.ystF5Pick)}</span>`:''}
           ${g.awayF5pct&&g.homeF5pct?`<div style="font-size:9px;color:var(--text2);margin-top:2px">${g.f5Pick===g.away?g.awayF5pct:g.homeF5pct}% win prob</div>`:''}
         </div>
         <div class="wb wb-fg"><div class="wb-lbl">Full Game</div>
-          <div class="wb-team">${sh(g.fgPick)}${g.ystFgPick&&g.ystFgPick!==g.fgPick?`<span class="pick-changed">was ${sh(g.ystFgPick)}</span>`:''}</div>
+          <div class="wb-team">${sh(g.fgPick)}</div>
+          ${g.ystFgPick&&g.ystFgPick!==g.fgPick?`<span class="pick-changed">was ${sh(g.ystFgPick)}</span>`:''}
           ${g.awayFGpct&&g.homeFGpct?`<div style="font-size:9px;color:var(--text2);margin-top:2px">${g.fgPick===g.away?g.awayFGpct:g.homeFGpct}% win prob</div>`:''}
         </div>
       </div>
