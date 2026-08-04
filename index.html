@@ -399,6 +399,60 @@ function parseBullpenCSV(rows){
   return csvToObjects(rows);
 }
 
+/* ─────────────────────────────────────────────
+   YESTERDAY SNAPSHOT PARSER
+   The 📋 Yesterday tab is a straight copy of whatever the 🎰 Game
+   Predictions sheet looked like on the last refresh — which means it
+   still contains BOTH a "TODAY" section and a "TOMORROW" section from
+   that prior run. csvToObjects() throws section-header rows away and
+   flattens everything else into one array, so by the time rowMatch()
+   runs it can no longer tell whether a given row was yesterday's TODAY
+   game or yesterday's TOMORROW game for the same matchup — it just
+   grabs whichever row mentions the two team names first.
+   That's the root cause of the "changed" flag bleeding onto tomorrow's
+   card: tomorrow's fresh prediction was being compared against
+   whatever stale row matched by name only, not against the one row
+   that's actually the correct one-day-old comparison point.
+   This parser keeps the section (today/tomorrow) AND the literal date
+   string attached to each row, so callers can filter for the exact
+   comparison they mean instead of matching on team names alone. */
+function parseYesterdayCSV(rows){
+  if(!rows||!rows.length) return [];
+  let headers=null, section=null, sectionDate=null;
+  const out=[];
+  for(const row of rows){
+    const f=(row[0]||'').toString();
+    if(f.includes('TODAY')){ section='today'; sectionDate=f; headers=null; continue; }
+    if(f.includes('TOMORROW')){ section='tomorrow'; sectionDate=f; headers=null; continue; }
+    if(/[\u{1F300}-\u{1FFFF}]/u.test(f)) continue; // emoji title row
+    const nonEmpty=row.filter(c=>c&&c.toString().trim());
+    if(nonEmpty.length<2) continue;
+    if(!headers){
+      headers=row.map(h=>h.replace(/\n/g,' ').replace(/[^\w\s/%().⭐🔥❄️➡📈📉-]/g,'').trim());
+      continue;
+    }
+    if(!section) continue; // rows before we've seen a TODAY/TOMORROW marker
+    const o={__section:section,__sectionDate:sectionDate};
+    headers.forEach((h,i)=>{o[h]=(row[i]||'').toString().trim();});
+    out.push(o);
+  }
+  return out;
+}
+
+/* Date-aware replacement for team-name-only matching against the
+   Yesterday snapshot. wantYstSection is which section of YESTERDAY's
+   snapshot is the correct one-day-old comparison for the game we're
+   currently rendering:
+     - rendering TODAY's card    -> compare against yesterday's TODAY section
+     - rendering TOMORROW's card -> compare against yesterday's TOMORROW section
+   Both represent "what did the model say about this exact game the
+   last time we looked," one refresh apart — rather than any row that
+   happens to mention the same two teams. */
+function ystRowMatch(row,away,home,wantYstSection){
+  if(row.__section!==wantYstSection) return false;
+  return rowMatch(row,away,home);
+}
+
 async function loadAll(){
   setMain(`<div class="status-wrap"><span class="spinner"></span>Loading from Google Sheets…</div>`);
   try{
@@ -417,7 +471,7 @@ async function loadAll(){
     DATA.parkWx     = csvToObjects(parkWx);
     DATA.teamStats  = csvToObjects(teamStats);
     DATA.advanced   = processAdvanced(advanced);
-    DATA.yesterday  = GIDS.yesterday ? csvToObjects(yst) : [];
+    DATA.yesterday  = GIDS.yesterday ? parseYesterdayCSV(yst) : [];
     DATA.statcast   = indexByAbbr(GIDS.statcast ? csvToObjects(statcast) : []);
     buildGames();
     renderTab(currentTab);
@@ -527,9 +581,23 @@ function buildGames(){
     if(!awayTeam||!homeTeam) continue;
     const awayAbbr=abbr(awayTeam), homeAbbr=abbr(homeTeam);
 
+    // Which section of TODAY's board this game belongs to — used to pick
+    // the matching section out of yesterday's snapshot (see ystRowMatch).
+    // processSchedule() already tags each entry via its own TODAY/TOMORROW
+    // section header (entry._day), which is more reliable than re-deriving
+    // it from the row's Day-label text.
+    const gameSection = entry._day==='tomorrow' ? 'tomorrow' : 'today';
+
     const pred = DATA.predictions.find(p=>rowMatch(p,awayTeam,homeTeam));
     const tot  = DATA.totals.find(t=>rowMatch(t,awayTeam,homeTeam));
-    const ystPred = DATA.yesterday?.length ? DATA.yesterday.find(p=>rowMatch(p,awayTeam,homeTeam)) : null;
+    // IMPORTANT: only compare against yesterday's row from the SAME section
+    // (today vs today, tomorrow vs tomorrow). Matching on team names alone
+    // let tomorrow's fresh prediction get compared against an unrelated
+    // stale row, which caused the "changed" flag to falsely show up on
+    // tomorrow's card. See ystRowMatch / parseYesterdayCSV above.
+    const ystPred = DATA.yesterday?.length
+      ? DATA.yesterday.find(p=>ystRowMatch(p,awayTeam,homeTeam,gameSection))
+      : null;
     const aTS  = DATA.teamStats.find(t=>t['Team']===awayTeam||t['Abbr']===awayAbbr)||{};
     const hTS  = DATA.teamStats.find(t=>t['Team']===homeTeam||t['Abbr']===homeAbbr)||{};
     const pk   = DATA.parkWx.find(p=>p['Team']===homeTeam)||{};
