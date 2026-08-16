@@ -1,2765 +1,1242 @@
+<!-- deploy-refresh: xERA build fix -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Sports Scores Dashboard</title>
-<link rel="icon" type="image/x-icon" href="images/favicon_4dot.ico">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<title>⚾ MLB Predictions Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <style>
-body { font-family: Arial, sans-serif; margin:0; background:#0f172a; color:white; }
-header { padding:15px; text-align:center; font-size:24px; font-weight:bold; background:#020617; letter-spacing:0.2px; }
-
-.tabs { display:flex; overflow-x:auto; background:#1e293b; position:sticky; top:0; z-index:1000; }
-.tab { padding:12px 18px; cursor:pointer; display:flex; align-items:center; white-space:nowrap; }
-.tab img { width:20px; height:20px; object-fit:contain; margin-right:6px; vertical-align:middle; flex:0 0 auto; }
-.tab.active { border-bottom:3px solid #38bdf8; background:#0f172a; }
-
-.section-title { text-align:center; font-weight:bold; margin:10px 0; }
-
-.content { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; padding:20px; }
-@media(max-width:1024px){ .content { grid-template-columns:repeat(2,1fr); } }
-
-.environment-line {
-    margin-top:2px;
-    color:#334155;
+:root {
+  --bg:#fff;--bg2:#f7f7f5;--bg3:#f0efec;
+  --text:#1a1a18;--text2:#6b6b67;--text3:#a0a09a;
+  --border:rgba(0,0,0,.1);--border2:rgba(0,0,0,.18);
+  --green:#1a7f3c;--green-bg:#eaf3de;--green-bd:#c0dd97;
+  --blue:#185fa5;--blue-bg:#e6f1fb;--blue-bd:#b5d4f4;
+  --amber:#ba7517;--amber-bg:#faeeda;
+  --red:#a32d2d;--red-bg:#fcebeb;
+  --r:10px;--rs:7px;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
 }
-
-.environment-pill {
-    display:inline-block;
-    font-size:12px;
-    font-weight:700;
-    padding:4px 8px;
-    border-radius:999px;
-    background:rgba(15,23,42,0.06);
-    color:#0f172a;
-    margin-top:2px;
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#1c1c1a;--bg2:#242422;--bg3:#2c2c2a;
+    --text:#f0efe8;--text2:#a0a09a;--text3:#6e6e68;
+    --border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.18);
+    --green-bg:#162b1c;--green-bd:#2a5c35;
+    --blue-bg:#122038;--blue-bd:#1e4475;
+    --amber-bg:#2a1f0a;--red-bg:#2a1212;
+    --shadow:0 1px 3px rgba(0,0,0,.3);
+  }
 }
-
-.environment-pill.outdoor {
-    background:rgba(14,165,233,0.10);
-    color:#0369a1;
-}
-
-.environment-pill.retractable {
-    background:rgba(245,158,11,0.14);
-    color:#b45309;
-}
-
-.environment-pill.fixed {
-    background:rgba(99,102,241,0.12);
-    color:#4338ca;
-}
-
-.environment-loading {
-    color:#64748b;
-}
-
-@media(max-width:800px){ .content { grid-template-columns:1fr; } }
-
-.game { background:white; color:black; padding:14px; border-radius:14px; box-shadow:0 8px 24px rgba(2,6,23,0.12); }
-
-.team-line { display:flex; align-items:center; gap:8px; font-weight:800; font-size:16px; line-height:1.2; }
-.team-line img { width:26px; height:26px; object-fit:contain; flex:0 0 auto; }
-
-.matchup-text { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
-.matchup-at { opacity:0.65; font-weight:700; }
-
-.details-toggle { width:100%; margin-top:10px; border:1px solid #dbe4ee; background:#f8fafc; color:#0f172a; border-radius:10px; padding:8px 10px; font-size:12px; font-weight:700; cursor:pointer; text-align:left; }
-.details-toggle:hover { background:#f1f5f9; }
-.details-panel { margin-top:8px; padding:10px; border-radius:10px; background:#f8fafc; border:1px solid #e2e8f0; display:none; }
-.details-panel.open { display:block; }
-.details-grid { display:grid; grid-template-columns:1fr; gap:8px; font-size:12px; color:#334155; }
-.details-label { font-weight:700; color:#0f172a; margin-right:4px; }
-.records-matchup { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.records-team-card {
-    text-align:center;
-    background:#ffffff;
-    border:1px solid #e2e8f0;
-    border-radius:10px;
-    padding:10px;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    text-align:center;
-}
-
-.records-team-card .form-text {
-    display:block;
-    text-align:center;
-}
-
-.records-team-card .form-pill {
-    display:inline-flex;
-    width:22px;
-    height:22px;
-    line-height:22px;
-    text-align:center;
-    font-size:11px;
-    font-weight:800;
-    border-radius:50%;
-    margin:2px;
-    color:white;
-    justify-content:center;
-    align-items:center;
-    vertical-align:middle;
-}
-.records-team-name { font-size:14px; font-weight:800; color:#0f172a; letter-spacing:0.02em; }
-.records-overall { margin-top:4px; font-size:14px; font-weight:700; color:#111827; }
-.records-split { margin-top:6px; display:inline-block; font-size:12px; font-weight:700; color:#1d4ed8; background:rgba(29,78,216,0.08); padding:3px 8px; border-radius:999px; }
-.form-lines { display:flex; flex-direction:column; align-items:center; gap:6px; margin-top:6px; }
-.form-line { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:4px; font-size:11px; color:#475569; }
-.form-line-label { font-weight:700; color:#0f172a; min-width:48px; text-align:right; }
-.form-pill { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:999px; font-size:11px; font-weight:800; color:#fff; }
-.form-pill.win { background:#16a34a; box-shadow:0 0 6px rgba(22,163,74,0.25); }
-.form-pill.loss { background:#dc2626; box-shadow:0 0 6px rgba(220,38,38,0.2); }
-.form-pill.neutral { background:#64748b; }
-.form-empty { color:#94a3b8; font-weight:700; }
-.leaders-matchup { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:2px; }
-.leaders-team-card { background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; padding:8px; }
-.leaders-team-header { font-weight:700; color:#0f172a; margin-bottom:6px; }
-.leaders-section-title { font-size:11px; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:0.04em; margin:6px 0 4px; }
-.leader-line { margin:2px 0; }
-@media(max-width:640px){ .leaders-matchup, .records-matchup { grid-template-columns:1fr; } }
-
-.spacer { height:6px; }
-.divider { border-top:1px solid #ddd; margin:6px 0; }
-
-.status { font-size:13px; color:#334155; line-height:1.35; }
-.status strong { color:#111827; }
-.status small { font-size:12px; }
-.status-line {
-    display:block;
-    margin-top:2px;
-}
-.status-line:first-child {
-    margin-top:0;
-}
-
-.pitchers {
-    font-size:12px;
-    color:#475569;
-    margin-top:7px;
-    margin-bottom:12px;
-    line-height:1.35;
-}
-.goalie-line {
-    display:flex;
-    align-items:center;
-    gap:6px;
-    flex-wrap:wrap;
-    margin:2px 0;
-}
-.goalie-line .goalie-text {
-    display:inline;
-}
-.goalie-line.goalie-advantage .goalie-text {
-    font-weight:normal;
-    color:inherit;
-}
-.status-badge {
-    display:inline-block;
-    font-size:10px;
-    font-weight:800;
-    padding:2px 7px;
-    border-radius:999px;
-    letter-spacing:0.02em;
-    line-height:1.2;
-}
-.status-badge.confirmed {
-    background:rgba(22,163,74,0.14);
-    color:#15803d;
-}
-.status-badge.expected,
-.status-badge.projected,
-.status-badge.likely {
-    background:rgba(245,158,11,0.16);
-    color:#b45309;
-}
-.status-badge.unconfirmed {
-    background:rgba(100,116,139,0.16);
-    color:#475569;
-}
-.goalie-edge {
-    display:inline-block;
-    font-size:10px;
-    font-weight:800;
-    padding:2px 7px;
-    border-radius:999px;
-    background:rgba(59,130,246,0.12);
-    color:#1d4ed8;
-}
-
-.score-lines {
-    margin-top:4px;
-    margin-bottom:4px;
-}
-.score-lines .score-value { font-weight:800; }
-.score-lines .top-team-name, .score-lines .top-team-score { font-size:16px; }
-.score-lines .bottom-team-name, .score-lines .bottom-team-score { font-size:14px; }
-
-@keyframes pulse {
-    0% { transform:scale(1); }
-    50% { transform:scale(1.2); }
-    100% { transform:scale(1); }
-}
-.live-badge {
-    background:red;
-    color:white;
-    font-size:11px;
-    padding:2px 6px;
-    border-radius:10px;
-    margin-right:6px;
-    animation:pulse 1s infinite;
-}
-
-.live-tab-dot {
-    display:inline-block;
-    width:9px;
-    height:9px;
-    border-radius:50%;
-    background:red;
-    margin-right:6px;
-    animation:pulse 1s infinite;
-}
-
-.league-tag {
-    display:inline-block;
-    font-size:10px;
-    font-weight:800;
-    letter-spacing:0.04em;
-    padding:2px 7px;
-    border-radius:999px;
-    background:rgba(56,189,248,0.16);
-    color:#0369a1;
-    margin-right:6px;
-    vertical-align:middle;
-}
-
-.scoreboard { margin-top:8px; font-size:12px; overflow-x:auto; border-radius:8px; }
-.scoreboard table { width:100%; border-collapse:collapse; }
-.scoreboard th, .scoreboard td { padding:4px 6px; text-align:center; }
-.scoreboard th { border-bottom:1px solid #ccc; }
-.scoreboard td { border-bottom:1px solid #eee; }
-.team-cell { text-align:left !important; font-weight:bold; white-space:nowrap; }
-.total-cell { font-weight:bold; }
-
-@keyframes numberFlash {
-    0% { transform:scale(1); opacity:1; }
-    35% { transform:scale(1.22); opacity:0.75; }
-    100% { transform:scale(1); opacity:1; }
-}
-.cell-value {
-    display:inline-block;
-}
-.number-changed {
-    animation:numberFlash 0.45s ease;
-}
-
-/* MLB count dots */
-.count-wrap {
-    display:inline-flex;
-    align-items:center;
-    gap:10px;
-    flex-wrap:wrap;
-}
-.count-label {
-    display:inline-flex;
-    align-items:center;
-    gap:4px;
-}
-.count-group {
-    display:inline-flex;
-    align-items:center;
-    gap:3px;
-    min-width:18px;
-}
-.dot {
-    width:8px;
-    height:8px;
-    border-radius:50%;
-    display:inline-block;
-    border:1px solid rgba(0,0,0,0.18);
-}
-.dot.ball { background:#facc15; }
-.dot.strike { background:#111827; }
-.dot.out { background:#dc2626; }
-.count-empty {
-    display:inline-block;
-    width:8px;
-    height:8px;
-    border-radius:50%;
-    background:#e5e7eb;
-    border:1px solid rgba(0,0,0,0.08);
-}
-
-/* Base runner diamond - tightened */
-.basepath-wrap {
-    display:inline-flex;
-    align-items:center;
-    gap:4px;
-    flex-wrap:wrap;
-}
-.baseball-diamond {
-    position: relative;
-    width: 28px;
-    height: 20px;
-    margin: 2px 4px;
-}
-.base {
-    position: absolute;
-    width: 8px;
-    height: 8px;
-    background: #e5e7eb;
-    border: 1px solid rgba(0,0,0,0.12);
-    box-sizing: border-box;
-    border-radius: 1px;
-    transform: rotate(45deg);
-}
-.base.on {
-    background: #22c55e;
-    box-shadow: 0 0 5px rgba(34,197,94,0.4);
-}
-.base.second { top: 0; left: 50%; transform: translateX(-50%) rotate(45deg); }
-.base.third  { bottom: 0; left: 2px; }
-.base.first  { bottom: 0; right: 2px; }
-
-.watch-line { margin-top:8px; color:#475569; }
-
-.series-line { margin-top:6px; }
-.series-badge {
-    display:inline-block;
-    font-size:12px;
-    font-weight:800;
-    padding:4px 10px;
-    border-radius:999px;
-    background:rgba(59,130,246,0.10);
-    color:#1d4ed8;
-    letter-spacing:0.01em;
-}
-.series-badge.series-won {
-    background:rgba(22,163,74,0.12);
-    color:#15803d;
-}
-
-
-.environment-line {
-    margin-top:2px;
-    color:#334155;
-}
-
-.environment-pill {
-    display:inline-block;
-    font-size:12px;
-    font-weight:700;
-    padding:4px 8px;
-    border-radius:999px;
-    background:rgba(15,23,42,0.06);
-    color:#0f172a;
-    margin-top:2px;
-}
-
-.environment-pill.outdoor {
-    background:rgba(14,165,233,0.10);
-    color:#0369a1;
-}
-
-.environment-pill.retractable {
-    background:rgba(245,158,11,0.14);
-    color:#b45309;
-}
-
-.environment-pill.fixed {
-    background:rgba(99,102,241,0.12);
-    color:#4338ca;
-}
-
-.environment-loading {
-    color:#64748b;
-}
-
-@media(max-width:800px){
-    .game { padding:12px; border-radius:12px; }
-    .team-line { font-size:15px; }
-    .team-line img { width:22px; }
-    .score-lines .top-team-name, .score-lines .top-team-score { font-size:15px; }
-    .score-lines .bottom-team-name, .score-lines .bottom-team-score { font-size:13px; }
-    .scoreboard th, .scoreboard td { padding:3px 4px; }
-    .pitchers, .status, .details-grid { font-size:12px; }
-}
-
-.form-text {
-    font-weight:800;
-    margin-bottom:6px;
-}
-
-.form-split {
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:4px;
-}
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:4px;
-}
-
-.form-split-label {
-    font-size:11px;
-    font-weight:700;
-    color:#64748b;
-}
-
-.form-pill-row {
-    display:flex;
-    flex-direction:row;
-    justify-content:center;
-    align-items:center;
-    flex-wrap:nowrap;
-    gap:4px;
-}
-
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg3);color:var(--text);min-height:100vh}
+/* HEADER */
+.hdr{background:var(--bg);border-bottom:1px solid var(--border);padding:13px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:50}
+.logo{font-size:18px;font-weight:600;display:flex;align-items:center;gap:8px}
+.logo-icon{font-size:22px}
+.hdr-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.date-pill{font-size:12px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;color:var(--text2)}
+.sync-pill{font-size:11px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;color:var(--text3);display:flex;align-items:center;gap:5px;white-space:nowrap}
+.sync-pill.stale{color:var(--amber);border-color:var(--amber-bg);background:var(--amber-bg)}
+.refresh-btn{display:flex;align-items:center;gap:5px;font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid var(--border2);background:var(--bg);color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .15s}
+.refresh-btn:hover{background:var(--bg2)}
+/* TABS */
+.tabs{background:var(--bg);border-bottom:1px solid var(--border);padding:0 20px;display:flex;gap:0;overflow-x:auto}
+.tab{padding:12px 18px;font-size:13px;font-weight:500;color:var(--text2);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:color .15s,border-color .15s}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.tab:hover:not(.active){color:var(--text)}
+/* MAIN */
+.main{padding:20px;max-width:1400px;margin:0 auto}
+/* STATUS */
+.status-wrap{text-align:center;padding:60px 20px;color:var(--text2);font-size:14px}
+.spinner{width:22px;height:22px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.err{color:var(--red);background:var(--red-bg);border-radius:var(--rs);padding:14px 18px;font-size:13px;line-height:1.6}
+/* GRID */
+.games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(305px,1fr));gap:14px}
+/* CARD */
+.card{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:pointer;box-shadow:var(--shadow);transition:transform .12s,box-shadow .12s,border-color .12s}
+.card:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,.1);border-color:var(--border2)}
+.card.elite   {border-left:3px solid var(--green)}
+.card.strong  {border-left:3px solid var(--blue)}
+.card.moderate{border-left:3px solid var(--amber)}
+.card-top{background:var(--bg2);padding:8px 13px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+.card-time{font-size:11px;color:var(--text2);font-weight:500;display:flex;align-items:center;gap:4px}
+.rb{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;white-space:nowrap}
+.rb-elite   {background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)}
+.rb-strong  {background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-bd)}
+.rb-moderate{background:var(--amber-bg);color:var(--amber)}
+.rb-lean    {background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+.card-body{padding:12px 13px}
+/* matchup */
+.matchup{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+.team{flex:1;min-width:0}.team.home{text-align:right}
+.team-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.team-rec{font-size:10px;color:var(--text2);margin-top:1px}
+.at-sep{font-size:11px;color:var(--text3);margin:0 7px;flex-shrink:0}
+/* pitchers */
+.pitchers{display:flex;justify-content:space-between;gap:6px;margin-bottom:9px}
+.pitcher{flex:1;min-width:0}.pitcher.home-p{text-align:right}
+.sp-name{font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sp-stats{font-size:10px;color:var(--text2);margin-top:1px}
+.pick-changed{display:block;font-size:9px;background:#fff3cd;color:#856404;border:1px solid #ffc107;border-radius:4px;padding:1px 5px;margin:3px auto 0;white-space:nowrap;width:fit-content}
+.divider{height:1px;background:var(--border);margin:9px 0}
+/* winners */
+.winners{display:flex;gap:5px;margin-bottom:7px}
+.wb{flex:1;border-radius:var(--rs);padding:6px 8px;text-align:center}
+.wb-f5{background:var(--blue-bg);border:1px solid var(--blue-bd)}
+.wb-fg{background:var(--green-bg);border:1px solid var(--green-bd)}
+.wb-lbl{font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+.wb-team{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wb-f5 .wb-team{color:var(--blue)}.wb-fg .wb-team{color:var(--green)}
+/* totals */
+.totals-2{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:7px}
+.tot{background:var(--bg2);border-radius:var(--rs);padding:6px 8px;text-align:center}
+.tot-lbl{font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+.tot-val{font-size:13px;font-weight:600}
+.tot-sub{font-size:9px;margin-top:1px}
+/* projected odds */
+.odds-box{background:var(--bg2);border-radius:var(--rs);padding:7px 10px;margin-bottom:7px}
+.odds-box-lbl{font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.odds-tag{font-size:8px;text-transform:none;letter-spacing:0;color:var(--text3);background:var(--bg3);border-radius:8px;padding:1px 6px;font-weight:500}
+.odds-row{display:flex;align-items:center;justify-content:space-between;gap:4px}
+.odds-side{flex:1;min-width:0}.odds-side.home{text-align:right}
+.odds-tname{font-size:9px;color:var(--text2);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.odds-ml{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.odds-ml.ml-fav{color:var(--green)}.odds-ml.ml-dog{color:var(--text)}
+.odds-mid{flex-shrink:0;text-align:center;padding:0 8px}
+.odds-line{font-size:11px;font-weight:600;color:var(--text2)}
+/* run totals */
+.run-box{background:var(--bg2);border-radius:var(--rs);padding:7px 10px;margin-bottom:7px}
+.run-box-lbl{font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+.run-row{display:flex;justify-content:space-between}
+.run-side{}.run-side.home{text-align:right}
+.run-tname{font-size:9px;color:var(--text2);margin-bottom:2px}
+.run-nums{font-size:11px;font-weight:600}
+.run-nums.away{color:var(--blue)}.run-nums.home{color:var(--green)}
+/* weather */
+.wx-line{font-size:10px;color:var(--text2);display:flex;align-items:flex-start;gap:5px;line-height:1.45;margin-bottom:5px}
+.wx-ico{flex-shrink:0;font-size:13px}
+.park-line{font-size:10px;color:var(--text3);margin-bottom:5px}
+.tap-hint{font-size:9px;color:var(--text3);text-align:center;margin-top:4px}
+/* conf */
+.c-high{color:var(--green)}.c-med{color:var(--amber)}.c-low{color:var(--text3)}
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:flex-start;justify-content:center;padding:28px 14px;overflow-y:auto}
+.overlay.open{display:flex}
+.modal{background:var(--bg);border-radius:var(--r);border:1px solid var(--border2);width:100%;max-width:630px;padding:20px;position:relative;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+.modal-close{position:absolute;top:14px;right:16px;background:none;border:none;cursor:pointer;color:var(--text2);font-size:20px;padding:0;line-height:1}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:14px;padding-right:28px}
+.m-hdr{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin:16px 0 8px;display:flex;align-items:center;gap:5px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.m-box{background:var(--bg2);border-radius:var(--rs);padding:10px 12px}
+.m-box-title{font-size:11px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.sr{display:flex;justify-content:space-between;align-items:center;padding:3.5px 0;border-bottom:1px solid var(--border)}
+.sr:last-child{border-bottom:none}
+.sk{font-size:11px;color:var(--text2)}.sv{font-size:11px;font-weight:500}
+.trend-b{font-size:10px;padding:1px 7px;border-radius:20px}
+.t-hot{background:var(--green-bg);color:var(--green)}
+.t-cold{background:var(--red-bg);color:var(--red)}
+.t-neut{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+.bp-g{font-size:12px;font-weight:700;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center}
+.g-A{background:var(--green-bg);color:var(--green)}.g-B{background:var(--blue-bg);color:var(--blue)}
+.g-C{background:var(--amber-bg);color:var(--amber)}.g-D,.g-F{background:var(--red-bg);color:var(--red)}
+/* prob bar */
+.prob-wrap{background:var(--bg2);border-radius:var(--rs);padding:11px 13px;margin-bottom:10px}
+.prob-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:7px}
+.prob-bar-row{display:flex;align-items:center;gap:9px}
+.prob-bg{flex:1;height:7px;border-radius:4px;background:var(--bg3);overflow:hidden;position:relative}
+.pb-a{height:100%;background:var(--blue);border-radius:4px 0 0 4px}
+.pb-h{position:absolute;right:0;top:0;height:100%;background:var(--green);border-radius:0 4px 4px 0}
+.prob-pct{font-size:12px;font-weight:600;min-width:34px}
+.prob-teams{display:flex;justify-content:space-between;font-size:10px;margin-top:5px;color:var(--text2)}
+/* run detail */
+.run-detail,.odds-detail-box{background:var(--bg2);border-radius:var(--rs);padding:10px 13px;margin-bottom:10px}
+.rdc-v.ml-fav{color:var(--green)}.rdc-v.ml-dog{color:var(--text)}
+.rd-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:8px}
+.rd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;margin-bottom:8px}
+.rdc .rdc-l{font-size:9px;color:var(--text2);margin-bottom:2px}
+.rdc .rdc-v{font-size:18px;font-weight:700}
+.rdc-a{color:var(--blue)}.rdc-h{color:var(--green)}
+.rd-totrow{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.rd-totcell{background:var(--bg);border-radius:var(--rs);padding:6px;text-align:center}
+.rdtc-l{font-size:9px;color:var(--text2);margin-bottom:2px}
+.rdtc-v{font-size:14px;font-weight:600}
+/* wx detail */
+.wx-detail-box{background:var(--bg2);border-radius:var(--rs);padding:10px 13px;margin-bottom:10px}
+.wx-dl{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:6px}
+/* standings */
+.std-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:14px}
+.div-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.div-hdr{background:var(--bg2);padding:9px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px}
+.div-hdr.al{border-left:3px solid var(--blue)}.div-hdr.nl{border-left:3px solid var(--red)}
+.std-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.std-tbl th{font-size:10px;color:var(--text3);font-weight:500;padding:6px 8px;text-align:center;border-bottom:1px solid var(--border)}
+.std-tbl th:first-child{text-align:left;padding-left:14px}
+.std-tbl td{padding:6px 8px;text-align:center;border-bottom:1px solid var(--border);color:var(--text)}
+.std-tbl td:first-child{text-align:left;padding-left:14px;font-weight:500}
+.std-tbl tr:last-child td{border-bottom:none}
+.std-tbl tr.leader td:first-child{color:var(--green);font-weight:700}
+.sk-hot{color:var(--green);font-weight:600}.sk-cold{color:var(--red);font-weight:600}
+.gb-d{color:var(--text3)}
+@media(max-width:600px){.two-col{grid-template-columns:1fr}.rd-grid{grid-template-columns:repeat(2,1fr)}.main{padding:12px}}
 </style>
 </head>
-
 <body>
 
-<header>Sports Scores Dashboard</header>
-<div class="tabs" id="tabs"></div>
-<div id="content-container"></div>
+<div class="hdr">
+  <div class="logo"><span class="logo-icon">⚾</span> MLB Predictions</div>
+  <div class="hdr-right">
+    <span class="date-pill" id="date-pill"></span>
+    <span class="sync-pill" id="sync-pill" title="When the Google Sheet data was last refreshed"><i class="ti ti-clock" style="font-size:12px"></i> <span id="sync-pill-text">—</span></span>
+    <button class="refresh-btn" onclick="loadAll()"><i class="ti ti-refresh" style="font-size:13px"></i> Refresh</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" id="tab-today"     onclick="switchTab('today')">Today</button>
+  <button class="tab"        id="tab-tomorrow"  onclick="switchTab('tomorrow')">Tomorrow</button>
+  <button class="tab"        id="tab-standings" onclick="switchTab('standings')">Standings</button>
+</div>
+
+<div class="main" id="main"></div>
+
+<div class="overlay" id="overlay" onclick="closeOut(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></button>
+    <div id="modal-body"></div>
+  </div>
+</div>
 
 <script>
-const leagues = {
-    NHL: "hockey/nhl",
-    MLB: "baseball/mlb",
-    NFL: "football/nfl",
-    NCAAFB: "football/college-football",
-    NBA: "basketball/nba",
-    WNBA: "basketball/wnba",
-    NCAAMB: "basketball/mens-college-basketball"
+/* ─────────────────────────────────────────────
+   CONFIG
+───────────────────────────────────────────── */
+const SHEET_ID = '18akScsNGlflTQ8MM2iLZ8fi9rKW8cE7zPPh4bKsSdkk';
+const GIDS = {
+  schedule:    577339871,
+  predictions: 785483277,
+  teamTotals:  367925334,
+  pitchers:    221778536,
+  bullpen:     1783803778,
+  parkWeather: 866267891,
+  teamStats:   1418505229,
+  advanced:    1867140111,
+  statcast:    101370808,
+  meta:        1161579785,  // ← paste the GID for the '⏱️ Meta' tab here after running refreshAllData()
+  yesterday:   51773716,  // ← paste the GID for the '📋 Yesterday' tab here after first refresh
 };
 
-const leagueLogos = {
-    NHL: "images/nhl.svg",
-    MLB: "images/mlb.svg",
-    NFL: "images/nfl.svg",
-    NCAAFB: "images/ncaafb.svg",
-    NBA: "images/nba.svg",
-    WNBA: "images/wnba.svg",
-    NCAAMB: "images/ncaamb.svg"
+/* ─────────────────────────────────────────────
+   PARK COORDINATES + ORIENTATIONS
+   homeDir = compass bearing (°) toward home plate FROM center field
+   (used to describe wind direction relative to the field)
+───────────────────────────────────────────── */
+const PARKS = {
+  ATL:{ lat:33.8908, lon:-84.4678, homeDir:55,  name:'Truist Park',           roof:false },
+  PHI:{ lat:39.9057, lon:-75.1665, homeDir:60,  name:'Citizens Bank Park',    roof:false },
+  NYY:{ lat:40.8296, lon:-73.9262, homeDir:315, name:'Yankee Stadium',        roof:false },
+  TOR:{ lat:43.6414, lon:-79.3894, homeDir:0,   name:'Rogers Centre',         roof:true  },
+  DET:{ lat:42.3390, lon:-83.0485, homeDir:205, name:'Comerica Park',         roof:false },
+  MIA:{ lat:25.7781, lon:-80.2197, homeDir:60,  name:'loanDepot Park',        roof:true  },
+  HOU:{ lat:29.7573, lon:-95.3555, homeDir:30,  name:'Minute Maid Park',      roof:true  },
+  MIN:{ lat:44.9817, lon:-93.2782, homeDir:100, name:'Target Field',          roof:false },
+  STL:{ lat:38.6226, lon:-90.1928, homeDir:40,  name:'Busch Stadium',         roof:false },
+  TEX:{ lat:32.7512, lon:-97.0832, homeDir:30,  name:'Globe Life Field',      roof:true  },
+  COL:{ lat:39.7559, lon:-104.994, homeDir:35,  name:'Coors Field',           roof:false },
+  ARI:{ lat:33.4453, lon:-112.067, homeDir:15,  name:'Chase Field',           roof:true  },
+  LAD:{ lat:34.0739, lon:-118.240, homeDir:20,  name:'Dodger Stadium',        roof:false },
+  SD: { lat:32.7073, lon:-117.157, homeDir:290, name:'Petco Park',            roof:false },
+  CHC:{ lat:41.9484, lon:-87.6553, homeDir:185, name:'Wrigley Field',         roof:false },
+  BAL:{ lat:39.2838, lon:-76.6218, homeDir:335, name:'Camden Yards',          roof:false },
+  TB: { lat:27.7683, lon:-82.6534, homeDir:30,  name:'Tropicana Field',       roof:true  },
+  CLE:{ lat:41.4962, lon:-81.6852, homeDir:35,  name:'Progressive Field',     roof:false },
+  SF: { lat:37.7786, lon:-122.389, homeDir:35,  name:'Oracle Park',           roof:false },
+  ATH:{ lat:38.5803, lon:-121.499, homeDir:30,  name:'Sutter Health Park',    roof:false },
+  LAA:{ lat:33.8003, lon:-117.883, homeDir:30,  name:'Angel Stadium',         roof:false },
+  BOS:{ lat:42.3467, lon:-71.0972, homeDir:95,  name:'Fenway Park',           roof:false },
+  KC: { lat:39.0517, lon:-94.4803, homeDir:40,  name:'Kauffman Stadium',      roof:false },
+  CIN:{ lat:39.0979, lon:-84.5082, homeDir:35,  name:'Great American Ball Park', roof:false },
+  PIT:{ lat:40.4469, lon:-80.0057, homeDir:100, name:'PNC Park',              roof:false },
+  WSH:{ lat:38.8730, lon:-77.0074, homeDir:50,  name:'Nationals Park',        roof:false },
+  NYM:{ lat:40.7571, lon:-73.8458, homeDir:145, name:'Citi Field',            roof:false },
+  SEA:{ lat:47.5914, lon:-122.332, homeDir:55,  name:'T-Mobile Park',         roof:true  },
+  MIL:{ lat:43.0280, lon:-87.9712, homeDir:30,  name:'American Family Field', roof:true  },
+  CWS:{ lat:41.8300, lon:-87.6338, homeDir:10,  name:'Guaranteed Rate Field', roof:false },
 };
 
-// SiriusXM channel info by league. "short" is used in the compact game-card
-// line, "full" (with more context/caveats) is used in the details panel.
-// Channel numbers per SiriusXM's own channel guide (siriusxm.com) as of the
-// 2025/2026 season - double check on siriusxm.com if these ever change.
-const siriusXMInfo = {
-    NHL: {
-        short: "SiriusXM NHL Network Radio (Ch. 91)",
-        full: "SiriusXM NHL Network Radio (Ch. 91). Each team's own home/away radio call is also carried as a separate channel in the SiriusXM app."
-    },
-    MLB: {
-        short: "MLB Network Radio (Ch. 89)",
-        full: "MLB Network Radio (Ch. 89). Each team's home/away radio call (your choice of announcers) is also carried as a separate channel in the SiriusXM app."
-    },
-    NFL: {
-        short: "SiriusXM NFL Radio (Ch. 88)",
-        full: "SiriusXM NFL Radio (Ch. 88). Every team's local radio call is also carried as a separate channel in the SiriusXM app."
-    },
-    NBA: {
-        short: "SiriusXM NBA Radio (Ch. 86)",
-        full: "SiriusXM NBA Radio (Ch. 86). Each team's local radio call is also carried as a separate channel in the SiriusXM app."
-    },
-    WNBA: {
-        short: "SiriusXM NBA Radio (Ch. 86, select games)",
-        full: "WNBA doesn't have its own year-round channel - select games air on SiriusXM NBA Radio (Ch. 86). Check the SiriusXM app for additional team coverage."
-    },
-    NCAAMB: {
-        short: "SiriusXM College Sports Radio (Ch. 84)",
-        full: "SiriusXM College Sports Radio (Ch. 84), plus conference channels (Big Ten Ch. 372, ACC Ch. 371, SEC Ch. 374) during in-season coverage. Not every game is carried."
-    },
-    NCAAFB: {
-        short: "SiriusXM College Sports Radio (Ch. 84)",
-        full: "SiriusXM College Sports Radio (Ch. 84), plus conference channels (Big Ten Ch. 372, ACC Ch. 371, SEC Ch. 374). Coverage comes mainly via Westwood One and conference deals - not every game is carried."
-    }
+/* Weather code → description */
+const WX_CODE = {
+  0:'Clear',1:'Mainly Clear',2:'Partly Cloudy',3:'Overcast',
+  45:'Foggy',48:'Icy Fog',
+  51:'Light Drizzle',53:'Drizzle',55:'Heavy Drizzle',
+  61:'Light Rain',63:'Rain',65:'Heavy Rain',
+  71:'Light Snow',73:'Snow',75:'Heavy Snow',
+  80:'Light Showers',81:'Showers',82:'Heavy Showers',
+  95:'Thunderstorms',96:'Thunderstorms',99:'Thunderstorms'
+};
+const WX_ICON = {
+  0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',
+  51:'🌦️',53:'🌦️',55:'🌧️',61:'🌦️',63:'🌧️',65:'🌧️',
+  71:'🌨️',73:'🌨️',75:'❄️',80:'🌦️',81:'🌧️',82:'⛈️',
+  95:'⛈️',96:'⛈️',99:'⛈️'
 };
 
-function getRadioInfo(leagueKey, variant){
-    const entry = siriusXMInfo[leagueKey];
-    if(!entry) return "";
-    return entry[variant] || "";
+/* Convert met. wind direction (where wind comes FROM) to field-relative description */
+function windToField(windFromDeg, parkHomeDir) {
+  // windFromDeg = direction wind is coming FROM (meteorological)
+  // parkHomeDir = bearing FROM CF toward home plate
+  // We want to say wind is blowing "in/out" and toward which field zone
+  const cfDir = (parkHomeDir + 180) % 360; // bearing from home plate toward CF
+  // angle of wind blowing toward, relative to CF direction
+  const windToDeg = (windFromDeg + 180) % 360;
+  let diff = ((windToDeg - cfDir) % 360 + 360) % 360;
+
+  // In vs out
+  let inOut;
+  if (diff > 315 || diff <= 45)  inOut = 'out';
+  else if (diff > 135 && diff <= 225) inOut = 'in';
+  else inOut = 'across';
+
+  // Field zone
+  let zone;
+  if (diff > 315 || diff <= 45)  zone = 'to center';
+  else if (diff > 45 && diff <= 90)  zone = 'out to right-center';
+  else if (diff > 90 && diff <= 135) zone = 'out to right';
+  else if (diff > 135 && diff <= 180) zone = 'in from right';
+  else if (diff > 180 && diff <= 225) zone = 'in from left';
+  else if (diff > 225 && diff <= 270) zone = 'out to left';
+  else zone = 'out to left-center';
+
+  if (inOut === 'across') {
+    zone = diff > 45 && diff <= 135 ? 'blowing right to left' : 'blowing left to right';
+  }
+  return zone;
 }
 
-// --- Live SiriusXM per-game channel lookup -------------------------------
-// siriusxm.com/sports/{slug} publishes a real day-by-day schedule with the
-// actual away/home channel numbers for each game (e.g. "Ch 177/859"). We
-// scrape that page (through the same CORS-proxy fallback chain used for the
-// NHL goalie data) and, if we can match the two teams in a given game to a
-// channel, show that instead of the generic per-league channel above. If
-// SiriusXM blocks the proxy, the page hasn't posted the day's slate yet, or
-// we can't match the team names, we just keep the generic info - nothing
-// breaks either way.
-const siriusXMScheduleSlugs = {
-    NHL: 'nhl',
-    MLB: 'mlb',
-    NFL: 'nfl',
-    NBA: 'nba',
-    WNBA: 'wnba',
-    NCAAMB: 'college-basketball',
-    NCAAFB: 'college-football'
-};
+/* ─────────────────────────────────────────────
+   GLOBALS
+───────────────────────────────────────────── */
+let DATA={}, WEATHER={}, currentTab='today', todayGames=[], tmrwGames=[];
 
-let siriusXMScheduleCache = {};
-let siriusXMScheduleCacheTime = {};
-let siriusXMScheduleFetchPromises = {};
+const now = new Date();
+document.getElementById('date-pill').textContent = now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
 
-// SiriusXM's site is bot-protected and the schedule is rendered client-side,
-// so a plain CORS proxy that just re-fetches the raw HTML often comes back
-// empty or blocked. r.jina.ai actually renders the page (like a headless
-// browser) before handing back text, so it's tried first here and given a
-// much longer timeout; the others are kept as a fallback chain. Every step
-// logs to the console (look for "[SiriusXM]") so it's obvious which attempt
-// succeeded or failed if the per-game channel isn't showing up.
-function sleep(ms){
-    return new Promise(resolve => setTimeout(resolve, ms));
+/* ─────────────────────────────────────────────
+   CSV FETCH + PARSE
+───────────────────────────────────────────── */
+async function fetchCSV(gid){
+  const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
+  const r=await fetch(url);
+  if(!r.ok) throw new Error(`HTTP ${r.status} fetching gid=${gid}`);
+  return parseCSV(await r.text());
 }
-
-async function fetchSiriusXMPageText(url){
-    // r.jina.ai is the only one of these that actually renders SiriusXM's
-    // JS-heavy page before returning text - a plain CORS proxy just gets
-    // the empty pre-render shell, and a direct browser fetch is blocked by
-    // CORS outright (siriusxm.com sends no Access-Control-Allow-Origin
-    // header). But r.jina.ai itself is inconsistent against sites with bot
-    // protection - sometimes it gets the real page, sometimes it gets
-    // caught and returns a tiny stub - so it's retried a couple of times
-    // with a short pause before falling back to the other proxies (which
-    // will likely also fail, but cost little to try).
-    // Each jina attempt uses a cache-busted target URL (a harmless extra
-    // query param SiriusXM's server just ignores) so a bad/blocked response
-    // r.jina.ai may have cached for the exact original URL doesn't get
-    // served back to us again on retry - each attempt forces a fresh fetch.
-    const jinaAttempts = [0, 2000, 4500, 7000, 10000].map((delayBeforeMs, i) => ({
-        label: `r.jina.ai (attempt ${i + 1})`,
-        fetchUrl: `https://r.jina.ai/${url}${url.includes('?') ? '&' : '?'}_cb=${i}`,
-        timeoutMs: 20000,
-        delayBeforeMs
-    }));
-
-    const candidates = [
-        ...jinaAttempts,
-        { label: 'corsproxy.io', fetchUrl: `https://corsproxy.io/?url=${encodeURIComponent(url)}`, timeoutMs: 8000 },
-        { label: 'allorigins-raw', fetchUrl: `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`, timeoutMs: 8000 },
-        { label: 'allorigins-get', fetchUrl: `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, timeoutMs: 8000, isJson: true },
-        { label: 'direct', fetchUrl: url, timeoutMs: 6000 }
-    ];
-
-    for(const candidate of candidates){
-        if(candidate.delayBeforeMs){
-            await sleep(candidate.delayBeforeMs);
-        }
-
-        try {
-            const res = await fetchWithTimeout(candidate.fetchUrl, candidate.timeoutMs);
-            if(!res.ok){
-                console.log(`[SiriusXM] ${candidate.label} responded ${res.status} for ${url}`);
-                continue;
-            }
-
-            let body = '';
-            if(candidate.isJson){
-                const data = await res.json();
-                body = data?.contents || '';
-            } else {
-                body = await res.text();
-            }
-
-            if(body && body.length > 1000){
-                console.log(`[SiriusXM] ${candidate.label} returned ${body.length} chars for ${url}`);
-                return body;
-            }
-
-            console.log(`[SiriusXM] ${candidate.label} returned too little content (${body.length} chars) for ${url}`);
-        } catch (err) {
-            console.log(`[SiriusXM] ${candidate.label} failed for ${url}:`, err?.message || err);
-        }
+function parseCSV(txt){
+  // Full RFC-4180 parser: handles quoted fields with embedded newlines and commas.
+  const rows=[];
+  let cur='', inQ=false, row=[];
+  for(let i=0;i<txt.length;i++){
+    const c=txt[i];
+    if(c==='"'){
+      if(inQ&&txt[i+1]==='"'){cur+='"';i++;}  // escaped quote
+      else inQ=!inQ;
+    } else if(c===','&&!inQ){
+      row.push(cur.replace(/\n/g,' ').trim()); cur='';  // collapse embedded newlines to space
+    } else if((c==='\n'||c==='\r')&&!inQ){
+      if(c==='\r'&&txt[i+1]==='\n') i++;  // skip \r in \r\n
+      row.push(cur.replace(/\n/g,' ').trim()); cur='';
+      if(row.some(c=>c)) rows.push(row);
+      row=[];
+    } else {
+      cur+=c;
     }
-
-    console.log(`[SiriusXM] all fetch attempts failed for ${url}`);
-    return '';
+  }
+  if(cur||row.length){row.push(cur.replace(/\n/g,' ').trim());if(row.some(c=>c))rows.push(row);}
+  return rows;
+}
+function csvToObjects(rows){
+  if(!rows||!rows.length) return [];
+  // find header row — skip emoji title rows, empty rows, and section-header rows
+  // A valid header row must have at least 2 non-empty cells (real column headers)
+  let hi=0;
+  for(let i=0;i<Math.min(rows.length,10);i++){
+    const f=(rows[i][0]||'');
+    // Skip emoji-prefixed title rows
+    if(/[\u{1F300}-\u{1FFFF}]/u.test(f)||f.startsWith('📅')||f.startsWith('📊')||f.startsWith('⚾')||f.startsWith('🔥')||f.startsWith('🏟')||f.startsWith('📈')||f.startsWith('🎰')) continue;
+    // Skip fully empty rows
+    if(rows[i].every(c=>!c)) continue;
+    // Skip section-header rows — rows where only the first cell has content (like "SECTION 1 — ...")
+    const nonEmpty = rows[i].filter(c=>c.trim());
+    if(nonEmpty.length < 2) continue;
+    hi=i; break;
+  }
+  const headers=rows[hi].map(h=>h.replace(/\n/g,' ').replace(/[^\w\s/%().⭐🔥❄️➡📈📉-]/g,'').trim());
+  return rows.slice(hi+1).filter(r=>r.some(c=>c)).map(row=>{
+    const o={};
+    headers.forEach((h,i)=>{o[h]=(row[i]||'').trim();});
+    return o;
+  });
 }
 
-async function fetchSiriusXMSchedule(leagueKey){
-    const slug = siriusXMScheduleSlugs[leagueKey];
-    if(!slug) return null;
+/* ─────────────────────────────────────────────
+   BULLPEN CSV PARSER
+   The Bullpen sheet has a specific structure:
+   - emoji title row
+   - "SECTION 1 — TEAM BULLPEN SUMMARY" section label
+   - actual header row: Team, BP ERA, BP WHIP, Saves, Holds, Blown Saves, Save%, K/9, ...
+   - data rows
+   - then a second section with pitcher-level data
+   We specifically look for the header row containing "BP ERA"
+───────────────────────────────────────────── */
+function parseBullpenCSV(rows){
+  // Bullpen sheet header is now parsed correctly by RFC4180 parseCSV:
+  // "Blown\nSaves" comes through as "Blown Saves" in a single cell.
+  // No special two-row merging needed — delegate to csvToObjects.
+  return csvToObjects(rows);
+}
 
-    const now = Date.now();
-    // Successful fetches stay cached for 30 min. A failed fetch is only
-    // "cached" for 3 min - long enough to avoid hammering the proxies on
-    // every game render, but short enough that the next refresh cycle or
-    // so gets a real retry instead of being locked out for half an hour.
-    const freshWindowMs = siriusXMScheduleCache[leagueKey] ? 30 * 60 * 1000 : 3 * 60 * 1000;
-    const cacheIsFresh = siriusXMScheduleCacheTime[leagueKey] && (now - siriusXMScheduleCacheTime[leagueKey] < freshWindowMs);
-    if(cacheIsFresh) return siriusXMScheduleCache[leagueKey];
-
-    if(!siriusXMScheduleFetchPromises[leagueKey]){
-        siriusXMScheduleFetchPromises[leagueKey] = (async () => {
-            try {
-                const text = await fetchSiriusXMPageText(`https://www.siriusxm.com/sports/${slug}`);
-                siriusXMScheduleCache[leagueKey] = text || null;
-                siriusXMScheduleCacheTime[leagueKey] = Date.now();
-            } catch (err) {
-                console.error(`SiriusXM schedule fetch failed for ${leagueKey}:`, err);
-            } finally {
-                delete siriusXMScheduleFetchPromises[leagueKey];
-            }
-            return siriusXMScheduleCache[leagueKey] || null;
-        })();
+/* ─────────────────────────────────────────────
+   YESTERDAY SNAPSHOT PARSER
+   The 📋 Yesterday tab is a straight copy of whatever the 🎰 Game
+   Predictions sheet looked like on the last refresh — which means it
+   still contains BOTH a "TODAY" section and a "TOMORROW" section from
+   that prior run. csvToObjects() throws section-header rows away and
+   flattens everything else into one array, so by the time rowMatch()
+   runs it can no longer tell whether a given row was yesterday's TODAY
+   game or yesterday's TOMORROW game for the same matchup — it just
+   grabs whichever row mentions the two team names first.
+   That's the root cause of the "changed" flag bleeding onto tomorrow's
+   card: tomorrow's fresh prediction was being compared against
+   whatever stale row matched by name only, not against the one row
+   that's actually the correct one-day-old comparison point.
+   This parser keeps the section (today/tomorrow) AND the literal date
+   string attached to each row, so callers can filter for the exact
+   comparison they mean instead of matching on team names alone. */
+function parseYesterdayCSV(rows){
+  if(!rows||!rows.length) return [];
+  let headers=null, section=null, sectionDate=null;
+  const out=[];
+  for(const row of rows){
+    const f=(row[0]||'').toString();
+    if(f.includes('TODAY')){ section='today'; sectionDate=f; headers=null; continue; }
+    if(f.includes('TOMORROW')){ section='tomorrow'; sectionDate=f; headers=null; continue; }
+    if(/[\u{1F300}-\u{1FFFF}]/u.test(f)) continue; // emoji title row
+    const nonEmpty=row.filter(c=>c&&c.toString().trim());
+    if(nonEmpty.length<2) continue;
+    if(!headers){
+      headers=row.map(h=>h.replace(/\n/g,' ').replace(/[^\w\s/%().⭐🔥❄️➡📈📉-]/g,'').trim());
+      continue;
     }
-
-    return siriusXMScheduleFetchPromises[leagueKey];
+    if(!section) continue; // rows before we've seen a TODAY/TOMORROW marker
+    const o={__section:section,__sectionDate:sectionDate};
+    headers.forEach((h,i)=>{o[h]=(row[i]||'').toString().trim();});
+    out.push(o);
+  }
+  return out;
 }
 
-// SiriusXM's schedule page lists each game as: away team name/logo, then
-// the literal word "Away" next to its channel number(s), then the home
-// team name/logo, then the literal word "Home" next to its channel
-// number(s) (sometimes followed by an "Espanol" feed). So rather than just
-// grabbing the nearest "CH ###" after a team name (which can grab the
-// wrong team's channel when both teams are close together), we first find
-// the text window that contains *both* team names close together - i.e.
-// this specific game's listing - then use the "Away"/"Home" labels inside
-// that window to correctly split the channel numbers between the two teams.
-function findGameScheduleWindow(scheduleText, awayNames, homeNames){
-    const normalizedText = scheduleText.replace(/\s+/g, ' ');
-    const WINDOW_RADIUS = 700;
-
-    for(const aName of awayNames){
-        if(!aName) continue;
-        let searchFrom = 0;
-        let aIdx;
-        while((aIdx = normalizedText.indexOf(aName, searchFrom)) !== -1){
-            const slice = normalizedText.slice(aIdx, Math.min(normalizedText.length, aIdx + WINDOW_RADIUS));
-
-            for(const hName of homeNames){
-                if(hName && slice.includes(hName)){
-                    return slice;
-                }
-            }
-
-            searchFrom = aIdx + aName.length;
-        }
-    }
-
-    return null;
+/* Date-aware replacement for team-name-only matching against the
+   Yesterday snapshot. wantYstSection is which section of YESTERDAY's
+   snapshot is the correct one-day-old comparison for the game we're
+   currently rendering:
+     - rendering TODAY's card    -> compare against yesterday's TODAY section
+     - rendering TOMORROW's card -> compare against yesterday's TOMORROW section
+   Both represent "what did the model say about this exact game the
+   last time we looked," one refresh apart — rather than any row that
+   happens to mention the same two teams. */
+function ystRowMatch(row,away,home,wantYstSection){
+  if(row.__section!==wantYstSection) return false;
+  return rowMatch(row,away,home);
 }
 
-function extractAwayHomeChannels(windowText){
-    const awayLabelIdx = windowText.search(/\bAway\b/i);
-    const homeLabelIdx = windowText.search(/\bHome\b/i);
-
-    const chRegex = /CH(?:ANNEL)?\.?\s*#?\s*(\d{2,4})/gi;
-    let match;
-    let awayCh = null;
-    let homeCh = null;
-
-    while((match = chRegex.exec(windowText)) !== null){
-        const pos = match.index;
-        if(awayLabelIdx !== -1 && pos > awayLabelIdx && (homeLabelIdx === -1 || pos < homeLabelIdx) && awayCh === null){
-            awayCh = match[1];
-        } else if(homeLabelIdx !== -1 && pos > homeLabelIdx && homeCh === null){
-            homeCh = match[1];
-        }
-    }
-
-    // Fallback: no "Away"/"Home" labels found (format changed?) - just take
-    // the first two channel numbers in listed order.
-    if(awayCh === null && homeCh === null){
-        const all = [];
-        let m;
-        chRegex.lastIndex = 0;
-        while((m = chRegex.exec(windowText)) !== null){
-            all.push(m[1]);
-        }
-        awayCh = all[0] || null;
-        homeCh = all[1] || null;
-    }
-
-    return { awayCh, homeCh };
-}
-
-async function getGameSpecificRadioInfo(home, away, leagueKey){
-    const scheduleText = await fetchSiriusXMSchedule(leagueKey);
-    if(!scheduleText) return null;
-
-    const awayNames = [away.team.displayName, away.team.shortDisplayName, away.team.name, away.team.location].filter(Boolean);
-    const homeNames = [home.team.displayName, home.team.shortDisplayName, home.team.name, home.team.location].filter(Boolean);
-
-    const gameWindow = findGameScheduleWindow(scheduleText, awayNames, homeNames);
-    if(!gameWindow){
-        console.log(`[SiriusXM] fetched ${leagueKey} schedule (${scheduleText.length} chars) but couldn't find a listing containing both "${away.team.displayName}" and "${home.team.displayName}"`);
-        return null;
-    }
-
-    const { awayCh, homeCh } = extractAwayHomeChannels(gameWindow);
-
-    if(!awayCh && !homeCh){
-        console.log(`[SiriusXM] found ${away.team.displayName} @ ${home.team.displayName} in the ${leagueKey} schedule but no channel numbers nearby`);
-        return null;
-    }
-
-    const parts = [];
-    if(awayCh) parts.push(`${away.team.abbreviation}: Ch. ${awayCh}`);
-    if(homeCh) parts.push(`${home.team.abbreviation}: Ch. ${homeCh}`);
-    return parts.join(' · ');
-}
-
-async function enhanceRadioUI(gameDiv, home, away, leagueKey){
-    if(!siriusXMScheduleSlugs[leagueKey]) return;
-
-    try {
-        const specific = await getGameSpecificRadioInfo(home, away, leagueKey);
-        if(!specific) return;
-
-        const compactEl = gameDiv.querySelector('.radio-line-value');
-        if(compactEl) compactEl.textContent = specific;
-
-        const detailEl = gameDiv.querySelector('.radio-detail-value');
-        if(detailEl) detailEl.textContent = `${specific} (today's channels, via siriusxm.com/sports/${siriusXMScheduleSlugs[leagueKey]})`;
-    } catch (err) {
-        console.error('SiriusXM game-specific radio lookup failed:', err);
-    }
-}
-
-let currentLeague = "LIVE";
-const tabsDiv = document.getElementById("tabs");
-const containerDiv = document.getElementById("content-container");
-let gameStateMap = {};
-let refreshInFlight = false;
-let mlbPitcherMetaCache = {};
-let nhlGoalieCache = {};
-let nhlGoalieCacheTime = 0;
-let mlbEnvironmentCache = {};
-let leagueFormCache = {};
-let teamFormCache = {};
-let teamSplitFormCache = { home: {}, away: {} };
-
-const liveTab = document.createElement("div");
-liveTab.className = "tab" + (currentLeague === "LIVE" ? " active" : "");
-liveTab.innerHTML = `<span class="live-tab-dot"></span>Live Games`;
-liveTab.onclick = () => {
-    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-    liveTab.classList.add("active");
-    currentLeague = "LIVE";
-    loadGames();
-};
-tabsDiv.appendChild(liveTab);
-
-Object.keys(leagues).forEach(l => {
-    const tab = document.createElement("div");
-    tab.className = "tab" + (l === currentLeague ? " active" : "");
-    tab.innerHTML = `<img src="${leagueLogos[l]}" alt="${l} logo">${l}`;
-    tab.onclick = () => {
-        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-        tab.classList.add("active");
-        currentLeague = l;
-        loadGames();
-    };
-    tabsDiv.appendChild(tab);
-});
-
-function getSortedTeams(home, away){
-    if(home.score == null || away.score == null) return [away, home];
-    return Number(home.score) >= Number(away.score) ? [home, away] : [away, home];
-}
-
-function getHandLabel(value){
-    const raw = String(value || '').trim().toUpperCase();
-    if(raw.startsWith('L')) return 'LHP';
-    if(raw.startsWith('R')) return 'RHP';
-    return '';
-}
-
-function formatPitcher(p, handOverride = ""){
-    if(!p) return "TBD";
-
-    const name = p.athlete?.displayName || p.displayName || "TBD";
-
-    const espnHandRaw =
-        p.athlete?.hand?.type ||
-        p.hand?.type ||
-        p.throwingHand ||
-        p.athlete?.displayHand;
-
-    const hand = getHandLabel(handOverride) || getHandLabel(espnHandRaw);
-
-    let era = p.statistics?.find(s =>
-        String(s?.name || '').toLowerCase() === 'era' ||
-        String(s?.displayName || '').toLowerCase().includes('era')
-    )?.displayValue;
-
-    if(!era || era === "0" || era === "0.00"){
-        era = "--";
-    }
-
-    let recordRaw = p.records?.[0]?.summary || p.record || "";
-    let recordMatch = String(recordRaw).match(/\d+-\d+/);
-    let record = recordMatch ? recordMatch[0] : (recordRaw || "--");
-
-    return `${name} (${record}, ${era} ERA)${hand ? ` ${hand}` : ""}`;
-}
-
-async function fetchMLBPitcherMeta(name){
-    const cleanName = String(name || '').trim();
-    if(!cleanName) return null;
-
-    if(!mlbPitcherMetaCache[cleanName]){
-        mlbPitcherMetaCache[cleanName] = (async () => {
-            try {
-                const url = `https://statsapi.mlb.com/api/v1/people/search?names=${encodeURIComponent(cleanName)}`;
-                const res = await fetchWithTimeout(url, 6000);
-                if(!res.ok) return null;
-
-                const data = await res.json();
-                const people = Array.isArray(data?.people) ? data.people : [];
-                if(!people.length) return null;
-
-                const exact = people.find(person =>
-                    String(person?.fullName || '').toLowerCase() === cleanName.toLowerCase()
-                ) || people[0];
-
-                return {
-                    fullName: exact?.fullName || cleanName,
-                    pitchHand: exact?.pitchHand?.code || exact?.pitchHand?.description || ""
-                };
-            } catch (err) {
-                console.error("MLB pitcher meta fetch failed:", err);
-                return null;
-            }
-        })();
-    }
-
-    return await mlbPitcherMetaCache[cleanName];
-}
-
-async function enhanceMLBPitchersUI(gameDiv, awayProbable, homeProbable, awayAbbr, homeAbbr){
-    const awayEl = gameDiv.querySelector('.pitcher-away');
-    const homeEl = gameDiv.querySelector('.pitcher-home');
-
-    const awayName = awayProbable?.athlete?.displayName || awayProbable?.displayName || "";
-    const homeName = homeProbable?.athlete?.displayName || homeProbable?.displayName || "";
-
-    const [awayMeta, homeMeta] = await Promise.all([
-        fetchMLBPitcherMeta(awayName),
-        fetchMLBPitcherMeta(homeName)
+async function loadAll(){
+  setMain(`<div class="status-wrap"><span class="spinner"></span>Loading from Google Sheets…</div>`);
+  try{
+    const ystPromise=GIDS.yesterday?fetchCSV(GIDS.yesterday).catch(()=>[]):Promise.resolve([]);
+    const statcastPromise=GIDS.statcast?fetchCSV(GIDS.statcast).catch(()=>[]):Promise.resolve([]);
+    const [sched,preds,totals,pitchers,bullpen,parkWx,teamStats,advanced,yst,statcast]=await Promise.all([
+      fetchCSV(GIDS.schedule),fetchCSV(GIDS.predictions),fetchCSV(GIDS.teamTotals),
+      fetchCSV(GIDS.pitchers),fetchCSV(GIDS.bullpen),fetchCSV(GIDS.parkWeather),
+      fetchCSV(GIDS.teamStats),fetchCSV(GIDS.advanced),ystPromise,statcastPromise,
     ]);
+    DATA.schedule   = processSchedule(sched);
+    DATA.predictions= csvToObjects(preds);
+    DATA.totals     = csvToObjects(totals);
+    DATA.pitchers   = csvToObjects(pitchers);
+    DATA.bullpen    = parseBullpenCSV(bullpen);
+    DATA.parkWx     = csvToObjects(parkWx);
+    DATA.teamStats  = csvToObjects(teamStats);
+    DATA.advanced   = processAdvanced(advanced);
+    DATA.yesterday  = GIDS.yesterday ? parseYesterdayCSV(yst) : [];
+    DATA.statcast   = indexByAbbr(GIDS.statcast ? csvToObjects(statcast) : []);
+    buildGames();
+    renderTab(currentTab);
+    fetchWeatherAll();
+    loadSyncStatus(); // separate, non-blocking — never delays the main dashboard
+  }catch(e){
+    setMain(`<div class="status-wrap"><div class="err"><strong>Could not load data.</strong><br>Make sure your sheet is shared as \"Anyone with the link can view.\"<br><small style="opacity:.7">${e.message}</small></div></div>`);
+  }
+}
 
-    if(awayEl){
-        awayEl.textContent = `${awayAbbr}: ${formatPitcher(awayProbable, awayMeta?.pitchHand || "")}`;
+/* ─────────────────────────────────────────────
+   SYNC STATUS — "Data last refreshed" pill
+   Reads the '⏱️ Meta' tab written by stampLastRefreshed_() in the
+   Apps Script. Failures here are silent (pill just stays at '—')
+   since this is a nice-to-have, not core dashboard functionality.
+───────────────────────────────────────────── */
+async function loadSyncStatus(){
+  const pill=document.getElementById('sync-pill');
+  const text=document.getElementById('sync-pill-text');
+  if(!GIDS.meta){ text.textContent='sync time not configured'; return; }
+  try{
+    const rows=await fetchCSV(GIDS.meta);
+    const meta=csvToObjects(rows);
+    const isoRow=meta.find(r=>r['Key']==='lastRefreshedISO');
+    const dispRow=meta.find(r=>r['Key']==='lastRefreshedDisplay');
+    if(!isoRow||!isoRow['Value']){ text.textContent='unknown'; return; }
+    const refreshedAt=new Date(isoRow['Value']);
+    if(isNaN(refreshedAt.getTime())){ text.textContent=dispRow?.['Value']||'unknown'; return; }
+    text.textContent='Updated '+relativeTime(refreshedAt);
+    pill.title='Data last refreshed: '+(dispRow?.['Value']||refreshedAt.toLocaleString());
+    // Flag as stale if the sheet hasn't refreshed in over 3 hours —
+    // the daily trigger runs once a day, so this mainly catches a
+    // broken/stuck Apps Script trigger rather than normal gaps.
+    const hoursSince=(Date.now()-refreshedAt.getTime())/36e5;
+    pill.classList.toggle('stale', hoursSince>3);
+  }catch(e){
+    text.textContent='sync status unavailable';
+  }
+}
+
+function relativeTime(d){
+  const secs=Math.floor((Date.now()-d.getTime())/1000);
+  if(secs<60) return 'just now';
+  const mins=Math.floor(secs/60);
+  if(mins<60) return mins+'m ago';
+  const hrs=Math.floor(mins/60);
+  if(hrs<24) return hrs+'h ago';
+  const days=Math.floor(hrs/24);
+  return days+'d ago';
+}
+
+function processSchedule(rows){
+  const all=[];let section=null;
+  for(const row of rows){
+    const f=(row[0]||'').trim();
+    if(f.includes('TODAY')){section='today';continue;}
+    if(f.includes('TOMORROW')){section='tomorrow';continue;}
+    if(!f||f.includes('Time')||f.startsWith('📅')) continue;
+    if(section&&row[0]&&row[2]) all.push({_day:section,raw:row});
+  }
+  return all;
+}
+
+/* ─────────────────────────────────────────────
+   PROCESS ADVANCED (multi-section sheet)
+───────────────────────────────────────────── */
+function processAdvanced(rows){
+  const res={spForm:{},teamForm:{},h2h:{}};
+  let section=null,headers=[];
+  for(const row of rows){
+    const f=(row[0]||'').trim();
+    if(f.includes('SECTION 1')||f.includes('STARTING PITCHER')){section='sp';headers=[];continue;}
+    if(f.includes('SECTION 2')||f.includes('TEAM FORM')){section='team';headers=[];continue;}
+    if(f.includes('SECTION 3')||f.includes('HEAD-TO-HEAD')){section='h2h';headers=[];continue;}
+    if(!f||row.every(c=>!c)) continue;
+    const fl=f.toLowerCase();
+    if(fl==='pitcher'||fl==='team'||fl==='matchup'){headers=row.map(h=>h.trim());continue;}
+    if(!headers.length) continue;
+    const obj={};headers.forEach((h,i)=>{obj[h]=(row[i]||'').trim();});
+    if(section==='sp'  &&obj['Pitcher']) res.spForm[obj['Pitcher']]=obj;
+    if(section==='team'&&obj['Abbr'])    res.teamForm[obj['Abbr']]=obj;
+    if(section==='team'&&obj['Team']&&!obj['Abbr']) res.teamForm[obj['Team']]=obj;
+    if(section==='h2h' &&obj['Matchup']) res.h2h[obj['Matchup']]=obj;
+  }
+  return res;
+}
+
+/* Statcast tab has the same shape as Team Stats: an emoji title row,
+   then one header row, then 30 team rows. csvToObjects already skips
+   the title row via its emoji-prefix detection, so this just re-keys
+   the resulting objects by Abbr for O(1) lookup per game card. */
+function indexByAbbr(rows){
+  const out={};
+  rows.forEach(r=>{ if(r['Abbr']) out[r['Abbr']]=r; });
+  return out;
+}
+
+/* ─────────────────────────────────────────────
+   BUILD GAME OBJECTS
+───────────────────────────────────────────── */
+function buildGames(){
+  todayGames=[];tmrwGames=[];
+  for(const entry of DATA.schedule){
+    const r=entry.raw;
+    // cols: Time, Day, Away, (vs), Home, Venue, AwaysSP, AwayERA, AwayWHIP, HomeSP, HomeERA, HomeWHIP ...
+    const [time,,awayTeam,,homeTeam,venue,awaySP,awayERA,awayWHIP,homeSP,homeERA,homeWHIP]=r;
+    if(!awayTeam||!homeTeam) continue;
+    const awayAbbr=abbr(awayTeam), homeAbbr=abbr(homeTeam);
+
+    // Which section of TODAY's board this game belongs to — used to pick
+    // the matching section out of yesterday's snapshot (see ystRowMatch).
+    // processSchedule() already tags each entry via its own TODAY/TOMORROW
+    // section header (entry._day), which is more reliable than re-deriving
+    // it from the row's Day-label text.
+    const gameSection = entry._day==='tomorrow' ? 'tomorrow' : 'today';
+
+    const pred = DATA.predictions.find(p=>rowMatch(p,awayTeam,homeTeam));
+    const tot  = DATA.totals.find(t=>rowMatch(t,awayTeam,homeTeam));
+    // IMPORTANT: only compare against yesterday's row from the SAME section
+    // (today vs today, tomorrow vs tomorrow). Matching on team names alone
+    // let tomorrow's fresh prediction get compared against an unrelated
+    // stale row, which caused the "changed" flag to falsely show up on
+    // tomorrow's card. See ystRowMatch / parseYesterdayCSV above.
+    const ystPred = DATA.yesterday?.length
+      ? DATA.yesterday.find(p=>ystRowMatch(p,awayTeam,homeTeam,gameSection))
+      : null;
+    const aTS  = DATA.teamStats.find(t=>t['Team']===awayTeam||t['Abbr']===awayAbbr)||{};
+    const hTS  = DATA.teamStats.find(t=>t['Team']===homeTeam||t['Abbr']===homeAbbr)||{};
+    const pk   = DATA.parkWx.find(p=>p['Team']===homeTeam)||{};
+    const aBP  = DATA.bullpen.find(b=>b['Team']&&(b['Team']===awayTeam||awayTeam.includes(b['Team'])||b['Team'].includes(awayTeam)))||{};
+    const hBP  = DATA.bullpen.find(b=>b['Team']&&(b['Team']===homeTeam||homeTeam.includes(b['Team'])||b['Team'].includes(homeTeam)))||{};
+    // SP name in schedule includes ERA annotation e.g. 'Kevin Gausman (3.41 away ERA)'
+    // Strip it for pitcher stats lookup
+    const awaySpName = awaySP.replace(/\s*\(.*$/, '').trim();
+    const homeSpName = homeSP.replace(/\s*\(.*$/, '').trim();
+    const aPit = DATA.pitchers.find(p=>p['Pitcher']===awaySpName)||{};
+    const hPit = DATA.pitchers.find(p=>p['Pitcher']===homeSpName)||{};
+
+
+    const g={
+      _day:entry._day,
+      time, away:awayTeam, home:homeTeam,
+      venue: venue||pk['Stadium']||'',
+      awayAbbr, homeAbbr,
+      awaySP:awaySP||'TBD', awayERA:awayERA||'—', awayWHIP:awayWHIP||'—',
+      homeSP:homeSP||'TBD', homeERA:homeERA||'—', homeWHIP:homeWHIP||'—',
+      f5Pick:    col(pred,'F5 Pick')||'—',
+      ystF5Pick: col(ystPred,'F5 Pick')||'',
+      ystFgPick: col(ystPred,'FG Pick')||'',
+      f5Conf:  col(pred,'F5 Conf')||'—',
+      f5Total: col(pred,'F5 Total')||col(tot,'F5 Tot')||'—',
+      fgPick:  col(pred,'FG Pick')||'—',
+      fgConf:  col(pred,'FG Conf')||'—',
+      fgTotal: col(pred,'FG Total')||col(tot,'FG Tot')||'—',
+      rating:  col(pred,'Rating')||'—',
+      awayF5pct: pf(col(pred,'Away F5%')),
+      homeF5pct: pf(col(pred,'Home F5%')),
+      awayFGpct: pf(col(pred,'Away FG%')),
+      homeFGpct: pf(col(pred,'Home FG%')),
+      // team run totals — try multiple column name variants
+      awayF5runs: col(tot,'Away F5')||'—',
+      homeF5runs: col(tot,'Home F5')||'—',
+      awayFGruns: col(tot,'Away FG')||'—',
+      homeFGruns: col(tot,'Home FG')||'—',
+      awayRec:     aTS['W']&&aTS['L']?`${aTS['W']}-${aTS['L']}`:'',
+      awayHomeRec: aTS['Home W-L']||col(aTS,'Home W-L','HomeWL')||'',
+      awayAwayRec: aTS['Away W-L']||col(aTS,'Away W-L','AwayWL')||'',
+      homeRec:     hTS['W']&&hTS['L']?`${hTS['W']}-${hTS['L']}`:'',
+      homeHomeRec: hTS['Home W-L']||col(hTS,'Home W-L','HomeWL')||'',
+      homeAwayRec: hTS['Away W-L']||col(hTS,'Away W-L','AwayWL')||'',
+      aTS,hTS,aBP,hBP,aPit,hPit,
+      park: pk['Stadium']||venue||'',
+      parkFactor: pk['Park Factor']||'—',
+      roof: pk['Roof']||'',
+      altitude: pk['Alt (ft)']||'',
+      awayHand:    col(aPit,'T')||'',
+      homeHand:    col(hPit,'T')||'',
+      awayGB:      col(aPit,'GB%')||'—',
+      homeGB:      col(hPit,'GB%')||'—',
+      awayXFIP:    col(aPit,'xFIP')||'—',
+      homeXFIP:    col(hPit,'xFIP')||'—',
+      awaySIERA:   col(aPit,'SIERA')||'—',
+      homeSIERA:   col(hPit,'SIERA')||'—',
+      awayXERA:    col(aPit,'xERA')||'—',
+      homeXERA:    col(hPit,'xERA')||'—',
+      awayAwayERA: col(aPit,'Away ERA','AwayERA')||'—',
+      homeHomeERA: col(hPit,'Home ERA','HomeERA')||'—',
+      awayOpsVsR:  col(aTS,'OPS vs R','OPSvsR')||'—',
+      awayOpsVsL:  col(aTS,'OPS vs L','OPSvsL')||'—',
+      homeOpsVsR:  col(hTS,'OPS vs R','OPSvsR')||'—',
+      homeOpsVsL:  col(hTS,'OPS vs L','OPSvsL')||'—',
+      // Model-projected odds (fair-value, NOT live sportsbook lines)
+      awayML:  col(pred,'Away ML (Proj)','AwayMLProj','Away ML')||'—',
+      homeML:  col(pred,'Home ML (Proj)','HomeMLProj','Home ML')||'—',
+      f5ProjOU: col(pred,'F5 O/U','F5OU')||'—',
+      fgProjOU: col(pred,'FG O/U','FGOU')||'—',
+    };
+    if(entry._day==='today')     todayGames.push(g);
+    else if(entry._day==='tomorrow') tmrwGames.push(g);
+  }
+}
+
+/* helpers */
+function col(obj,...keys){
+  if(!obj) return '';
+  const norm=s=>s.toLowerCase().replace(/[^a-z0-9]/g,'');
+  for(const k of keys){
+    const nk=norm(k);
+    // 1. Exact normalized match (fastest, most reliable)
+    const exact=Object.keys(obj).find(ok=>norm(ok)===nk);
+    if(exact&&obj[exact]) return obj[exact];
+    // 2. Prefix match — key starts with search term (e.g. 'Away ERA' matches 'awayera')
+    const prefix=Object.keys(obj).find(ok=>norm(ok).startsWith(nk)&&nk.length>=4);
+    if(prefix&&obj[prefix]) return obj[prefix];
+    // 3. Substring match — only when search term is ≥5 chars to avoid false positives
+    if(nk.length>=5){
+      const sub=Object.keys(obj).find(ok=>norm(ok).includes(nk)||nk.includes(norm(ok)));
+      if(sub&&obj[sub]) return obj[sub];
     }
-    if(homeEl){
-        homeEl.textContent = `${homeAbbr}: ${formatPitcher(homeProbable, homeMeta?.pitchHand || "")}`;
-    }
+  }
+  return '';
+}
+function rowMatch(row,away,home){
+  const m=Object.values(row).join(' ').toLowerCase();
+  return m.includes(away.split(' ').pop().toLowerCase())&&m.includes(home.split(' ').pop().toLowerCase());
+}
+function pf(s){ return s?parseFloat(s.replace('%',''))||null:null; }
+// Clean K/9 values that Google Sheets may export as percentage-formatted decimals (e.g. "959.00%" → "9.59")
+function cleanK9(s){
+  if(!s||s==='—') return '—';
+  // If value ends with % and is large (>20), it's a decimal stored as percent: divide by 100
+  const m=s.match(/^([\d.]+)%$/);
+  if(m){ const v=parseFloat(m[1]); return v>20?(v/100).toFixed(2):s; }
+  return s;
 }
 
-function toIsoDate(dateString){
-    const d = new Date(dateString);
-    if(Number.isNaN(d.getTime())) return "";
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
-}
-
-function fetchWithTimeout(url, timeoutMs = 5000){
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-    return fetch(url, { signal: controller.signal, cache: 'no-store' })
-        .finally(() => clearTimeout(timeoutId));
-}
-
-function buildTextProxyUrls(url){
-    const u = new URL(url);
-    const noScheme = `${u.host}${u.pathname}${u.search}`;
-    return [
-        url,
-        `https://r.jina.ai/http://${noScheme}`,
-        `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-        `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`
-    ];
-}
-
-async function fetchTextWithFallback(url){
-    for(const candidate of buildTextProxyUrls(url)){
-        try {
-            const res = await fetchWithTimeout(candidate, candidate.includes('r.jina.ai') ? 8000 : 5000);
-            if(!res.ok) continue;
-            if(candidate.includes('/get?url=')){
-                const data = await res.json();
-                if(data?.contents) return data.contents;
-            } else {
-                const body = await res.text();
-                if(body) return body;
-            }
-        } catch (err) {}
-    }
-    return "";
-}
-
-
-function getWinnerAbbreviation(event){
-    const comp = event?.competitions?.[0];
-    const competitors = comp?.competitors || [];
-    if(!competitors.length) return null;
-
-    const withWinnerFlag = competitors.find(team => team?.winner === true);
-    if(withWinnerFlag?.team?.abbreviation) return withWinnerFlag.team.abbreviation;
-
-    const scored = competitors.filter(team => team?.score != null);
-    if(scored.length >= 2){
-        const sorted = [...scored].sort((a, b) => Number(b.score) - Number(a.score));
-        if(Number(sorted[0]?.score) !== Number(sorted[1]?.score)){
-            return sorted[0]?.team?.abbreviation || null;
-        }
-    }
-
-    return null;
-}
-
-function getTeamRecentForm(teamAbbr){
-    return teamFormCache[teamAbbr] || '—';
-}
-
-function getTeamSplitForm(teamAbbr, side){
-    return teamSplitFormCache?.[side]?.[teamAbbr] || '—';
-}
-
-async function fetchLeagueRecentForm(){
-    const sportPath = leagues[currentLeague];
-    if(!sportPath) return;
-
-    // ESPN's scoreboard endpoint only accepts a single date, not a range.
-    // Fetch the last 14 days individually in parallel so each team can
-    // accumulate up to 5 results for the "Last 5" and home/road split forms.
-    const groups = currentLeague === 'NCAAMB' ? '&groups=50' : '';
-    const dayOffsets = [-1,-2,-3,-4,-5,-6,-7,-8,-9,-10,-11,-12,-13,-14];
-    const allEvents = [];
-    const seen = new Set();
-
-    await Promise.all(dayOffsets.map(async offset => {
-        try {
-            const url = `https://site.api.espn.com/apis/site/v2/sports/${sportPath}/scoreboard?dates=${getDate(offset)}${groups}`;
-            const res = await fetchWithTimeout(url, 6000);
-            if(!res.ok) return;
-            const data = await res.json();
-            (data?.events || []).forEach(event => {
-                if(!seen.has(event.id)){
-                    seen.add(event.id);
-                    allEvents.push(event);
-                }
-            });
-        } catch(err) {}
-    }));
-
-    console.log(`[Form] ${currentLeague}: fetched ${allEvents.length} events over last 14 days`);
-
-    const overallFormMap = {};
-    const splitFormMap = { home: {}, away: {} };
-
-    allEvents
-        .filter(event => event?.status?.type?.completed)
-        .sort((a, b) => new Date(b.date) - new Date(a.date))
-        .forEach(event => {
-            const winnerAbbr = getWinnerAbbreviation(event);
-            const competitors = event?.competitions?.[0]?.competitors || [];
-
-            competitors.forEach(team => {
-                const abbr = team?.team?.abbreviation;
-                const side = team?.homeAway;
-                if(!abbr) return;
-
-                const result = winnerAbbr
-                    ? (winnerAbbr === abbr ? 'W' : 'L')
-                    : '—';
-
-                if(!overallFormMap[abbr]) overallFormMap[abbr] = [];
-                if(overallFormMap[abbr].length < 5){
-                    overallFormMap[abbr].push(result);
-                }
-
-                if(side === 'home' || side === 'away'){
-                    if(!splitFormMap[side][abbr]) splitFormMap[side][abbr] = [];
-                    if(splitFormMap[side][abbr].length < 5){
-                        splitFormMap[side][abbr].push(result);
-                    }
-                }
-            });
-        });
-
-    Object.keys(overallFormMap).forEach(abbr => {
-        teamFormCache[abbr] = overallFormMap[abbr].join('-');
-    });
-
-    teamSplitFormCache = { home: {}, away: {} };
-    ['home', 'away'].forEach(side => {
-        Object.keys(splitFormMap[side]).forEach(abbr => {
-            teamSplitFormCache[side][abbr] = splitFormMap[side][abbr].join('-');
-        });
-    });
-}
-
-
-function normalizeGoalieTeamToken(value){
-    return String(value || '')
-        .normalize('NFKD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase()
-        .replace(/&/g, 'and')
-        .replace(/[^a-z0-9]/g, '');
-}
-
-function normalizeGoalieStatus(value){
-    const cleaned = String(value || '')
-        .replace(/[✓✔]/g, '')
-        .trim()
-        .toUpperCase();
-
-    if(cleaned === 'CONFIRMED') return 'Confirmed';
-    if(cleaned === 'UNCONFIRMED') return 'Unconfirmed';
-    if(cleaned === 'EXPECTED') return 'Expected';
-    if(cleaned === 'PROJECTED') return 'Projected';
-    if(cleaned === 'LIKELY') return 'Likely';
-    return cleaned ? cleaned[0] + cleaned.slice(1).toLowerCase() : '';
-}
-
-function extractGoalieName(line){
-    const raw = String(line || '').trim();
-    if(!raw) return '';
-
-    const stripped = raw.replace(/\s+\d{1,2}-\d{1,2}-\d{1,2}.*$/,'').trim();
-    if(/^[A-Z][A-Za-z.\-']+(?:\s+[A-Z][A-Za-z.\-']+){1,3}$/.test(stripped)){
-        return stripped;
-    }
-
-    const match = raw.match(/([A-Z][A-Za-z.\-']+(?:\s+[A-Z][A-Za-z.\-']+){1,3})/);
-    return match ? match[1].trim() : '';
-}
-
-function parseDailyFantasyFuelGoalies(text){
-    const normalized = String(text || '')
-        .replace(/\r/g, '\n')
-        .replace(/\u00a0/g, ' ')
-        .replace(/[ \t]+/g, ' ')
-        .replace(/\n{3,}/g, '\n\n');
-
-    const lines = normalized.split('\n').map(line => line.trim()).filter(Boolean);
-    const data = {};
-
-    for(let i = 0; i < lines.length; i++){
-        const line = lines[i];
-
-        const matchupMatch = line.match(/^[A-Za-z]{3},.*?([A-Za-z .'\-]+)\s+vs\s+([A-Za-z .'\-]+)$/i);
-        if(!matchupMatch) continue;
-
-        const homeTeam = matchupMatch[1].trim();
-        const awayTeam = matchupMatch[2].trim();
-        const key = `${normalizeGoalieTeamToken(awayTeam)}@${normalizeGoalieTeamToken(homeTeam)}`;
-
-        const goalies = [];
-        let j = i + 1;
-
-        while(j < lines.length && goalies.length < 2){
-            const current = lines[j];
-
-            if(/^[A-Za-z]{3},.*?\svs\s/i.test(current) || /^[A-Z][A-Z .'\-]+ VS [A-Z][A-Z .'\-]+$/.test(current)){
-                if(goalies.length) break;
-                j++;
-                continue;
-            }
-
-            const status = normalizeGoalieStatus(current);
-            if(['Confirmed', 'Unconfirmed', 'Expected', 'Projected', 'Likely'].includes(status)){
-                let name = '';
-                for(let k = j - 1; k >= Math.max(i + 1, j - 4); k--){
-                    name = extractGoalieName(lines[k]);
-                    if(name) break;
-                }
-
-                let record = '';
-                let gaa = '';
-                let svPct = '';
-
-                for(let k = j + 1; k < Math.min(j + 14, lines.length); k++){
-                    const probe = lines[k];
-                    if(/^RECORD$/i.test(probe) && k > j + 0) record = lines[k - 1];
-                    if(/^GAA$/i.test(probe) && k > j + 0) gaa = lines[k - 1];
-                    if(/^SV PCT$/i.test(probe) && k > j + 0) svPct = lines[k - 1];
-
-                    if(record && gaa && svPct) break;
-                }
-
-                if(name){
-                    goalies.push({ name, status, record, gaa, svPct });
-                }
-            }
-
-            j++;
-        }
-
-        if(goalies.length){
-            data[key] = {
-                away: goalies[1] || null,
-                home: goalies[0] || null
-            };
-        }
-
-        i = Math.max(i, j - 1);
-    }
-
-    return data;
-}
-
-async function fetchNHLGoalies(forceRefresh = false, leagueKey = currentLeague){
-    if(leagueKey !== "NHL"){
-        return;
-    }
-
-    const now = Date.now();
-    const cacheIsFresh = nhlGoalieCacheTime && (now - nhlGoalieCacheTime < 5 * 60 * 1000) && Object.keys(nhlGoalieCache || {}).length;
-
-    if(!forceRefresh && cacheIsFresh){
-        return;
-    }
-
-    try {
-        const text = await fetchTextWithFallback('https://www.dailyfantasyfuel.com/nhl/starting-goalies/');
-        nhlGoalieCache = parseDailyFantasyFuelGoalies(text);
-        nhlGoalieCacheTime = Date.now();
-    } catch (err) {
-        console.error('NHL goalie fetch failed:', err);
-        if(!Object.keys(nhlGoalieCache || {}).length){
-            nhlGoalieCache = {};
-        }
-    }
-}
-
-function formatGoalie(goalie, omitStatus){
-    if(!goalie || !goalie.name) return 'TBD';
-
-    const parts = [];
-    if(goalie.record) parts.push(goalie.record);
-    if(goalie.gaa) parts.push(`${goalie.gaa} GAA`);
-    if(goalie.svPct) parts.push(`${goalie.svPct} SV%`);
-
-    const statText = parts.length ? ` (${parts.join(', ')})` : '';
-    const statusText = (!omitStatus && goalie.status) ? ` · ${goalie.status}` : '';
-    return `${goalie.name}${statText}${statusText}`;
-}
-
-
-function goalieStrengthScore(goalie){
-    if(!goalie || !goalie.name) return null;
-
-    const gaa = parseFloat(String(goalie.gaa || '').replace(/[^\d.]/g, ''));
-    const svPctRaw = String(goalie.svPct || '').trim();
-    let svPct = parseFloat(svPctRaw.replace(/[^\d.]/g, ''));
-    if(!Number.isNaN(svPct) && svPct > 1.5){
-        svPct = svPct / 1000;
-    }
-
-    let score = 0;
-    let parts = 0;
-
-    if(!Number.isNaN(gaa)){
-        score += Math.max(0, 5 - gaa) * 25;
-        parts += 1;
-    }
-
-    if(!Number.isNaN(svPct)){
-        score += Math.max(0, (svPct - 0.850)) * 1000;
-        parts += 1;
-    }
-
-    return parts ? score : null;
-}
-
-function getGoalieAdvantage(goalieA, goalieB){
-    const scoreA = goalieStrengthScore(goalieA);
-    const scoreB = goalieStrengthScore(goalieB);
-
-    if(scoreA == null || scoreB == null) return null;
-    if(Math.abs(scoreA - scoreB) < 8) return 'Even';
-    return scoreA > scoreB ? 'A' : 'B';
-}
-
-function buildGoalieLineHTML(teamAbbr, goalie, isAdvantage){
-    const badgeClass = String(goalie?.status || '').toLowerCase();
-    const badgeText = goalie?.status || '';
-    const badgeHTML = badgeText ? `<span class="status-badge ${badgeClass}">${badgeText}</span>` : '';
-    const edgeHTML = isAdvantage ? `<span class="goalie-edge">Edge</span>` : '';
-    return `
-        <div class="goalie-line ${isAdvantage ? 'goalie-advantage' : ''}">
-            <span class="goalie-text">${teamAbbr}: ${formatGoalie(goalie, true)}</span>
-            ${badgeHTML}
-            ${edgeHTML}
-        </div>
-    `;
-}
-
-function enhanceNHLGoaliesUI(gameDiv, awayTeam, homeTeam){
-    const awayEl = gameDiv.querySelector('.goalie-away');
-    const homeEl = gameDiv.querySelector('.goalie-home');
-    if(!awayEl || !homeEl) return;
-
-    const key = `${normalizeGoalieTeamToken(awayTeam?.team?.displayName)}@${normalizeGoalieTeamToken(homeTeam?.team?.displayName)}`;
-    const goalieData = nhlGoalieCache[key] || null;
-
-    const advantage = getGoalieAdvantage(goalieData?.away || null, goalieData?.home || null);
-    awayEl.innerHTML = buildGoalieLineHTML(awayTeam.team.abbreviation, goalieData?.away || null, advantage === 'A');
-    homeEl.innerHTML = buildGoalieLineHTML(homeTeam.team.abbreviation, goalieData?.home || null, advantage === 'B');
-}
-
-
-
-const mlbVenueMeta = {
-    ARI: { roofType: 'retractable', roofLabel: 'Retractable Roof', lat: 33.4455, lon: -112.0667, fieldBearing: 20 },
-    ATL: { roofType: 'outdoor', roofLabel: 'Open Air', lat: 33.8907, lon: -84.4677, fieldBearing: 25 },
-    BAL: { roofType: 'outdoor', roofLabel: 'Open Air', lat: 39.2839, lon: -76.6217, fieldBearing: 50 },
-    BOS: { roofType: 'outdoor', roofLabel: 'Open Air', lat: 42.3467, lon: -71.0972, fieldBearing: 55 },
-    CHC: { roofType: 'outdoor', roofLabel: 'Open Air', lat: 41.9484, lon: -87.6553, fieldBearing: 45 },
-    CIN: { roofType: 'outdoor', roofLabel: 'Open Air', lat: 39.0979, lon: -84.5081, fieldBearing: 55 },
-    CLE: { roofType: 'outdoor', roofLabel: 'Open Air', lat: 41.4962, lon: -81.6852, fieldBearing: 40 },
-    COL: { roofType: 'outdoor', roofLabel: 'Open Air', lat: 39.7561, lon: -104.9942, fieldBearing: 35 },
-    CWS: { roofType: 'outdoor', roofLabel: 'Open Air', lat: 41.83, lon: -87.6338, fieldBearing: 55 },
-    DET: { roofType: 'outdoor', roofLabel: 'Open Air', lat: 42.339, lon: -83.0485, fieldBearing: 30 },
-    HOU: { roofType: 'retractable', roofLabel: 'Retractable Roof', lat: 29.7573, lon: -95.3555, fieldBearing: 20 },
-    KC: { roofType: 'outdoor', roofLabel: 'Open Air', lat: 39.0517, lon: -94.4803, fieldBearing: 40 },
-    LAA: { roofType: 'outdoor', roofLabel: 'Open Air', lat: 33.8003, lon: -117.8827, fieldBearing: 30 },
-    LAD: { roofType: 'outdoor', roofLabel: 'Open Air', lat: 34.0739, lon: -118.24, fieldBearing: 35 },
-    MIA: { roofType: 'retractable', roofLabel: 'Retractable Roof', lat: 25.7781, lon: -80.2197, fieldBearing: 35 },
-    MIL: { roofType: 'retractable', roofLabel: 'Retractable Roof', lat: 43.028, lon: -87.9712, fieldBearing: 25 },
-    MIN: { roofType: 'outdoor', roofLabel: 'Open Air', lat: 44.9817, lon: -93.2776, fieldBearing: 40 },
-    NYM: { roofType: 'outdoor', roofLabel: 'Open Air', lat: 40.7571, lon: -73.8458, fieldBearing: 35 },
-    NYY: { roofType: 'outdoor', roofLabel: 'Open Air', lat: 40.8296, lon: -73.9262, fieldBearing: 50 },
-    OAK: { roofType: 'outdoor', roofLabel: 'Open Air', lat: 38.2579, lon: -121.9454, fieldBearing: 40 },
-    PHI: { roofType: 'outdoor', roofLabel: 'Open Air', lat: 39.9061, lon: -75.1665, fieldBearing: 35 },
-    PIT: { roofType: 'outdoor', roofLabel: 'Open Air', lat: 40.4469, lon: -80.0057, fieldBearing: 35 },
-    SD: { roofType: 'outdoor', roofLabel: 'Open Air', lat: 32.7076, lon: -117.157, fieldBearing: 35 },
-    SEA: { roofType: 'retractable', roofLabel: 'Retractable Roof', lat: 47.5914, lon: -122.3325, fieldBearing: 0 },
-    SF: { roofType: 'outdoor', roofLabel: 'Open Air', lat: 37.7786, lon: -122.3893, fieldBearing: 60 },
-    STL: { roofType: 'outdoor', roofLabel: 'Open Air', lat: 38.6226, lon: -90.1928, fieldBearing: 35 },
-    TB: { roofType: 'fixed', roofLabel: 'Fixed Roof', lat: 27.7682, lon: -82.6534, fieldBearing: 40 },
-    TEX: { roofType: 'retractable', roofLabel: 'Retractable Roof', lat: 32.7473, lon: -97.0842, fieldBearing: 40 },
-    TOR: { roofType: 'retractable', roofLabel: 'Retractable Roof', lat: 43.6414, lon: -79.3894, fieldBearing: 35 },
-    WSH: { roofType: 'outdoor', roofLabel: 'Open Air', lat: 38.873, lon: -77.0074, fieldBearing: 25 }
+const ABBR_MAP={
+  'Pittsburgh Pirates':'PIT','Atlanta Braves':'ATL','Chicago White Sox':'CWS',
+  'Philadelphia Phillies':'PHI','Boston Red Sox':'BOS','New York Yankees':'NYY',
+  'Baltimore Orioles':'BAL','Toronto Blue Jays':'TOR','Seattle Mariners':'SEA',
+  'Detroit Tigers':'DET','Tampa Bay Rays':'TB','Miami Marlins':'MIA',
+  'Athletics':'ATH','Houston Astros':'HOU','Kansas City Royals':'KC',
+  'Minnesota Twins':'MIN','Cincinnati Reds':'CIN','St. Louis Cardinals':'STL',
+  'Cleveland Guardians':'CLE','Texas Rangers':'TEX','Milwaukee Brewers':'MIL',
+  'Colorado Rockies':'COL','Washington Nationals':'WSH','Arizona Diamondbacks':'ARI',
+  'Los Angeles Angels':'LAA','Los Angeles Dodgers':'LAD','New York Mets':'NYM',
+  'San Diego Padres':'SD','San Francisco Giants':'SF','Chicago Cubs':'CHC'
 };
+const SHORT_MAP={
+  'Pittsburgh Pirates':'Pittsburgh','Atlanta Braves':'Atlanta','Chicago White Sox':'Chi. White Sox',
+  'Philadelphia Phillies':'Philadelphia','Boston Red Sox':'Boston','New York Yankees':'NY Yankees',
+  'Baltimore Orioles':'Baltimore','Toronto Blue Jays':'Toronto','Seattle Mariners':'Seattle',
+  'Detroit Tigers':'Detroit','Tampa Bay Rays':'Tampa Bay','Miami Marlins':'Miami',
+  'Athletics':'Athletics','Houston Astros':'Houston','Kansas City Royals':'Kansas City',
+  'Minnesota Twins':'Minnesota','Cincinnati Reds':'Cincinnati','St. Louis Cardinals':'St. Louis',
+  'Cleveland Guardians':'Cleveland','Texas Rangers':'Texas','Milwaukee Brewers':'Milwaukee',
+  'Colorado Rockies':'Colorado','Washington Nationals':'Washington','Arizona Diamondbacks':'Arizona',
+  'Los Angeles Angels':'LA Angels','Los Angeles Dodgers':'LA Dodgers','New York Mets':'NY Mets',
+  'San Diego Padres':'San Diego','San Francisco Giants':'SF Giants','Chicago Cubs':'Chi. Cubs'
+};
+function abbr(n){ return ABBR_MAP[n]||n.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,3); }
+function sh(n){ return SHORT_MAP[n]||n; }
 
-function getMLBVenueMeta(homeTeam){
-    const abbr = homeTeam?.team?.abbreviation;
-    return mlbVenueMeta[abbr] || null;
+/* ─────────────────────────────────────────────
+   DATE HELPER — America/New_York LOCAL date
+   FIX: Date.toISOString() returns UTC, which can
+   land on the *next* calendar day in the evening
+   (US Eastern). That mismatched the WEATHER cache
+   keys built from Open-Meteo's timezone=auto (local)
+   response against lookups keyed off UTC dates,
+   so the cache lookup always missed and every card
+   stayed stuck on "Loading weather…". This formats
+   in the same local timezone the schedule uses.
+───────────────────────────────────────────── */
+function localDateStr(d){
+  return new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(d);
 }
 
-function getWeatherDescription(code){
-    const map = {
-        0: 'Clear',
-        1: 'Mostly Clear',
-        2: 'Partly Cloudy',
-        3: 'Overcast',
-        45: 'Fog',
-        48: 'Fog',
-        51: 'Light Drizzle',
-        53: 'Drizzle',
-        55: 'Heavy Drizzle',
-        61: 'Light Rain',
-        63: 'Rain',
-        65: 'Heavy Rain',
-        71: 'Light Snow',
-        73: 'Snow',
-        75: 'Heavy Snow',
-        80: 'Rain Showers',
-        81: 'Rain Showers',
-        82: 'Heavy Showers',
-        95: 'Thunderstorms',
-        96: 'Thunderstorms',
-        99: 'Strong Storms'
+/* ─────────────────────────────────────────────
+   OPEN-METEO WEATHER (CORS-safe, no key)
+───────────────────────────────────────────── */
+async function fetchWeatherAll(){
+  // Key WEATHER by "ABR:yyyy-mm-dd" so today/tomorrow get separate hourly slots
+  const gameTimeMap={};
+  const today=new Date();
+  const todayStr=localDateStr(today);
+  const tomorrowStr=localDateStr(new Date(today.getTime()+86400000));
+  for(const g of [...todayGames,...tmrwGames]){
+    if(!g.homeAbbr||!PARKS[g.homeAbbr]||PARKS[g.homeAbbr].roof) continue;
+    let gameHour=19;
+    if(g.time&&g.time!=='—'){
+      const mtch=g.time.trim().match(/(\d+):(\d+)\s*(AM|PM)/i);
+      if(mtch){let h=parseInt(mtch[1]);const pm=mtch[3].toUpperCase()==='PM';if(pm&&h!==12)h+=12;if(!pm&&h===12)h=0;gameHour=h;}
+    }
+    const dateStr=todayGames.includes(g)?todayStr:tomorrowStr;
+    const key=g.homeAbbr+':'+dateStr;
+    if(!gameTimeMap[key]) gameTimeMap[key]={abbr:g.homeAbbr,dateStr,gameHour};
+  }
+  const parkSet={};
+  Object.values(gameTimeMap).forEach(({abbr})=>{ parkSet[abbr]=true; });
+  const toFetch=Object.keys(parkSet);
+  if(!toFetch.length){rerenderCards();return;}
+  const lats=toFetch.map(a=>PARKS[a].lat).join(',');
+  const lons=toFetch.map(a=>PARKS[a].lon).join(',');
+  const url=`https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}`
+    +`&hourly=temperature_2m,precipitation_probability,weather_code,wind_speed_10m,wind_direction_10m`
+    +`&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=2`;
+  try{
+    const resp=await fetch(url);
+    if(!resp.ok) throw new Error(`Open-Meteo ${resp.status}`);
+    const json=await resp.json();
+    const results=Array.isArray(json)?json:[json];
+    const locMap={};
+    results.forEach((loc,i)=>{ locMap[toFetch[i]]=loc; });
+    Object.entries(gameTimeMap).forEach(([key,{abbr,dateStr,gameHour}])=>{
+      const loc=locMap[abbr];
+      if(!loc?.hourly?.time) return;
+      const times=loc.hourly.time;
+      let hi=times.findIndex(t=>t&&t.startsWith(dateStr)&&parseInt(t.slice(11,13),10)===gameHour);
+      if(hi===-1){const ds=times.findIndex(t=>t&&t.startsWith(dateStr));hi=ds!==-1?Math.min(ds+gameHour,times.length-1):0;}
+      hi=Math.max(0,Math.min(hi,times.length-1));
+      const h=loc.hourly;
+      const code=h.weather_code?.[hi]??0;
+      const windDeg=h.wind_direction_10m?.[hi]??0;
+      const windSpd=h.wind_speed_10m?.[hi]??0;
+      const windZone=windSpd>3?windToField(windDeg,PARKS[abbr].homeDir):null;
+      WEATHER[key]={
+        temp:Math.round(h.temperature_2m?.[hi]??70),code,
+        cond:WX_CODE[code]||'Clear',icon:WX_ICON[code]||'🌤️',
+        wind:Math.round(windSpd),windDir:windZone,
+        precip:Math.round(h.precipitation_probability?.[hi]??0),
+      };
+    });
+    rerenderCards();
+  }catch(e){console.warn('Open-Meteo weather failed:',e);}
+}
+function wxLine(homeAbbr,gameTime,day){
+  const park=PARKS[homeAbbr];
+  if(!park||park.roof){
+    return`<div class="wx-line"><span class="wx-ico">🏟️</span><span>Dome — weather not a factor</span></div>`;
+  }
+  const _td=localDateStr(new Date());
+  const _tm=localDateStr(new Date(Date.now()+86400000));
+  const wx=WEATHER[homeAbbr+':'+(day==='tomorrow'?_tm:_td)]||WEATHER[homeAbbr];
+  if(!wx){
+    return`<div class="wx-line"><span class="wx-ico" style="opacity:.4">⏳</span><span style="opacity:.5">Loading weather…</span></div>`;
+  }
+  const parts=[`${wx.temp}°`,wx.cond];
+  if(wx.wind>3) parts.push(`Wind ${wx.wind} mph${wx.windDir?' '+wx.windDir:''}`);
+  parts.push(`${wx.precip}% precip`);
+  const tl=gameTime&&gameTime!=='—'?` <span style="font-size:9px;opacity:.55">@ ${gameTime}</span>`:'';
+  return`<div class="wx-line"><span class="wx-ico">${wx.icon}</span><span>${parts.join(' · ')}${tl}</span></div>`;
+}
+
+function wxFull(homeAbbr,day){
+  const park=PARKS[homeAbbr];
+  if(!park||park.roof) return '🏟️ Dome — weather not a factor';
+  const _td2=localDateStr(new Date());
+  const _tm2=localDateStr(new Date(Date.now()+86400000));
+  const wx=WEATHER[homeAbbr+':'+(day==='tomorrow'?_tm2:_td2)]||WEATHER[homeAbbr];
+  if(!wx) return '⏳ Weather loading…';
+  const parts=[`${wx.temp}°`,wx.cond];
+  if(wx.wind>3) parts.push(`Wind ${wx.wind} mph${wx.windDir?' '+wx.windDir:''}`);
+  parts.push(`${wx.precip}% precip`);
+  return wx.icon+' '+parts.join(' · ');
+}
+
+function rerenderCards(){
+  if(currentTab==='today'||currentTab==='tomorrow') renderTab(currentTab);
+}
+
+/* ─────────────────────────────────────────────
+   RENDER HELPERS
+───────────────────────────────────────────── */
+function rcls(r){
+  if(!r) return 'lean';
+  const l=r.toLowerCase();
+  if(l.includes('elite'))    return 'elite';
+  if(l.includes('strong'))   return 'strong';
+  if(l.includes('moderate')) return 'moderate';
+  return 'lean';
+}
+function rbadge(r){
+  const c=rcls(r);
+  const lbl={elite:'⭐⭐⭐ Elite',strong:'⭐⭐ Strong',moderate:'⭐ Moderate',lean:'📊 Lean'};
+  return`<span class="rb rb-${c}">${lbl[c]}</span>`;
+}
+function ccls(c){
+  if(!c) return 'c-low';
+  const l=c.toLowerCase();
+  if(l.includes('high')) return 'c-high';
+  if(l.includes('med'))  return 'c-med';
+  return 'c-low';
+}
+function clbl(c){
+  if(!c) return '—';
+  const l=c.toLowerCase();
+  if(l.includes('high')) return '🟢 High';
+  if(l.includes('med'))  return '🟡 Med';
+  return '🔴 Low';
+}
+function trcls(t){
+  if(!t) return 't-neut';
+  if(t.includes('Hot')||t.includes('🔥')) return 't-hot';
+  if(t.includes('Cold')||t.includes('❄')) return 't-cold';
+  return 't-neut';
+}
+function mlcls(ml){
+  if(!ml||ml==='—') return '';
+  return ml.toString().startsWith('-')?'ml-fav':'ml-dog';
+}
+function gcls(g){
+  if(!g) return '';
+  const l=g.trim().toUpperCase().replace(/[^A-F]/g,'')[0];
+  return l?`g-${l}`:'';
+}
+function sr(k,v){ return`<div class="sr"><span class="sk">${k}</span><span class="sv">${v}</span></div>`; }
+function setMain(h){ document.getElementById('main').innerHTML=h; }
+
+/* ─────────────────────────────────────────────
+   BUILD CARD HTML
+───────────────────────────────────────────── */
+function buildCard(g,idx,day){
+  const rc=rcls(g.rating);
+  const pk=PARKS[g.homeAbbr];
+  const roof=pk?.roof?'Dome':(g.roof||'Open');
+  const pf=g.parkFactor||'—';
+
+  return`<div class="card ${rc}" onclick="openModal(${idx},'${day}')" tabindex="0" role="button" aria-label="${g.away} at ${g.home}">
+    <div class="card-top">
+      <span class="card-time"><i class="ti ti-clock" style="font-size:10px"></i> ${g.time}</span>
+      ${rbadge(g.rating)}
+    </div>
+    <div class="card-body">
+      <div class="matchup">
+        <div class="team away"><div class="team-name">${sh(g.away)}</div><div class="team-rec">${g.awayRec}</div></div>
+        <span class="at-sep">@</span>
+        <div class="team home"><div class="team-name">${sh(g.home)}</div><div class="team-rec">${g.homeRec}</div></div>
+      </div>
+      <div class="pitchers">
+        <div class="pitcher"><div class="sp-name">${g.awaySP}${g.awayHand?` <span style="font-weight:400">(${g.awayHand==='L'?'LHP':'RHP'})</span>`:''}</div><div class="sp-stats">ERA ${g.awayERA} · WHIP ${g.awayWHIP}</div></div>
+        <div class="pitcher home-p"><div class="sp-name">${g.homeSP}${g.homeHand?` <span style="font-weight:400">(${g.homeHand==='L'?'LHP':'RHP'})</span>`:''}</div><div class="sp-stats">ERA ${g.homeERA} · WHIP ${g.homeWHIP}</div></div>
+      </div>
+      <div class="divider"></div>
+      <div class="winners">
+        <div class="wb wb-f5"><div class="wb-lbl">F5 Winner</div>
+          <div class="wb-team">${sh(g.f5Pick)}</div>
+          ${g.ystF5Pick&&g.ystF5Pick!==g.f5Pick?`<span class="pick-changed">was ${sh(g.ystF5Pick)}</span>`:''}
+          ${g.awayF5pct&&g.homeF5pct?`<div style="font-size:9px;color:var(--text2);margin-top:2px">${g.f5Pick===g.away?g.awayF5pct:g.homeF5pct}% win prob</div>`:''}
+        </div>
+        <div class="wb wb-fg"><div class="wb-lbl">Full Game</div>
+          <div class="wb-team">${sh(g.fgPick)}</div>
+          ${g.ystFgPick&&g.ystFgPick!==g.fgPick?`<span class="pick-changed">was ${sh(g.ystFgPick)}</span>`:''}
+          ${g.awayFGpct&&g.homeFGpct?`<div style="font-size:9px;color:var(--text2);margin-top:2px">${g.fgPick===g.away?g.awayFGpct:g.homeFGpct}% win prob</div>`:''}
+        </div>
+      </div>
+      <div class="totals-2">
+        <div class="tot"><div class="tot-lbl">F5 Total</div><div class="tot-val">${g.f5Total}</div><div class="tot-sub ${ccls(g.f5Conf)}">${clbl(g.f5Conf)}</div></div>
+        <div class="tot"><div class="tot-lbl">Game Total</div><div class="tot-val">${g.fgTotal}</div><div class="tot-sub ${ccls(g.fgConf)}">${clbl(g.fgConf)}</div></div>
+      </div>
+      <div class="odds-box">
+        <div class="odds-box-lbl">Projected Odds <span class="odds-tag">model-derived</span></div>
+        <div class="odds-row">
+          <div class="odds-side"><div class="odds-tname">${sh(g.away)}</div><div class="odds-ml ${mlcls(g.awayML)}">${g.awayML}</div></div>
+          <div class="odds-mid"><div class="odds-tname">Total</div><div class="odds-line">${g.fgProjOU!=='—'?g.fgProjOU:g.fgTotal}</div></div>
+          <div class="odds-side home"><div class="odds-tname">${sh(g.home)}</div><div class="odds-ml ${mlcls(g.homeML)}">${g.homeML}</div></div>
+        </div>
+      </div>
+      <div class="run-box">
+        <div class="run-box-lbl">Projected Runs</div>
+        <div class="run-row">
+          <div class="run-side away"><div class="run-tname">${sh(g.away)}</div><div class="run-nums away">F5: ${g.awayF5runs}</div><div class="run-nums away">FG: ${g.awayFGruns}</div></div>
+          <div class="run-side home"><div class="run-tname">${sh(g.home)}</div><div class="run-nums home">F5: ${g.homeF5runs}</div><div class="run-nums home">FG: ${g.homeFGruns}</div></div>
+        </div>
+      </div>
+      <div class="park-line">${g.park||g.venue} · ${pf} · ${roof}</div>
+      ${wxLine(g.homeAbbr,g.time,g._day)}
+      <div class="tap-hint"><i class="ti ti-chevrons-down" style="font-size:9px"></i> Tap for full breakdown</div>
+    </div>
+  </div>`;
+}
+
+/* ─────────────────────────────────────────────
+   RENDER TAB
+───────────────────────────────────────────── */
+function renderTab(tab){
+  if(tab==='today'){
+    if(!todayGames.length){setMain('<div class="status-wrap">No games found for today.</div>');return;}
+    setMain(`<div class="games-grid">${todayGames.map((g,i)=>buildCard(g,i,'today')).join('')}</div>`);
+  } else if(tab==='tomorrow'){
+    if(!tmrwGames.length){setMain('<div class="status-wrap">No games found for tomorrow.</div>');return;}
+    setMain(`<div class="games-grid">${tmrwGames.map((g,i)=>buildCard(g,i,'tomorrow')).join('')}</div>`);
+  } else {
+    renderStandings();
+  }
+}
+function switchTab(tab){
+  currentTab=tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  if(!Object.keys(DATA).length) return;
+  renderTab(tab);
+}
+
+/* ─────────────────────────────────────────────
+   STANDINGS
+───────────────────────────────────────────── */
+const DIVS={
+  'AL East':   ['New York Yankees','Boston Red Sox','Toronto Blue Jays','Baltimore Orioles','Tampa Bay Rays'],
+  'AL Central':['Cleveland Guardians','Chicago White Sox','Kansas City Royals','Minnesota Twins','Detroit Tigers'],
+  'AL West':   ['Houston Astros','Los Angeles Angels','Texas Rangers','Seattle Mariners','Athletics'],
+  'NL East':   ['Atlanta Braves','Philadelphia Phillies','New York Mets','Miami Marlins','Washington Nationals'],
+  'NL Central':['Milwaukee Brewers','Chicago Cubs','St. Louis Cardinals','Pittsburgh Pirates','Cincinnati Reds'],
+  'NL West':   ['Los Angeles Dodgers','San Diego Padres','Arizona Diamondbacks','San Francisco Giants','Colorado Rockies'],
+};
+function renderStandings(){
+  if(!DATA.teamStats?.length){setMain('<div class="status-wrap">Standings not loaded yet.</div>');return;}
+  const tsMap={};
+  for(const t of DATA.teamStats) if(t['Team']) tsMap[t['Team']]=t;
+
+  let html='<div class="std-grid">';
+  for(const [div,teams] of Object.entries(DIVS)){
+    const isAL=div.startsWith('AL');
+    const sorted=[...teams].sort((a,b)=>{
+      const ta=tsMap[a]||{},tb=tsMap[b]||{};
+      const wa=+(ta['W']||0),la=+(ta['L']||0),wb=+(tb['W']||0),lb=+(tb['L']||0);
+      return(wb/(wb+lb||1))-(wa/(wa+la||1));
+    });
+    const ldr=tsMap[sorted[0]]||{};
+    const lw=+(ldr['W']||0),ll=+(ldr['L']||0);
+    html+=`<div class="div-card"><div class="div-hdr ${isAL?'al':'nl'}">${isAL?'🔵':'🔴'} ${div}</div>
+    <table class="std-tbl"><thead><tr><th>Team</th><th>W</th><th>L</th><th>PCT</th><th>GB</th><th>L10</th><th>Str</th></tr></thead><tbody>`;
+    sorted.forEach((tn,i)=>{
+      const t=tsMap[tn]||{};
+      const w=+(t['W']||0),l=+(t['L']||0);
+      const pct=(w+l)?(w/(w+l)).toFixed(3).replace(/^0/,''):'.000';
+      const gbVal=i===0?'—':(((lw-w)+(l-ll))/2).toFixed(1).replace('.0','');
+      const a=abbr(tn);
+      const f=DATA.advanced?.teamForm?.[a]||DATA.advanced?.teamForm?.[tn]||{};
+      const l10w=f['L10 W']||'—', l10l=f['L10 L']||'—';
+      const l10=(l10w!=='—'&&l10l!=='—')?`${l10w}-${l10l}`:'—';
+      const streak=f['Streak']||'—';
+      const snum=parseInt(streak.replace(/[WL]/,''))||0;
+      const scls=streak.startsWith('W')?'sk-hot':(streak.startsWith('L')&&snum>=2?'sk-cold':'');
+      html+=`<tr${i===0?' class="leader"':''}><td>${sh(tn)}</td><td>${w}</td><td>${l}</td><td>${pct}</td><td class="gb-d">${gbVal}</td><td>${l10}</td><td class="${scls}">${streak}</td></tr>`;
+    });
+    html+='</tbody></table></div>';
+  }
+  html+='</div>';
+  setMain(html);
+}
+
+/* ─────────────────────────────────────────────
+   MODAL
+───────────────────────────────────────────── */
+function openModal(idx,day){
+  const g=day==='today'?todayGames[idx]:tmrwGames[idx];
+  if(!g) return;
+
+  const awayP=g.awayFGpct||(g.awayFGruns&&g.homeFGruns?Math.round(+g.awayFGruns/(+g.awayFGruns+ +g.homeFGruns)*100):50);
+  const homeP=100-awayP;
+  const aSPF=DATA.advanced?.spForm?.[g.awaySP]||{};
+  const hSPF=DATA.advanced?.spForm?.[g.homeSP]||{};
+  const aForm=DATA.advanced?.teamForm?.[g.awayAbbr]||DATA.advanced?.teamForm?.[g.away]||{};
+  const hForm=DATA.advanced?.teamForm?.[g.homeAbbr]||DATA.advanced?.teamForm?.[g.home]||{};
+  const h2hKey=Object.keys(DATA.advanced?.h2h||{}).find(k=>{
+    const kl=k.toLowerCase();
+    return kl.includes(g.away.split(' ').pop().toLowerCase())&&kl.includes(g.home.split(' ').pop().toLowerCase());
+  });
+  const h2h=h2hKey?DATA.advanced.h2h[h2hKey]:{};
+  const aBP=g.aBP||{},hBP=g.hBP||{};
+  const aBPg=(g.aBP?.['Grade']||'').trim().charAt(0);
+  const hBPg=(g.hBP?.['Grade']||'').trim().charAt(0);
+  const pk=PARKS[g.homeAbbr];
+  const roof=pk?.roof?'Dome':(g.roof||'Open');
+
+  let h=`<div class="modal-title">⚾ ${g.away} <span style="color:var(--text2);font-weight:400">@</span> ${g.home}</div>`;
+
+  // Win prob
+  h+=`<div class="prob-wrap">
+    <div class="prob-lbl">Full Game Win Probability</div>
+    <div class="prob-bar-row">
+      <span class="prob-pct" style="color:var(--blue)">${awayP}%</span>
+      <div class="prob-bg"><div class="pb-a" style="width:${awayP}%"></div><div class="pb-h" style="width:${homeP}%"></div></div>
+      <span class="prob-pct" style="color:var(--green);text-align:right">${homeP}%</span>
+    </div>
+    <div class="prob-teams">
+      <span style="color:var(--blue);font-weight:600">${sh(g.away)}</span>
+      <span>Proj ${g.awayFGruns} – ${g.homeFGruns} runs</span>
+      <span style="color:var(--green);font-weight:600">${sh(g.home)}</span>
+    </div>
+  </div>`;
+
+  // Run totals
+  h+=`<div class="run-detail">
+    <div class="rd-lbl">Projected Run Totals</div>
+    <div class="rd-grid">
+      <div class="rdc"><div class="rdc-l">${sh(g.away)} F5</div><div class="rdc-v rdc-a">${g.awayF5runs}</div></div>
+      <div class="rdc"><div class="rdc-l">${sh(g.away)} FG</div><div class="rdc-v rdc-a">${g.awayFGruns}</div></div>
+      <div class="rdc"><div class="rdc-l">${sh(g.home)} F5</div><div class="rdc-v rdc-h">${g.homeF5runs}</div></div>
+      <div class="rdc"><div class="rdc-l">${sh(g.home)} FG</div><div class="rdc-v rdc-h">${g.homeFGruns}</div></div>
+    </div>
+    <div class="rd-totrow">
+      <div class="rd-totcell"><div class="rdtc-l">F5 Total</div><div class="rdtc-v">${g.f5Total} <span style="font-size:10px" class="${ccls(g.f5Conf)}">${clbl(g.f5Conf)}</span></div></div>
+      <div class="rd-totcell"><div class="rdtc-l">Game Total</div><div class="rdtc-v">${g.fgTotal} <span style="font-size:10px" class="${ccls(g.fgConf)}">${clbl(g.fgConf)}</span></div></div>
+    </div>
+  </div>`;
+
+  // Projected odds (model-derived fair value — not live sportsbook lines)
+  h+=`<div class="odds-detail-box">
+    <div class="rd-lbl">Projected Odds <span style="font-size:10px;font-weight:400;color:var(--text3)">· model fair value, not a live sportsbook line</span></div>
+    <div class="rd-grid" style="grid-template-columns:1fr 1fr">
+      <div class="rdc"><div class="rdc-l">${sh(g.away)} ML</div><div class="rdc-v ${mlcls(g.awayML)}">${g.awayML}</div></div>
+      <div class="rdc"><div class="rdc-l">${sh(g.home)} ML</div><div class="rdc-v ${mlcls(g.homeML)}">${g.homeML}</div></div>
+    </div>
+    <div class="rd-totrow">
+      <div class="rd-totcell"><div class="rdtc-l">F5 Line</div><div class="rdtc-v" style="font-size:12px">${g.f5ProjOU!=='—'?g.f5ProjOU:g.f5Total}</div></div>
+      <div class="rd-totcell"><div class="rdtc-l">Game Line</div><div class="rdtc-v" style="font-size:12px">${g.fgProjOU!=='—'?g.fgProjOU:g.fgTotal}</div></div>
+    </div>
+  </div>`;
+
+  // Park + weather
+  h+=`<div class="wx-detail-box">
+    <div class="wx-dl">Park &amp; Weather${g.time&&g.time!=='—'?` <span style="font-size:10px;font-weight:400;color:var(--text3)">· forecast @ ${g.time}</span>`:''}</div>
+    <div style="font-size:12px;font-weight:500;margin-bottom:5px">${g.park||g.venue} <span style="color:var(--text2);font-weight:400">· ${g.parkFactor} · ${roof}${g.altitude?' · '+g.altitude+' ft':''}</span></div>
+    <div style="font-size:12px;color:var(--text2)">${wxFull(g.homeAbbr,g._day)}</div>
+  </div>`;
+
+  // Team form
+  h+=`<div class="m-hdr"><i class="ti ti-chart-line"></i> Team Form (Last 10)</div>
+  <div class="two-col">
+    <div class="m-box"><div class="m-box-title">${sh(g.away)}</div>
+      ${sr('L10',aForm['L10 W']&&aForm['L10 L']?aForm['L10 W']+'-'+aForm['L10 L']:'—')}
+      ${sr('Trend',`<span class="trend-b ${trcls(aForm['Trend']||'')}">${aForm['Trend']||'—'}</span>`)}
+      ${sr('Streak',aForm['Streak']||'—')}
+      ${sr('Overall',g.awayRec||'—')}
+      ${sr('Home',g.awayHomeRec||'—')} ${sr('Away',g.awayAwayRec||'—')}
+      ${sr('ERA',g.aTS?.['ERA']||g.aTS?.['Team ERA']||'—')}
+      ${sr('OPS',g.aTS?.['OPS']||'—')}
+      ${sr('OPS vs R',g.awayOpsVsR)} ${sr('OPS vs L',g.awayOpsVsL)}
+    </div>
+    <div class="m-box"><div class="m-box-title">${sh(g.home)}</div>
+      ${sr('L10',hForm['L10 W']&&hForm['L10 L']?hForm['L10 W']+'-'+hForm['L10 L']:'—')}
+      ${sr('Trend',`<span class="trend-b ${trcls(hForm['Trend']||'')}">${hForm['Trend']||'—'}</span>`)}
+      ${sr('Streak',hForm['Streak']||'—')}
+      ${sr('Overall',g.homeRec||'—')}
+      ${sr('Home',g.homeHomeRec||'—')} ${sr('Away',g.homeAwayRec||'—')}
+      ${sr('ERA',g.hTS?.['ERA']||g.hTS?.['Team ERA']||'—')}
+      ${sr('OPS',g.hTS?.['OPS']||'—')}
+      ${sr('OPS vs R',g.homeOpsVsR)} ${sr('OPS vs L',g.homeOpsVsL)}
+    </div>
+  </div>`;
+
+  // Team Statcast (Baseball Savant) — only render if the tab is wired up
+  const aSC = DATA.statcast?.[g.awayAbbr];
+  const hSC = DATA.statcast?.[g.homeAbbr];
+  if (aSC || hSC) {
+    const wobaDiffCls = v => {
+      const n = parseFloat(v);
+      if (isNaN(n)) return '';
+      return n > 0.015 ? 'c-high' : n < -0.015 ? 'c-low' : '';
     };
-    return map[Number(code)] || 'Forecast';
+    h+=`<div class="m-hdr"><i class="ti ti-target"></i> Team Statcast (Hitting)</div>
+    <div class="two-col">
+      <div class="m-box"><div class="m-box-title">${sh(g.away)}</div>
+        ${sr('Barrel%',aSC?.['Barrel%']||'—')}
+        ${sr('Hard-Hit%',aSC?.['Hard-Hit%']||'—')}
+        ${sr('xwOBA',aSC?.['xwOBA']||'—')}
+        ${sr('wOBA',aSC?.['wOBA']||'—')}
+        ${sr('wOBA vs xwOBA',`<span class="${wobaDiffCls(aSC?.['wOBA-xwOBA'])}">${aSC?.['wOBA-xwOBA']||'—'}</span>`)}
+        ${sr('xBA / BA',(aSC?.['xBA']||'—')+' / '+(aSC?.['BA']||'—'))}
+        ${sr('xSLG / SLG',(aSC?.['xSLG']||'—')+' / '+(aSC?.['SLG']||'—'))}
+      </div>
+      <div class="m-box"><div class="m-box-title">${sh(g.home)}</div>
+        ${sr('Barrel%',hSC?.['Barrel%']||'—')}
+        ${sr('Hard-Hit%',hSC?.['Hard-Hit%']||'—')}
+        ${sr('xwOBA',hSC?.['xwOBA']||'—')}
+        ${sr('wOBA',hSC?.['wOBA']||'—')}
+        ${sr('wOBA vs xwOBA',`<span class="${wobaDiffCls(hSC?.['wOBA-xwOBA'])}">${hSC?.['wOBA-xwOBA']||'—'}</span>`)}
+        ${sr('xBA / BA',(hSC?.['xBA']||'—')+' / '+(hSC?.['BA']||'—'))}
+        ${sr('xSLG / SLG',(hSC?.['xSLG']||'—')+' / '+(hSC?.['SLG']||'—'))}
+      </div>
+    </div>`;
+  }
+
+  // SP
+  // Split ERAs shown for reference only — not used in calculation
+  const awayEraLbl=g.awayAwayERA&&g.awayAwayERA!=='—'?g.awayAwayERA:'—';
+  const homeEraLbl=g.homeHomeERA&&g.homeHomeERA!=='—'?g.homeHomeERA:'—';
+  const awayWL=(g.aPit&&g.aPit['W']!==''&&g.aPit['L']!=='')
+    ?`${g.aPit['W']}-${g.aPit['L']}`:'--';
+  const homeWL=(g.hPit&&g.hPit['W']!==''&&g.hPit['L']!=='')
+    ?`${g.hPit['W']}-${g.hPit['L']}`:'--';
+  h+=`<div class="m-hdr"><i class="ti ti-baseball"></i> Starting Pitchers</div>
+  <div class="two-col">
+    <div class="m-box"><div class="m-box-title">${g.awaySP}${g.awayHand?` <span style="font-size:11px;font-weight:400">(${g.awayHand==='L'?'LHP':'RHP'})</span>`:''}</div>
+      ${sr('W/L',awayWL)}
+      ${sr('Away ERA (split)',awayEraLbl)}
+      ${sr('ERA',g.awayERA)}
+      ${sr('xERA',g.awayXERA)}
+      ${sr('L3 ERA',aSPF['L3 ERA']||aSPF['L3ERA']||'—')}
+      ${sr('WHIP',g.awayWHIP)}
+      ${sr('L3 WHIP',aSPF['L3 WHIP']||aSPF['L3WHIP']||'—')}
+      ${sr('FIP',col(g.aPit,'FIP')||'—')} ${sr('xFIP',g.awayXFIP)}
+      ${sr('SIERA',g.awaySIERA)}
+      ${sr('GB%',g.awayGB)}
+      ${sr('Trend',aSPF['Trend']||'—')}
+      ${sr('K/9',col(g.aPit,'K/9')||'—')} ${sr('BB/9',col(g.aPit,'BB/9')||'—')}
+    </div>
+    <div class="m-box"><div class="m-box-title">${g.homeSP}${g.homeHand?` <span style="font-size:11px;font-weight:400">(${g.homeHand==='L'?'LHP':'RHP'})</span>`:''}</div>
+      ${sr('W/L',homeWL)}
+      ${sr('Home ERA (split)',homeEraLbl)}
+      ${sr('ERA',g.homeERA)}
+      ${sr('xERA',g.homeXERA)}
+      ${sr('L3 ERA',hSPF['L3 ERA']||hSPF['L3ERA']||'—')}
+      ${sr('WHIP',g.homeWHIP)}
+      ${sr('L3 WHIP',hSPF['L3 WHIP']||hSPF['L3WHIP']||'—')}
+      ${sr('FIP',col(g.hPit,'FIP')||'—')} ${sr('xFIP',g.homeXFIP)}
+      ${sr('SIERA',g.homeSIERA)}
+      ${sr('GB%',g.homeGB)}
+      ${sr('Trend',hSPF['Trend']||'—')}
+      ${sr('K/9',col(g.hPit,'K/9')||'—')} ${sr('BB/9',col(g.hPit,'BB/9')||'—')}
+    </div>
+  </div>`
+
+  // Bullpen
+  h+=`<div class="m-hdr"><i class="ti ti-flame"></i> Bullpen</div>
+  <div class="two-col">
+    <div class="m-box"><div class="m-box-title">${sh(g.away)} <span class="bp-g ${gcls(aBPg)}">${aBPg||'—'}</span></div>
+      ${sr('BP ERA',g.aBP?.['BP ERA']||'—')} ${sr('K/9',cleanK9(g.aBP?.['K/9'])||'—')}
+      ${sr('Saves',g.aBP?.['Saves']||'—')} ${sr('Save%',g.aBP?.['Save%']||'—')}
+      ${sr('Closer',g.aBP?.['Closer']||'—')}
+      ${sr('Setup 1',g.aBP?.['Setup 1']||'—')} ${sr('Setup 2',g.aBP?.['Setup 2']||'—')}
+    </div>
+    <div class="m-box"><div class="m-box-title">${sh(g.home)} <span class="bp-g ${gcls(hBPg)}">${hBPg||'—'}</span></div>
+      ${sr('BP ERA',g.hBP?.['BP ERA']||'—')} ${sr('K/9',cleanK9(g.hBP?.['K/9'])||'—')}
+      ${sr('Saves',g.hBP?.['Saves']||'—')} ${sr('Save%',g.hBP?.['Save%']||'—')}
+      ${sr('Closer',g.hBP?.['Closer']||'—')}
+      ${sr('Setup 1',g.hBP?.['Setup 1']||'—')} ${sr('Setup 2',g.hBP?.['Setup 2']||'—')}
+    </div>
+  </div>`;
+
+  // H2H
+  if(Object.keys(h2h).length){
+    h+=`<div class="m-hdr"><i class="ti ti-vs"></i> 2026 Head-to-Head</div>
+    <div class="m-box">
+      ${sr('Series Leader',h2h['Series Leader']||'—')}
+      ${sr('Away Record',h2h['Away Record']||'—')}
+      ${sr('Home Record',h2h['Home Record']||'—')}
+      ${sr('Notes',h2h['Notes']||'—')}
+    </div>`;
+  }
+
+  document.getElementById('modal-body').innerHTML=h;
+  document.getElementById('overlay').classList.add('open');
 }
 
-function getCompassDirectionLabel(degrees){
-    const val = Number(degrees);
-    if(Number.isNaN(val)) return '';
-    const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
-    return dirs[Math.round(val / 22.5) % 16];
-}
-
-function normalizeDegrees(value){
-    let deg = Number(value);
-    if(Number.isNaN(deg)) return null;
-    deg = deg % 360;
-    if(deg < 0) deg += 360;
-    return deg;
-}
-
-function smallestAngleDifference(a, b){
-    const diff = Math.abs(a - b) % 360;
-    return diff > 180 ? 360 - diff : diff;
-}
-
-function getStadiumFieldWindDirection(windFromDegrees, fieldBearingDegrees){
-    const windFrom = normalizeDegrees(windFromDegrees);
-    const fieldBearing = normalizeDegrees(fieldBearingDegrees);
-    if(windFrom == null || fieldBearing == null) return '';
-
-    // Convert "wind from" meteorological direction into where the wind is blowing TO.
-    const windTo = normalizeDegrees(windFrom + 180);
-    const delta = normalizeDegrees(windTo - fieldBearing);
-
-    if(delta == null) return '';
-
-    // 0 = out to CF, 180 = in to home plate, 90 = to LF, 270 = to RF
-    if(delta < 22.5 || delta >= 337.5) return 'out to center field';
-    if(delta >= 22.5 && delta < 67.5) return 'out to left-center';
-    if(delta >= 67.5 && delta < 112.5) return 'to left field';
-    if(delta >= 112.5 && delta < 157.5) return 'in from left field';
-    if(delta >= 157.5 && delta < 202.5) return 'to home plate';
-    if(delta >= 202.5 && delta < 247.5) return 'in from right field';
-    if(delta >= 247.5 && delta < 292.5) return 'to right field';
-    return 'out to right-center';
-}
-
-function getClosestHourlyIndex(times, targetDate){
-    if(!Array.isArray(times) || !times.length) return -1;
-    const target = new Date(targetDate).getTime();
-    let bestIndex = 0;
-    let bestDiff = Infinity;
-
-    times.forEach((time, index) => {
-        const value = new Date(time).getTime();
-        const diff = Math.abs(value - target);
-        if(diff < bestDiff){
-            bestDiff = diff;
-            bestIndex = index;
-        }
-    });
-
-    return bestIndex;
-}
-
-async function fetchMLBGameEnvironment(event, homeTeam){
-    const venueMeta = getMLBVenueMeta(homeTeam);
-    if(!venueMeta) return null;
-
-    const cacheKey = `${event?.id || ''}_${homeTeam?.team?.abbreviation || ''}`;
-    if(mlbEnvironmentCache[cacheKey]) return mlbEnvironmentCache[cacheKey];
-
-    if(venueMeta.roofType !== 'outdoor'){
-        const result = {
-            type: 'roof',
-            roofType: venueMeta.roofType,
-            label: venueMeta.roofLabel
-        };
-        mlbEnvironmentCache[cacheKey] = result;
-        return result;
-    }
-
-    try {
-        const params = new URLSearchParams({
-            latitude: String(venueMeta.lat),
-            longitude: String(venueMeta.lon),
-            hourly: 'temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,precipitation_probability',
-            forecast_days: '2',
-            temperature_unit: 'fahrenheit',
-            wind_speed_unit: 'mph',
-            timezone: 'auto'
-        });
-
-        const res = await fetchWithTimeout(`https://api.open-meteo.com/v1/forecast?${params.toString()}`, 8000);
-        if(!res.ok) throw new Error(`Weather fetch failed: ${res.status}`);
-
-        const data = await res.json();
-        const hourly = data?.hourly || {};
-        const idx = getClosestHourlyIndex(hourly?.time, event?.date);
-
-        if(idx < 0){
-            const fallback = {
-                type: 'roof',
-                roofType: 'outdoor',
-                label: 'Open Air'
-            };
-            mlbEnvironmentCache[cacheKey] = fallback;
-            return fallback;
-        }
-
-        const temp = hourly?.temperature_2m?.[idx];
-        const wind = hourly?.wind_speed_10m?.[idx];
-        const windDir = hourly?.wind_direction_10m?.[idx];
-        const precip = hourly?.precipitation_probability?.[idx];
-        const weatherCode = hourly?.weather_code?.[idx];
-
-        const pieces = [];
-        if(temp != null) pieces.push(`${Math.round(temp)}°`);
-        if(weatherCode != null) pieces.push(getWeatherDescription(weatherCode));
-        if(wind != null){
-            const fieldWind = getStadiumFieldWindDirection(windDir, venueMeta.fieldBearing);
-            const fallbackWind = getCompassDirectionLabel(windDir);
-            pieces.push(`Wind ${Math.round(wind)} mph${fieldWind ? ` ${fieldWind}` : (fallbackWind ? ` from ${fallbackWind}` : '')}`);
-        }
-        if(precip != null) pieces.push(`${Math.round(precip)}% precip`);
-
-        const result = {
-            type: 'weather',
-            label: pieces.join(' · ') || 'Weather Unavailable'
-        };
-        mlbEnvironmentCache[cacheKey] = result;
-        return result;
-    } catch (err) {
-        console.error('MLB weather fetch failed:', err);
-        const fallback = {
-            type: 'roof',
-            roofType: 'outdoor',
-            label: 'Open Air'
-        };
-        mlbEnvironmentCache[cacheKey] = fallback;
-        return fallback;
-    }
-}
-
-function buildMLBEnvironmentHTML(event, homeTeam){
-    const venueMeta = getMLBVenueMeta(homeTeam);
-    if(!venueMeta) return '';
-
-    const labelPrefix = venueMeta.roofType === 'outdoor' ? 'Weather' : 'Roof';
-    const defaultText = venueMeta.roofType === 'outdoor' ? 'Loading…' : venueMeta.roofLabel;
-    const pillClass = venueMeta.roofType === 'outdoor'
-        ? 'environment-pill outdoor'
-        : venueMeta.roofType === 'retractable'
-            ? 'environment-pill retractable'
-            : 'environment-pill fixed';
-
-    return `
-        <div class="environment-line" data-env-id="${event.id}">
-            <span class="details-label">${labelPrefix}:</span>
-            <span class="${pillClass}${venueMeta.roofType === 'outdoor' ? ' environment-loading' : ''}" data-env-pill="true">${defaultText}</span>
-        </div>
-    `;
-}
-
-async function enhanceMLBEnvironmentUI(gameDiv, event, homeTeam, leagueKey = currentLeague){
-    if(leagueKey !== 'MLB') return;
-
-    const wrapper = gameDiv.querySelector(`[data-env-id="${event.id}"]`);
-    if(!wrapper) return;
-
-    const pill = wrapper.querySelector('[data-env-pill="true"]');
-    if(!pill) return;
-
-    const result = await fetchMLBGameEnvironment(event, homeTeam);
-    if(!result) return;
-
-    const labelEl = wrapper.querySelector('.details-label');
-    if(labelEl){
-        labelEl.textContent = `${result.type === 'weather' ? 'Weather' : 'Roof'}:`;
-    }
-
-    pill.classList.remove('environment-loading', 'outdoor', 'retractable', 'fixed');
-    if(result.type === 'weather'){
-        pill.classList.add('environment-pill', 'outdoor');
-        pill.textContent = result.label;
-    } else {
-        pill.classList.add('environment-pill', result.roofType || 'fixed');
-        pill.textContent = result.label;
-    }
-}
-
-
-function isLikelyGoalieName(line){
-    const s = String(line || '').trim();
-    if(!s) return false;
-    if (/\bat\b/i.test(s) && s.split(/\s+/).length > 3) return false;
-    if (/^\d/.test(s)) return false;
-    if (/^(show more|line combos|news|stats|schedule|source)$/i.test(s)) return false;
-    if (/(W-L-OTL|GAA|SV%|SO:|Source:|updated|today|tomorrow|yesterday)/i.test(s)) return false;
-    return /^[A-Z][A-Za-z.\-']+(?:\s+[A-Z][A-Za-z.\-']+){1,3}$/.test(s);
-}
-
-function getSituation(event){
-    const comp = event.competitions?.[0] || {};
-    return event.situation || comp.situation || {};
-}
-
-function buildDots(count, type, maxCount){
-    let html = '<span class="count-group">';
-    for(let i = 0; i < maxCount; i++){
-        if(i < count){
-            html += `<span class="dot ${type}"></span>`;
-        } else {
-            html += `<span class="count-empty"></span>`;
-        }
-    }
-    html += '</span>';
-    return html;
-}
-
-function getBaseOccupancy(situation){
-    const athletes = situation?.onFirst || situation?.onSecond || situation?.onThird
-        ? null
-        : (situation?.runners || situation?.baseRunners || situation?.athletes || []);
-
-    const first = !!(
-        situation?.onFirst ||
-        situation?.first ||
-        athletes?.some?.(r => r?.base === 1 || r?.currentBase === 1 || r?.baseNumber === 1)
-    );
-
-    const second = !!(
-        situation?.onSecond ||
-        situation?.second ||
-        athletes?.some?.(r => r?.base === 2 || r?.currentBase === 2 || r?.baseNumber === 2)
-    );
-
-    const third = !!(
-        situation?.onThird ||
-        situation?.third ||
-        athletes?.some?.(r => r?.base === 3 || r?.currentBase === 3 || r?.baseNumber === 3)
-    );
-
-    return { first, second, third };
-}
-
-function buildBaseDiamondHTML(situation){
-    const bases = getBaseOccupancy(situation);
-
-    return `
-        <span class="basepath-wrap">
-            <span>Bases:</span>
-            <span class="baseball-diamond" aria-label="Base runner diamond">
-                <span class="base second ${bases.second ? 'on' : ''}"></span>
-                <span class="base third ${bases.third ? 'on' : ''}"></span>
-                <span class="base first ${bases.first ? 'on' : ''}"></span>
-            </span>
-        </span>
-    `;
-}
-
-function buildGameState(event){
-    const comp = event.competitions[0];
-    const home = comp.competitors.find(t => t.homeAway === "home");
-    const away = comp.competitors.find(t => t.homeAway === "away");
-    const situation = getSituation(event);
-    const bases = getBaseOccupancy(situation);
-
-    return JSON.stringify({
-        state: event.status.type.state,
-        completed: event.status.type.completed,
-        detail: event.status.type.detail,
-        shortDetail: event.status.type.shortDetail,
-        homeScore: home.score,
-        awayScore: away.score,
-        balls: situation.balls ?? null,
-        strikes: situation.strikes ?? null,
-        outs: situation.outs ?? null,
-        onFirst: bases.first,
-        onSecond: bases.second,
-        onThird: bases.third,
-        homeLines: (home.linescores || []).map(ls => ({
-            period: ls.period ?? null,
-            value: ls.value ?? "",
-            displayValue: ls.displayValue ?? ""
-        })),
-        awayLines: (away.linescores || []).map(ls => ({
-            period: ls.period ?? null,
-            value: ls.value ?? "",
-            displayValue: ls.displayValue ?? ""
-        }))
-    });
-}
-
-function getDate(offset){
-    const d = new Date();
-    d.setDate(d.getDate() + offset);
-    return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
-}
-
-function formatGameTime(dateString){
-    return new Date(dateString).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
-}
-
-function getStatusText(event, leagueKey = currentLeague){
-    const situation = getSituation(event);
-    const isFinal = event.status.type.completed;
-    const isLive = event.status.type.state === "in";
-
-    let inningText;
-
-    if(isFinal){
-        inningText = "Final";
-    } else if(isLive){
-        inningText = event.status.type.detail || event.status.type.shortDetail || "Live";
-    } else {
-        return `<strong>${formatGameTime(event.date)}</strong>`;
-    }
-
-    if(leagueKey === "MLB" && isLive){
-        const balls = situation.balls ?? 0;
-        const strikes = situation.strikes ?? 0;
-        const outs = situation.outs ?? 0;
-
-        const countLine = `
-            <span class="status-line">
-                <span class="count-wrap">
-                    <span class="count-label">Balls: ${buildDots(balls, "ball", 3)}</span>
-                    <span class="count-label">Strikes: ${buildDots(strikes, "strike", 2)}</span>
-                    <span class="count-label">Outs: ${buildDots(outs, "out", 3)}</span>
-                </span>
-            </span>
-        `;
-
-        const baseLine = `
-            <span class="status-line">
-                ${buildBaseDiamondHTML(situation)}
-            </span>
-        `;
-
-        return `
-            <span class="status-line"><strong>${inningText}</strong></span>
-            ${countLine}
-            ${baseLine}
-        `;
-    }
-
-    return inningText;
-}
-
-function normalizeLineScore(line, index){
-    return {
-        key: String(line?.period ?? index + 1),
-        label: String(line?.period ?? index + 1),
-        value: line?.displayValue ?? line?.value ?? ""
-    };
-}
-
-function getTableData(away, home){
-    const awayLines = (away.linescores || []).map(normalizeLineScore);
-    const homeLines = (home.linescores || []).map(normalizeLineScore);
-
-    if(!awayLines.length && !homeLines.length) return null;
-
-    const allKeys = [];
-    const keyMap = new Map();
-
-    [...awayLines, ...homeLines].forEach((line, idx) => {
-        if(!keyMap.has(line.key)){
-            keyMap.set(line.key, {
-                key: line.key,
-                label: line.label || String(idx + 1)
-            });
-            allKeys.push(line.key);
-        }
-    });
-
-    allKeys.sort((a, b) => {
-        const na = Number(a);
-        const nb = Number(b);
-        const aNum = !Number.isNaN(na);
-        const bNum = !Number.isNaN(nb);
-        if(aNum && bNum) return na - nb;
-        if(aNum) return -1;
-        if(bNum) return 1;
-        return a.localeCompare(b, undefined, { numeric:true, sensitivity:"base" });
-    });
-
-    const awayMap = new Map(awayLines.map(line => [line.key, line.value]));
-    const homeMap = new Map(homeLines.map(line => [line.key, line.value]));
-
-    return {
-        columns: allKeys.map(key => ({
-            key,
-            label: keyMap.get(key)?.label || key
-        })),
-        away: {
-            abbr: away.team.abbreviation,
-            values: allKeys.map(key => awayMap.get(key) ?? ""),
-            total: away.score ?? ""
-        },
-        home: {
-            abbr: home.team.abbreviation,
-            values: allKeys.map(key => homeMap.get(key) ?? ""),
-            total: home.score ?? ""
-        }
-    };
-}
-
-function wrapCellValue(value){
-    return `<span class="cell-value">${value ?? ""}</span>`;
-}
-
-function buildTableHTML(away, home){
-    const tableData = getTableData(away, home);
-    if(!tableData) return "";
-
-    const header = tableData.columns.map(col => `<th data-col-key="${col.key}">${col.label}</th>`).join("");
-
-    const awayCells = tableData.away.values
-        .map((value, idx) => `<td data-col-key="${tableData.columns[idx].key}">${wrapCellValue(value)}</td>`)
-        .join("");
-
-    const homeCells = tableData.home.values
-        .map((value, idx) => `<td data-col-key="${tableData.columns[idx].key}">${wrapCellValue(value)}</td>`)
-        .join("");
-
-    return `
-        <div class="scoreboard">
-            <table>
-                <thead>
-                    <tr>
-                        <th></th>
-                        ${header}
-                        <th>T</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr class="away-row">
-                        <td class="team-cell">${tableData.away.abbr}</td>
-                        ${awayCells}
-                        <td class="total-cell" data-col-key="total">${wrapCellValue(tableData.away.total)}</td>
-                    </tr>
-                    <tr class="home-row">
-                        <td class="team-cell">${tableData.home.abbr}</td>
-                        ${homeCells}
-                        <td class="total-cell" data-col-key="total">${wrapCellValue(tableData.home.total)}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    `;
-}
-
-function animateChangedValue(element, newValue){
-    if(!element) return;
-
-    let target = element.querySelector(".cell-value");
-
-    if(!target){
-        const currentText = element.textContent.trim();
-        element.textContent = "";
-        target = document.createElement("span");
-        target.className = "cell-value";
-        target.textContent = currentText;
-        element.appendChild(target);
-    }
-
-    const oldValue = target.textContent.trim();
-    const nextValue = String(newValue ?? "").trim();
-
-    if(oldValue === nextValue) return;
-
-    target.textContent = nextValue;
-    target.classList.remove("number-changed");
-    void target.offsetWidth;
-    target.classList.add("number-changed");
-}
-
-function animateTextSpan(span, newValue){
-    if(!span) return;
-
-    const oldValue = span.textContent.trim();
-    const nextValue = String(newValue ?? "").trim();
-
-    if(oldValue === nextValue) return;
-
-    span.textContent = nextValue;
-    span.classList.remove("number-changed");
-    void span.offsetWidth;
-    span.classList.add("number-changed");
-}
-
-function ensureScoreLines(gameDiv, isLive){
-    let scoreDiv = gameDiv.querySelector(".score-lines");
-
-    if(!scoreDiv){
-        scoreDiv = document.createElement("div");
-        scoreDiv.className = "score-lines";
-        scoreDiv.innerHTML = `
-            ${isLive ? '<div class="divider score-divider"></div>' : '<div class="spacer score-divider"></div>'}
-            <div><strong><span class="team-name top-team-name"></span> - <span class="score-value top-team-score cell-value"></span></strong></div>
-            <div><span class="team-name bottom-team-name"></span> - <span class="score-value bottom-team-score cell-value"></span></div>
-            <div class="spacer"></div>
-        `;
-
-        const pitchersDiv = gameDiv.querySelector(".pitchers");
-        if(pitchersDiv){
-            pitchersDiv.insertAdjacentElement("afterend", scoreDiv);
-        } else {
-            const teamLine = gameDiv.querySelector(".team-line");
-            teamLine.insertAdjacentElement("afterend", scoreDiv);
-        }
-    }
-
-    const divider = scoreDiv.querySelector(".score-divider");
-    if(divider){
-        divider.className = (isLive ? "divider" : "spacer") + " score-divider";
-    }
-
-    return scoreDiv;
-}
-
-function updateScoreLines(gameDiv, topTeam, bottomTeam, isLive, isFinal){
-    if(!isLive && !isFinal){
-        const oldScore = gameDiv.querySelector(".score-lines");
-        if(oldScore) oldScore.remove();
-        return;
-    }
-
-    const scoreDiv = ensureScoreLines(gameDiv, isLive);
-
-    const topNameEl = scoreDiv.querySelector(".top-team-name");
-    const bottomNameEl = scoreDiv.querySelector(".bottom-team-name");
-    const topScoreEl = scoreDiv.querySelector(".top-team-score");
-    const bottomScoreEl = scoreDiv.querySelector(".bottom-team-score");
-
-    if(topNameEl) topNameEl.textContent = topTeam.team.displayName;
-    if(bottomNameEl) bottomNameEl.textContent = bottomTeam.team.displayName;
-    animateTextSpan(topScoreEl, topTeam.score ?? "");
-    animateTextSpan(bottomScoreEl, bottomTeam.score ?? "");
-}
-
-function updateStatusUI(gameDiv, event, leagueKey = currentLeague){
-    const statusText = getStatusText(event, leagueKey);
-    const statusDiv = gameDiv.querySelector(".game-status");
-
-    if(statusDiv && statusDiv.innerHTML !== statusText){
-        statusDiv.innerHTML = statusText;
-    }
-
-    const isLive = event.status.type.state === "in";
-    const teamLine = gameDiv.querySelector(".team-line");
-    const existingBadge = teamLine?.querySelector(".live-badge");
-
-    if(isLive && !existingBadge){
-        const badge = document.createElement("span");
-        badge.className = "live-badge";
-        badge.textContent = "LIVE";
-        teamLine.prepend(badge);
-    } else if(!isLive && existingBadge){
-        existingBadge.remove();
-    }
-
-    const divider = gameDiv.querySelector(".status-divider");
-    if(isLive){
-        if(!divider){
-            const newDivider = document.createElement("div");
-            newDivider.className = "divider status-divider";
-            statusDiv?.insertAdjacentElement("afterend", newDivider);
-        } else {
-            divider.className = "divider status-divider";
-        }
-    } else if(divider){
-        divider.remove();
-    }
-}
-
-function getRecordSummaryByAliases(team, aliases){
-    const records = team?.records || [];
-    const normalizedAliases = (aliases || []).map(alias => String(alias).toLowerCase());
-
-    const match = records.find(record => {
-        const fields = [record?.name, record?.type, record?.displayName, record?.abbreviation]
-            .filter(Boolean)
-            .map(value => String(value).toLowerCase());
-        return normalizedAliases.some(alias => fields.includes(alias));
-    });
-
-    return match?.summary || null;
-}
-
-function getOverallRecord(team){
-    return getRecordSummaryByAliases(team, ['overall', 'total'])
-        || team?.record?.summary
-        || team?.records?.[0]?.summary
-        || '—';
-}
-
-function getHomeRoadRecord(team, side){
-    if(side === 'home'){
-        return getRecordSummaryByAliases(team, ['home']);
-    }
-    return getRecordSummaryByAliases(team, ['road', 'away']);
-}
-
-function formatTeamRecordLine(team, side){
-    const overall = getOverallRecord(team);
-    const split = getHomeRoadRecord(team, side);
-    const splitLabel = side === 'home' ? 'At Home' : 'On The Road';
-
-    return `${team.team.displayName} ${overall}${split ? ` (${split} ${splitLabel})` : ''}`;
-}
-
-function buildTeamRecordCard(team, side){
-    const overall = getOverallRecord(team);
-    const homeRecord = getHomeRoadRecord(team, 'home');
-    const awayRecord = getHomeRoadRecord(team, 'away');
-
-    const isAwayTeam = side === 'away';
-
-    return `
-        <div class="records-team-card">
-            <div class="records-team-name">${team.team.displayName}</div>
-            <div class="records-overall">${overall}</div>
-
-            ${isAwayTeam
-                ? `${awayRecord ? `<div class="records-split">${awayRecord} On The Road</div>` : ''}
-                   ${homeRecord ? `<div class="records-split">${homeRecord} At Home</div>` : ''}`
-                : `${homeRecord ? `<div class="records-split">${homeRecord} At Home</div>` : ''}
-                   ${awayRecord ? `<div class="records-split">${awayRecord} On The Road</div>` : ''}`
-            }
-        </div>
-    `;
-}
-
-function formatLeaderCategoryName(name){
-    if(!name) return 'Leader';
-
-    const normalized = String(name)
-        .replace(/([a-z])([A-Z])/g, '$1 $2')
-        .replace(/_/g, ' ')
-        .trim()
-        .toLowerCase();
-
-    const abbreviations = {
-        'at bats': 'AB',
-        'runs': 'R',
-        'hits': 'H',
-        'runs batted in': 'RBI',
-        'rbi': 'RBI',
-        'home runs': 'HR',
-        'batting average': 'AVG',
-        'average': 'AVG',
-        'on base percentage': 'OBP',
-        'slugging percentage': 'SLG',
-        'ops': 'OPS',
-        'stolen bases': 'SB',
-        'walks': 'BB',
-        'strikeouts': 'K',
-        'innings pitched': 'IP',
-        'earned runs': 'ER',
-        'hits allowed': 'H',
-        'pitch count': 'P',
-        'pitches': 'P',
-        'wins': 'W',
-        'saves': 'SV',
-        'points': 'PTS',
-        'rebounds': 'REB',
-        'assists': 'AST',
-        'blocks': 'BLK',
-        'steals': 'STL',
-        'goals': 'G',
-        'shots on goal': 'SOG',
-        'save percentage': 'SV%',
-        'saves': 'SV',
-        'passing yards': 'Pass Yds',
-        'rushing yards': 'Rush Yds',
-        'receiving yards': 'Rec Yds',
-        'touchdowns': 'TD'
-    };
-
-    if(abbreviations[normalized]) return abbreviations[normalized];
-
-    return normalized.replace(/\w/g, ch => ch.toUpperCase());
-}
-
-function getMLBLeaderBucket(name){
-    const normalized = String(name || '').toLowerCase().replace(/_/g, ' ');
-    const pitchingTerms = ['strikeout', 'innings pitched', 'earned run', 'pitch count', 'pitches', 'save', 'win', 'era', 'whip', 'hits allowed'];
-    return pitchingTerms.some(term => normalized.includes(term)) ? 'Pitching' : 'Batting';
-}
-
-function renderLeaderLines(categories){
-    return categories.map(category => {
-        const leader = category?.leaders?.[0];
-        const playerName = leader?.athlete?.displayName || leader?.displayName || '—';
-        const stat = leader?.displayValue || '';
-        const label = formatLeaderCategoryName(category?.name);
-        if(!stat && playerName === '—') return '';
-        return `<div class="leader-line"><span class="details-label">${label}:</span>${playerName}${stat ? ` (${stat})` : ''}</div>`;
-    }).filter(Boolean).join('');
-}
-
-function getFirstMatchingLeader(categories, aliases){
-    return aliases.map(alias => String(alias).toLowerCase())
-        .map(alias => categories.find(category => String(category?.name || '').toLowerCase().replace(/_/g, ' ') === alias))
-        .find(Boolean) || null;
-}
-
-function getPreferredMLBCategories(categories){
-    const cleaned = (categories || []).filter(category => {
-        const name = String(category?.name || '').toLowerCase().replace(/_/g, ' ');
-        return name && name !== 'mlbrating' && name !== 'mlb rating' && name !== 'average' && name !== 'avg';
-    });
-
-    const preferredBatting = [
-        getFirstMatchingLeader(cleaned, ['runs', 'run']),
-        getFirstMatchingLeader(cleaned, ['hits', 'hit']),
-        getFirstMatchingLeader(cleaned, ['rbi', 'rbis', 'runs batted in']),
-        getFirstMatchingLeader(cleaned, ['home runs', 'home run', 'hr'])
-    ].filter(Boolean);
-
-    const preferredPitching = [
-        getFirstMatchingLeader(cleaned, ['innings pitched', 'ip']),
-        getFirstMatchingLeader(cleaned, ['strikeouts', 'strikeout', 'k']),
-        getFirstMatchingLeader(cleaned, ['earned runs', 'earned run', 'er'])
-    ].filter(Boolean);
-
-    const fallbackPitching = cleaned.filter(category => getMLBLeaderBucket(category?.name) === 'Pitching');
-    const fallbackBatting = cleaned.filter(category => getMLBLeaderBucket(category?.name) === 'Batting');
-
-    const uniqueByName = list => {
-        const seen = new Set();
-        return list.filter(category => {
-            const key = String(category?.name || '').toLowerCase().replace(/_/g, ' ');
-            if(!key || seen.has(key)) return false;
-            seen.add(key);
-            return true;
-        });
-    };
-
-    return {
-        batting: uniqueByName([
-            ...preferredBatting,
-            ...fallbackBatting
-        ]).slice(0, 4),
-        pitching: uniqueByName([
-            ...preferredPitching,
-            ...fallbackPitching
-        ]).slice(0, 4)
-    };
-}
-
-function formatTeamLeaders(team){
-    const categories = team?.leaders || [];
-    if(!categories.length) return '';
-
-    if(currentLeague === 'MLB'){
-        const preferred = getPreferredMLBCategories(categories);
-        const battingHTML = renderLeaderLines(preferred.batting);
-        const pitchingHTML = renderLeaderLines(preferred.pitching);
-
-        if(!battingHTML && !pitchingHTML) return '';
-
-        return `
-            <div class="leaders-team-card">
-                <div class="leaders-team-header">${team.team.abbreviation}</div>
-                ${battingHTML ? `<div class="leaders-section-title">Batting</div>${battingHTML}` : ''}
-                ${pitchingHTML ? `<div class="leaders-section-title">Pitching</div>${pitchingHTML}` : ''}
-            </div>
-        `;
-    }
-
-    const leadersHTML = renderLeaderLines(categories.slice(0, 3));
-    if(!leadersHTML) return '';
-
-    return `
-        <div class="leaders-team-card">
-            <div class="leaders-team-header">${team.team.abbreviation}</div>
-            ${leadersHTML}
-        </div>
-    `;
-}
-
-function formatFormPills(formString){
-    if(!formString || formString === '—') return '<span class="form-empty">—</span>';
-
-    return formString.split('-').filter(Boolean).map(result => {
-        const value = result.toUpperCase();
-        const className = value === 'W' ? 'win' : (value === 'L' ? 'loss' : 'neutral');
-        return `<span class="form-pill ${className}">${value}</span>`;
-    }).join('');
-}
-
-function buildFormLine(label, formString){
-    return `
-        <div class="form-line">
-            <span class="form-line-label">${label}:</span>
-            <span>${formatFormPills(formString)}</span>
-        </div>
-    `;
-}
-
-function buildFormCard(team, side){
-    const abbr = team.team.abbreviation;
-    const overall = getTeamRecentForm(abbr);
-    const split = getTeamSplitForm(abbr, side);
-    const splitLabel = side === 'home' ? 'Home' : 'Road';
-
-    return `
-        <div class="records-team-card">
-            <div class="records-team-name">${team.team.displayName}</div>
-            <div class="form-lines">
-                ${buildFormLine('Last 5', overall)}
-                ${buildFormLine(splitLabel, split)}
-            </div>
-            <div class="records-split">Current Form</div>
-        </div>
-    `;
-}
-
-function getPlayoffSeriesInfo(event){
-    const comp = event.competitions?.[0] || {};
-    const series = comp.series;
-    const isPlayoff = event.season?.type === 3;
-
-    if(!isPlayoff && !series) return null;
-
-    // ESPN provides a pre-built summary string — use it directly
-    if(series?.summary){
-        return { summary: series.summary, completed: series.completed || false };
-    }
-
-    // Build the summary from per-team wins in series.competitors
-    if(series?.competitors?.length >= 2){
-        const comps = comp.competitors || [];
-        const winMap = {};
-        series.competitors.forEach(sc => { winMap[sc.id] = sc.wins ?? 0; });
-
-        const home = comps.find(t => t.homeAway === 'home');
-        const away = comps.find(t => t.homeAway === 'away');
-
-        if(home && away){
-            const homeWins = winMap[home.id] ?? 0;
-            const awayWins = winMap[away.id] ?? 0;
-            // Best-of-7 by default; ESPN encodes series length in series.type.id for some leagues
-            const seriesLen = series.type?.length || 7;
-            const winsNeeded = Math.ceil(seriesLen / 2);
-            const completed = homeWins >= winsNeeded || awayWins >= winsNeeded;
-            const verb = completed ? 'wins series' : 'leads';
-
-            if(homeWins === 0 && awayWins === 0){
-                return { summary: 'Playoff Game 1', completed: false };
-            } else if(homeWins === awayWins){
-                return { summary: `Series Tied ${homeWins}-${awayWins}`, completed: false };
-            } else if(homeWins > awayWins){
-                return { summary: `${home.team.abbreviation} ${verb} ${homeWins}-${awayWins}`, completed };
-            } else {
-                return { summary: `${away.team.abbreviation} ${verb} ${awayWins}-${homeWins}`, completed };
-            }
-        }
-    }
-
-    // Playoff game but no series detail yet (e.g. Game 1 before any wins data)
-    if(isPlayoff){
-        return { summary: 'Playoff Game', completed: false };
-    }
-
-    return null;
-}
-
-function buildDetailsHTML(event, home, away, leagueKey = currentLeague, includeForms = true){
-    const comp = event.competitions?.[0] || {};
-    const venue = comp.venue?.fullName || comp.venue?.address?.city || 'TBD';
-    const statusDetail = event.status?.type?.detail || event.status?.type?.shortDetail || 'TBD';
-    const broadcasts = (comp.broadcasts || []).flatMap(b => b.names || []).join(', ') || 'TBD';
-    const environmentHTML = leagueKey === 'MLB' ? buildMLBEnvironmentHTML(event, home) : '';
-    const radioFull = getRadioInfo(leagueKey, 'full');
-    const seriesInfo = getPlayoffSeriesInfo(event);
-    const seriesHTML = seriesInfo
-        ? `<div><span class="details-label">Series:</span><span class="series-badge${seriesInfo.completed ? ' series-won' : ''}">${seriesInfo.summary}</span></div>`
-        : '';
-
-    return `
-        <div class="details-panel">
-            <div class="details-grid">
-                ${seriesHTML}
-                <div><span class="details-label">Venue:</span>${venue}</div>
-                <div><span class="details-label">Status:</span>${statusDetail}</div>
-                ${environmentHTML}
-                <div>
-                    <span class="details-label">Records:</span>
-                    <div class="records-matchup">
-                        ${buildTeamRecordCard(away, 'away')}
-                        ${buildTeamRecordCard(home, 'home')}
-                    </div>
-                </div>
-                ${includeForms ? `
-                <div>
-                    <span class="details-label">Current Form:</span>
-                    <div class="records-matchup">
-                        ${buildFormCard(away, 'away')}
-                        ${buildFormCard(home, 'home')}
-                    </div>
-                </div>` : ''}
-                <div><span class="details-label">Watch:</span>${broadcasts}</div>
-                ${radioFull ? `<div><span class="details-label">Radio:</span><span class="radio-detail-value">${radioFull}</span></div>` : ''}
-            </div>
-        </div>
-    `;
-}
-
-function bindDetailsToggle(gameDiv){
-    const btn = gameDiv.querySelector('.details-toggle');
-    const panel = gameDiv.querySelector('.details-panel');
-    if(!btn || !panel) return;
-    btn.addEventListener('click', () => {
-        const open = panel.classList.toggle('open');
-        btn.textContent = open ? 'Hide details ▲' : 'More details ▼';
-    });
-}
-
-function updateScoreboardTable(gameDiv, away, home){
-    const newTableData = getTableData(away, home);
-    let scoreboard = gameDiv.querySelector(".scoreboard");
-
-    if(!newTableData){
-        if(scoreboard){
-            scoreboard.remove();
-            const spacerAfterTable = gameDiv.querySelector(".table-spacers");
-            if(spacerAfterTable) spacerAfterTable.remove();
-        }
-        return;
-    }
-
-    if(!scoreboard){
-        const statusDiv = gameDiv.querySelector(".game-status");
-        if(statusDiv){
-            statusDiv.insertAdjacentHTML("beforebegin", buildTableHTML(away, home) + `<div class="table-spacers"><div class="spacer"></div><div class="spacer"></div></div>`);
-            return;
-        }
-    }
-
-    scoreboard = gameDiv.querySelector(".scoreboard");
-    if(!scoreboard) return;
-
-    const existingHeaderKeys = Array.from(scoreboard.querySelectorAll("thead th[data-col-key]")).map(th => th.dataset.colKey);
-    const newHeaderKeys = newTableData.columns.map(col => col.key);
-
-    const structureChanged =
-        existingHeaderKeys.length !== newHeaderKeys.length ||
-        existingHeaderKeys.some((key, idx) => key !== newHeaderKeys[idx]);
-
-    if(structureChanged){
-        const wrapper = document.createElement("div");
-        wrapper.innerHTML = buildTableHTML(away, home);
-        scoreboard.replaceWith(wrapper.firstElementChild);
-        return;
-    }
-
-    const awayRow = scoreboard.querySelector(".away-row");
-    const homeRow = scoreboard.querySelector(".home-row");
-
-    if(!awayRow || !homeRow){
-        const wrapper = document.createElement("div");
-        wrapper.innerHTML = buildTableHTML(away, home);
-        scoreboard.replaceWith(wrapper.firstElementChild);
-        return;
-    }
-
-    const awayTeamCell = awayRow.querySelector(".team-cell");
-    const homeTeamCell = homeRow.querySelector(".team-cell");
-    if(awayTeamCell) awayTeamCell.textContent = newTableData.away.abbr;
-    if(homeTeamCell) homeTeamCell.textContent = newTableData.home.abbr;
-
-    newTableData.columns.forEach((col, idx) => {
-        animateChangedValue(awayRow.querySelector(`td[data-col-key="${col.key}"]`), newTableData.away.values[idx] ?? "");
-        animateChangedValue(homeRow.querySelector(`td[data-col-key="${col.key}"]`), newTableData.home.values[idx] ?? "");
-    });
-
-    animateChangedValue(awayRow.querySelector(`td[data-col-key="total"]`), newTableData.away.total ?? "");
-    animateChangedValue(homeRow.querySelector(`td[data-col-key="total"]`), newTableData.home.total ?? "");
-}
-
-
-function refreshVisibleNHLGoalies(){
-    if(currentLeague !== "NHL") return;
-
-    document.querySelectorAll('.game[data-event-id]').forEach(gameDiv => {
-        const awayAbbr = gameDiv.dataset.awayAbbr;
-        const homeAbbr = gameDiv.dataset.homeAbbr;
-        const awayName = gameDiv.dataset.awayName;
-        const homeName = gameDiv.dataset.homeName;
-        if(!awayAbbr || !homeAbbr || !awayName || !homeName) return;
-
-        enhanceNHLGoaliesUI(gameDiv, {
-            team: { abbreviation: awayAbbr, displayName: awayName }
-        }, {
-            team: { abbreviation: homeAbbr, displayName: homeName }
-        });
-    });
-}
-
-function renderGame(event, grid, leagueKey = currentLeague, opts = {}){
-    const includeForms = opts.includeForms !== false;
-    const showLeagueTag = !!opts.showLeagueTag;
-
-    const comp = event.competitions[0];
-    const home = comp.competitors.find(t => t.homeAway === "home");
-    const away = comp.competitors.find(t => t.homeAway === "away");
-
-    const isLive = event.status.type.state === "in";
-    const isFinal = event.status.type.completed;
-    const [topTeam, bottomTeam] = getSortedTeams(home, away);
-    const statusText = getStatusText(event, leagueKey);
-    const tableHTML = buildTableHTML(away, home);
-
-    let scoreHTML = "";
-    if(isLive || isFinal){
-        scoreHTML = `
-            <div class="score-lines">
-                ${isLive ? '<div class="divider score-divider"></div>' : '<div class="spacer score-divider"></div>'}
-                <div><strong><span class="team-name top-team-name">${topTeam.team.displayName}</span> - <span class="score-value top-team-score cell-value">${topTeam.score ?? ""}</span></strong></div>
-                <div><span class="team-name bottom-team-name">${bottomTeam.team.displayName}</span> - <span class="score-value bottom-team-score cell-value">${bottomTeam.score ?? ""}</span></div>
-                <div class="spacer"></div>
-            </div>
-        `;
-    }
-
-    let broadcast = "";
-    if(!isFinal && comp.broadcasts?.length){
-        broadcast = comp.broadcasts.flatMap(b => b.names || []).join(", ");
-    }
-
-    const radioShort = !isFinal ? getRadioInfo(leagueKey, 'short') : "";
-
-    const gameDiv = document.createElement("div");
-    gameDiv.className = "game";
-    gameDiv.dataset.eventId = event.id;
-    gameDiv.dataset.league = leagueKey;
-    gameDiv.dataset.awayAbbr = away.team.abbreviation;
-    gameDiv.dataset.homeAbbr = home.team.abbreviation;
-    gameDiv.dataset.awayName = away.team.displayName;
-    gameDiv.dataset.homeName = home.team.displayName;
-
-    const seriesInfo = getPlayoffSeriesInfo(event);
-
-    gameDiv.innerHTML = `
-        <div class="team-line">
-            ${isLive ? '<span class="live-badge">LIVE</span>' : ''}
-            ${showLeagueTag ? `<span class="league-tag">${leagueKey}</span>` : ''}
-            <div class="matchup-text">
-                <img src="${away.team.logo}" alt="${away.team.abbreviation} logo"><span>${away.team.abbreviation}</span>
-                <span class="matchup-at">@</span>
-                <img src="${home.team.logo}" alt="${home.team.abbreviation} logo"><span>${home.team.abbreviation}</span>
-            </div>
-        </div>
-        ${seriesInfo ? `<div class="series-line"><span class="series-badge${seriesInfo.completed ? ' series-won' : ''}">${seriesInfo.summary}</span></div>` : ''}
-
-        ${leagueKey === "MLB" ? `
-        <div class="pitchers">
-            <div class="pitcher-away">${away.team.abbreviation}: ${formatPitcher(away.probables?.[0])}</div>
-            <div class="pitcher-home">${home.team.abbreviation}: ${formatPitcher(home.probables?.[0])}</div>
-        </div>` : leagueKey === "NHL" && !isFinal ? `
-        <div class="pitchers">
-            <div class="goalie-away"></div>
-            <div class="goalie-home"></div>
-        </div>` : ""}
-
-        ${scoreHTML}
-        ${tableHTML}
-        ${tableHTML ? `<div class="table-spacers"><div class="spacer"></div><div class="spacer"></div></div>` : ""}
-
-        <div class="status game-status">${statusText}</div>
-        ${isLive ? '<div class="divider status-divider"></div>' : ""}
-        ${broadcast ? `<div class="status watch-line"><small>Watch: ${broadcast}</small></div>` : ""}
-        ${radioShort ? `<div class="status watch-line"><small>Radio: <span class="radio-line-value">${radioShort}</span></small></div>` : ""}
-        <button class="details-toggle" type="button">More details ▼</button>
-        ${buildDetailsHTML(event, home, away, leagueKey, includeForms)}
-    `;
-
-    grid.appendChild(gameDiv);
-    bindDetailsToggle(gameDiv);
-
-    if(leagueKey === "MLB"){
-        enhanceMLBPitchersUI(
-            gameDiv,
-            away.probables?.[0],
-            home.probables?.[0],
-            away.team.abbreviation,
-            home.team.abbreviation
-        ).catch(err => console.error("MLB pitcher enhancement failed:", err));
-
-        enhanceMLBEnvironmentUI(gameDiv, event, home, leagueKey)
-            .catch(err => console.error("MLB environment enhancement failed:", err));
-    }
-
-    if(leagueKey === "NHL"){
-        enhanceNHLGoaliesUI(gameDiv, away, home);
-    }
-
-    if(!isFinal){
-        enhanceRadioUI(gameDiv, home, away, leagueKey)
-            .catch(err => console.error("SiriusXM radio enhancement failed:", err));
-    }
-
-    gameStateMap[event.id] = buildGameState(event);
-}
-
-// ESPN buckets each event under a single "date" that doesn't always match
-// the viewer's local calendar day (early/late games, timezone rounding,
-// etc). The per-league tabs already account for this by checking today,
-// tomorrow, and yesterday and de-duping by event id - the Live tab needs
-// the same three-day window or it can miss games that the league tabs
-// find just fine.
-async function fetchLiveScoreboardEvents(leagueKey){
-    const endpoint = leagues[leagueKey];
-    const groups = leagueKey === 'NCAAMB' ? '&groups=50' : '';
-    const offsets = [0, -1, 1];
-    const seen = new Set();
-    const events = [];
-    let anySuccess = false;
-
-    for(const offset of offsets){
-        try {
-            const res = await fetchWithTimeout(
-                `https://site.api.espn.com/apis/site/v2/sports/${endpoint}/scoreboard?dates=${getDate(offset)}${groups}`,
-                8000
-            );
-            if(!res.ok) continue;
-            const data = await res.json();
-            anySuccess = true;
-            (data.events || []).forEach(e => {
-                if(e?.id && !seen.has(e.id)){
-                    seen.add(e.id);
-                    events.push(e);
-                }
-            });
-        } catch (err) {
-            console.warn(`[Live] ${leagueKey} offset ${offset} fetch failed:`, err?.message || err);
-        }
-    }
-
-    return { events, ok: anySuccess };
-}
-
-async function loadAllLiveGames(){
-    const leagueKeys = Object.keys(leagues);
-
-    const results = await Promise.all(leagueKeys.map(async (leagueKey) => {
-        try {
-            const { events } = await fetchLiveScoreboardEvents(leagueKey);
-            return events
-                .filter(e => e?.status?.type?.state === "in")
-                .map(e => ({ event: e, leagueKey }));
-        } catch (err) {
-            console.error(`Live games fetch failed for ${leagueKey}:`, err);
-            return [];
-        }
-    }));
-
-    const liveList = results.flat().sort((a, b) => new Date(a.event.date) - new Date(b.event.date));
-
-    if(liveList.some(item => item.leagueKey === "NHL")){
-        try {
-            await fetchNHLGoalies(false, "NHL");
-        } catch (err) {
-            console.error('NHL goalie fetch failed during live aggregation:', err);
-        }
-    }
-
-    if(!liveList.length){
-        const empty = document.createElement("div");
-        empty.className = "section-title";
-        empty.innerText = "No games are currently live";
-        containerDiv.appendChild(empty);
-        return;
-    }
-
-    const liveHeader = document.createElement("div");
-    liveHeader.className = "section-title live-header";
-    liveHeader.innerText = "🔴 Live Games";
-    containerDiv.appendChild(liveHeader);
-
-    const liveGrid = document.createElement("div");
-    liveGrid.className = "content live-grid";
-    containerDiv.appendChild(liveGrid);
-
-    liveList.forEach(({ event, leagueKey }) => {
-        renderGame(event, liveGrid, leagueKey, { includeForms: false, showLeagueTag: true });
-    });
-}
-
-async function loadGames(){
-    containerDiv.innerHTML = "";
-    gameStateMap = {};
-
-    if(currentLeague === "LIVE"){
-        await loadAllLiveGames();
-        return;
-    }
-
-    await fetchLeagueRecentForm();
-
-    const goaliePromise = currentLeague === "NHL"
-        ? fetchNHLGoalies()
-        : Promise.resolve();
-
-    const endpoint = leagues[currentLeague];
-    const offsets = [0, 1, -1];
-    const titles = ["Today's Games", "Tomorrow's Games", "Yesterday's Games"];
-    const seenIds = new Set();
-
-    let allEvents = [];
-
-    for(let i = 0; i < offsets.length; i++){
-        const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${endpoint}/scoreboard?dates=${getDate(offsets[i])}`);
-        const data = await res.json();
-
-        if(!data.events) continue;
-
-        data.events.forEach(e => {
-            if(!seenIds.has(e.id)){
-                seenIds.add(e.id);
-                allEvents.push({ event: e, offsetIndex: i });
-            }
-        });
-    }
-
-    const liveEvents = allEvents.filter(e => e.event.status.type.state === "in");
-    const groupedEvents = [[], [], []];
-
-    allEvents.forEach(e => {
-        if(e.event.status.type.state !== "in"){
-            groupedEvents[e.offsetIndex].push(e.event);
-        }
-    });
-
-    if(liveEvents.length){
-        const liveHeader = document.createElement("div");
-        liveHeader.className = "section-title live-header";
-        liveHeader.innerText = "🔴 Live Games";
-        containerDiv.appendChild(liveHeader);
-
-        const liveGrid = document.createElement("div");
-        liveGrid.className = "content live-grid";
-        containerDiv.appendChild(liveGrid);
-
-        liveEvents
-            .map(e => e.event)
-            .sort((a,b) => new Date(a.date) - new Date(b.date))
-            .forEach(e => renderGame(e, liveGrid));
-    }
-
-    groupedEvents.forEach((events, i) => {
-        if(!events.length) return;
-
-        const title = document.createElement("div");
-        title.className = "section-title";
-        title.innerText = titles[i];
-        containerDiv.appendChild(title);
-
-        const grid = document.createElement("div");
-        grid.className = "content";
-        containerDiv.appendChild(grid);
-
-        events
-            .sort((a,b) => new Date(a.date) - new Date(b.date))
-            .forEach(e => renderGame(e, grid));
-    });
-
-    if(currentLeague === "NHL"){
-        goaliePromise.then(() => {
-            if(currentLeague === "NHL"){
-                refreshVisibleNHLGoalies();
-            }
-        }).catch(err => console.error('Delayed goalie refresh failed:', err));
-    }
-}
-
-async function fetchEventsForRefresh(){
-    const endpoint = leagues[currentLeague];
-    const offsets = [0, -1, 1];
-    const allEvents = [];
-    const seen = new Set();
-
-    for(const offset of offsets){
-        const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${endpoint}/scoreboard?dates=${getDate(offset)}`);
-        const data = await res.json();
-
-        for(const event of (data.events || [])){
-            if(seen.has(event.id)) continue;
-            seen.add(event.id);
-            allEvents.push(event);
-        }
-    }
-
-    return allEvents;
-}
-
-async function refreshAllLiveGames(){
-    const leagueKeys = Object.keys(leagues);
-
-    const results = await Promise.all(leagueKeys.map(async (leagueKey) => {
-        const { events, ok } = await fetchLiveScoreboardEvents(leagueKey);
-        if(!ok){
-            console.warn(`[Live] ${leagueKey} refresh failed across all date windows - leaving its cards as-is this cycle.`);
-        }
-        return { leagueKey, ok, events: events.map(e => ({ event: e, leagueKey })) };
-    }));
-
-    const failedLeagues = new Set(results.filter(r => !r.ok).map(r => r.leagueKey));
-
-    // If every single league's fetch failed this cycle (offline blip, rate
-    // limit, etc.) don't touch the page at all - just retry on the next
-    // tick. This is what used to wipe a perfectly good live view down to
-    // "No games are currently live" on a transient network hiccup.
-    if(failedLeagues.size === leagueKeys.length){
-        console.warn('[Live] All league fetches failed this refresh cycle - keeping the previous view untouched.');
-        return;
-    }
-
-    const allEvents = results.flatMap(r => r.events);
-    const liveEvents = allEvents.filter(({ event }) => event?.status?.type?.state === "in");
-
-    const grid = document.querySelector(".live-grid");
-    const renderedGameDivs = Array.from(document.querySelectorAll('.live-grid .game[data-event-id]'));
-    const renderedIds = new Set(renderedGameDivs.map(el => el.dataset.eventId));
-    const currentIds = new Set(liveEvents.map(({ event }) => event.id));
-
-    let structureChanged = !grid;
-
-    renderedGameDivs.forEach(el => {
-        const id = el.dataset.eventId;
-        if(currentIds.has(id)) return;
-        // This card's game isn't in the live list anymore. Only treat that
-        // as real (game ended) if its league's fetch actually succeeded
-        // this cycle - otherwise it's just missing data, not a finished game.
-        if(!failedLeagues.has(el.dataset.league)){
-            structureChanged = true;
-        }
-    });
-
-    currentIds.forEach(id => { if(!renderedIds.has(id)) structureChanged = true; });
-
-    if(structureChanged){
-        // A game went live, finished, or the section didn't exist yet -
-        // rebuild just the live section (still only this one reload, not
-        // a recurring one every 10s like before).
-        containerDiv.innerHTML = "";
-        gameStateMap = {};
-        await loadAllLiveGames();
-        return;
-    }
-
-    if(liveEvents.some(item => item.leagueKey === "NHL")){
-        fetchNHLGoalies(false, "NHL").then(() => {
-            liveEvents.filter(i => i.leagueKey === "NHL").forEach(({ event }) => {
-                const gameDiv = grid.querySelector(`[data-event-id="${event.id}"]`);
-                if(!gameDiv) return;
-                const comp = event.competitions[0];
-                const home = comp.competitors.find(t => t.homeAway === "home");
-                const away = comp.competitors.find(t => t.homeAway === "away");
-                enhanceNHLGoaliesUI(gameDiv, away, home);
-            });
-        }).catch(() => {});
-    }
-
-    liveEvents.forEach(({ event, leagueKey }) => {
-        const gameDiv = grid.querySelector(`[data-event-id="${event.id}"]`);
-        if(!gameDiv) return;
-
-        const comp = event.competitions[0];
-        const home = comp.competitors.find(t => t.homeAway === "home");
-        const away = comp.competitors.find(t => t.homeAway === "away");
-        const isLive = event.status.type.state === "in";
-        const isFinal = event.status.type.completed;
-
-        updateStatusUI(gameDiv, event, leagueKey);
-
-        const [topTeam, bottomTeam] = getSortedTeams(home, away);
-        updateScoreLines(gameDiv, topTeam, bottomTeam, isLive, isFinal);
-        updateScoreboardTable(gameDiv, away, home);
-
-        gameStateMap[event.id] = buildGameState(event);
-    });
-}
-
-async function refreshLiveGames(){
-    if(refreshInFlight) return;
-    refreshInFlight = true;
-
-    try {
-        if(currentLeague === "LIVE"){
-            await refreshAllLiveGames();
-            return;
-        }
-
-        if(currentLeague === "NHL"){
-            fetchNHLGoalies().then(() => refreshVisibleNHLGoalies()).catch(() => {});
-        }
-        const events = await fetchEventsForRefresh();
-        let requiresReload = false;
-        let liveGameJustStarted = false;
-
-        for(const event of events){
-            const gameDiv = document.querySelector(`[data-event-id="${event.id}"]`);
-            const isLive = event.status.type.state === "in";
-
-            if(!gameDiv){
-                if(isLive){
-                    requiresReload = true;
-                    liveGameJustStarted = true;
-                }
-                continue;
-            }
-
-            const previousState = gameStateMap[event.id];
-            const newState = buildGameState(event);
-
-            let previousParsed = null;
-            try {
-                previousParsed = previousState ? JSON.parse(previousState) : null;
-            } catch (e) {
-                previousParsed = null;
-            }
-
-            const comp = event.competitions[0];
-            const home = comp.competitors.find(t => t.homeAway === "home");
-            const away = comp.competitors.find(t => t.homeAway === "away");
-            const isFinal = event.status.type.completed;
-
-            updateStatusUI(gameDiv, event);
-
-            const [topTeam, bottomTeam] = getSortedTeams(home, away);
-            updateScoreLines(gameDiv, topTeam, bottomTeam, isLive, isFinal);
-            updateScoreboardTable(gameDiv, away, home);
-
-            gameStateMap[event.id] = newState;
-
-            const previousLive = previousParsed?.state === "in";
-            const previousCompleted = previousParsed?.completed === true;
-
-            if(previousParsed && previousLive !== isLive){
-                requiresReload = true;
-                if(!previousLive && isLive){
-                    liveGameJustStarted = true;
-                }
-            }
-
-            if(previousParsed && previousCompleted !== isFinal){
-                requiresReload = true;
-            }
-        }
-
-        if(requiresReload){
-            await loadGames();
-
-            if(liveGameJustStarted){
-                const liveHeader = document.querySelector(".live-header");
-                if(liveHeader){
-                    liveHeader.scrollIntoView({
-                        behavior: "smooth",
-                        block: "start"
-                    });
-                }
-            }
-        }
-    } catch (err) {
-        console.error("Refresh failed:", err);
-    } finally {
-        refreshInFlight = false;
-    }
-}
-
-loadGames();
-setInterval(refreshLiveGames, 10000);
+function closeModal(){ document.getElementById('overlay').classList.remove('open'); }
+function closeOut(e){ if(e.target===document.getElementById('overlay')) closeModal(); }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+
+/* ─────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────── */
+loadAll();
 </script>
-
 </body>
 </html>
